@@ -1,0 +1,42 @@
+{
+  "type": "datasource",
+  "name": " Google-Analytics",
+  "id": "lcc-3108-google-analytics",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_ Google-Analytics",
+  "info": {
+    "description": " Google-Analytics to Grafana",
+    "author": {
+      "name": "lcc3108",
+      "url": "https://github.com/lcc3108/"
+    },
+    "keywords": [
+      "GA",
+      "ga",
+      "GoogleAnalytics",
+      "Google"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/simple-datasource-backend"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/simple-datasource-backend/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaVersion": "7.x.x",
+    "plugins": []
+  }
+}
