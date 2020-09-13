@@ -24,7 +24,8 @@ jobs:
         with:
           go-version: '^1.15.2'
 
-      - name: Install mage
-        run: go get -u -d github.com/magefile/mage
-
-      - run: mage lint
+      - name: Lint
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: lint
