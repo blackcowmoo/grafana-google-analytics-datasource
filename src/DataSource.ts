@@ -1,9 +1,10 @@
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { DataSourceWithBackend } from '@grafana/runtime';
-import { MyDataSourceOptions, MyQuery } from './types';
+import { GADataSourceOptions, GAQuery } from './types';
 
-export class DataSource extends DataSourceWithBackend<MyQuery, MyDataSourceOptions> {
-  constructor(instanceSettings: DataSourceInstanceSettings<MyDataSourceOptions>) {
+export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
+  constructor(instanceSettings: DataSourceInstanceSettings<GADataSourceOptions>) {
     super(instanceSettings);
+    console.log('instanceSettings', instanceSettings);
   }
 }
