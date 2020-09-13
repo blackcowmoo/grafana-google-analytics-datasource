@@ -63,12 +63,7 @@ mage -l
 ## How To test
 
 ```BASH
-mkdir grafana-plugins
-cd grafana-plugins
-git clone https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource.git
-cd ..
-docker run -d -p 3000:3000 -v "$(pwd)"/grafana-plugins:/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
-
+docker run -p 3000:3000 -v "$(pwd)":/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
 ```
 
 ## Learn more
