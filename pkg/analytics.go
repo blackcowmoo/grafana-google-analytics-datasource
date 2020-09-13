@@ -47,7 +47,7 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 
 	// apiKey, apiKeyOk := secureJSONData["apiKey"]
 	_, apiKeyOk := secureJSONData["apiKey"]
-	if apiKeyOk == false {
+	if !apiKeyOk {
 		status = backend.HealthStatusError
 		message = "apiKey is required."
 	}
