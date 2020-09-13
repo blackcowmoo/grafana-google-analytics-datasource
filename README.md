@@ -17,19 +17,25 @@ A data source backend plugin consists of both frontend and backend components.
 ### Frontend
 
 1. Install dependencies
+
 ```BASH
 yarn install
 ```
 
 2. Build plugin in development mode or run in watch mode
+
 ```BASH
 yarn dev
 ```
+
 or
+
 ```BASH
 yarn watch
 ```
+
 3. Build plugin in production mode
+
 ```BASH
 yarn build
 ```
@@ -43,20 +49,27 @@ go get -u github.com/grafana/grafana-plugin-sdk-go
 ```
 
 2. Build backend plugin binaries for Linux, Windows and Darwin:
+
 ```BASH
 mage -v
 ```
 
 3. List all available Mage targets for additional commands:
+
 ```BASH
 mage -l
 ```
 
-## How To Test
-```BASH
-docker run -d -p 3000:3000 -v "$(pwd)"/grafana-plugins:/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
-```
+## How To test
 
+```BASH
+mkdir grafana-plugins
+cd grafana-plugins
+git clone https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource.git
+cd ..
+docker run -d -p 3000:3000 -v "$(pwd)"/grafana-plugins:/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
+
+```
 
 ## Learn more
 
