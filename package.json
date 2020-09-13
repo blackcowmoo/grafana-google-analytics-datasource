@@ -1,5 +1,5 @@
 {
-  "name": "lcc-3108-google-analytics",
+  "name": "google-analytics",
   "version": "1.0.0",
   "description": " Google-Analytics to Grafana",
   "scripts": {
@@ -8,7 +8,7 @@
     "dev": "grafana-toolkit plugin:dev",
     "watch": "grafana-toolkit plugin:dev --watch"
   },
-  "author": "lcc3108",
+  "author": "blackcowmoo",
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/data": "7.0.1",
