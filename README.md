@@ -63,7 +63,7 @@ mage -l
 ## How To test
 
 ```BASH
-docker run -p 3000:3000 -v "$(pwd)":/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
+docker run --rm -p 3000:3000 -v "$(pwd)":/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
 ```
 
 ## Apply Change
