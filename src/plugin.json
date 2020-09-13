@@ -1,22 +1,17 @@
 {
   "type": "datasource",
   "name": " Google-Analytics",
-  "id": "lcc-3108-google-analytics",
+  "id": "google-analytics",
   "metrics": true,
   "backend": true,
   "executable": "gpx_ Google-Analytics",
   "info": {
     "description": " Google-Analytics to Grafana",
     "author": {
-      "name": "lcc3108",
-      "url": "https://github.com/lcc3108/"
+      "name": "blackcowmoo",
+      "url": "https://github.com/blackcowmoo"
     },
-    "keywords": [
-      "GA",
-      "ga",
-      "GoogleAnalytics",
-      "Google"
-    ],
+    "keywords": ["GA", "ga", "GoogleAnalytics", "Google"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
