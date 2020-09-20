@@ -1,4 +1,4 @@
-name: github-actions/backend/build
+name: github-actions/frontend/build
 on:
   pull_request:
     branches:
