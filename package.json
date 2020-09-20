@@ -15,7 +15,8 @@
     "@grafana/toolkit": "7.0.1",
     "@grafana/runtime": "7.0.1",
     "@grafana/ui": "7.0.1",
-    "@types/lodash": "latest"
+    "@types/lodash": "latest",
+    "@types/react-dropzone": "^5.1.0"
   },
   "engines": {
     "node": ">=12 <13"
