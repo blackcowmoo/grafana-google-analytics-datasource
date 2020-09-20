@@ -1,4 +1,4 @@
-name: github-actions/backend/lint
+name: github-actions/backend/build
 on:
   pull_request:
     branches:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Lint
+    name: Lint & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -23,8 +23,8 @@ jobs:
           key: node-${{ hashFiles('yarn.lock') }}
           restore-keys: node-
 
-      - name: Install packages
+      - name: Install Packages
         run: yarn
 
-      - name: lint & build
+      - name: Lint & Build
         run: yarn build
