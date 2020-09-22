@@ -7,6 +7,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 // newDatasource returns datasource.ServeOpts.
@@ -37,20 +38,40 @@ type AnalyticsDatasource struct {
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+
 	var status = backend.HealthStatusOk
 	var message = "Success"
+	config, err := LoadSettings(req.PluginContext)
+	if err != nil {
+		return &backend.CheckHealthResult{
+			Status:  status,
+			Message: message,
+		}, nil
+	}
+	log.DefaultLogger.Info("config", config)
 
-	var secureJSONData = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData
-	if secureJSONData == nil {
-		secureJSONData = make(map[string]string)
+	client, err := NewGoogleClient(ctx, config)
+	log.DefaultLogger.Info("client", client)
+
+	if err != nil {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Invalid config",
+		}, nil
 	}
 
-	// apiKey, apiKeyOk := secureJSONData["apiKey"]
-	_, apiKeyOk := secureJSONData["apiKey"]
-	if !apiKeyOk {
-		status = backend.HealthStatusError
-		message = "apiKey is required."
+	res, err := getReport(client)
+
+	if err != nil {
+		log.DefaultLogger.Info("GET request to analyticsreporting/v4 returned error", " ", " ")
 	}
+
+	if res != nil {
+		log.DefaultLogger.Info("HTTPStatusCode", res.HTTPStatusCode)
+		log.DefaultLogger.Info("res", res)
+	}
+
+	printResponse(res)
 
 	return &backend.CheckHealthResult{
 		Status:  status,
