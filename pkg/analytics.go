@@ -67,7 +67,7 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Test Request Fail",
-		}
+		}, nil
 	}
 
 	if res != nil {
