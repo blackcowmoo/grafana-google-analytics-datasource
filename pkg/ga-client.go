@@ -45,7 +45,7 @@ func CreateGaService(ctx context.Context, auth *DatasourceSettings) (*ga.Service
 	return nil, fmt.Errorf("invalid Auth Type: %s", auth.AuthType)
 }
 
-func getReport(svc *ga.Service) (*ga.GetReportsResponse, error) {
+func getReport(client *ga.Service) (*ga.GetReportsResponse, error) {
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
 	req := &ga.GetReportsRequest{
@@ -72,7 +72,7 @@ func getReport(svc *ga.Service) (*ga.GetReportsResponse, error) {
 
 	log.DefaultLogger.Info("Doing GET request from analytics reporting", req)
 	// Call the BatchGet method and return the response.
-	return svc.Reports.BatchGet(req).Do()
+	return client.Reports.BatchGet(req).Do()
 }
 
 func printResponse(res *ga.GetReportsResponse) {
@@ -84,7 +84,7 @@ func printResponse(res *ga.GetReportsResponse) {
 		rows := report.Data.Rows
 
 		if rows == nil {
-			log.DefaultLogger.Info("no data", "", "")
+			log.DefaultLogger.Info("no data", "")
 		}
 
 		for _, row := range rows {

@@ -41,17 +41,17 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 
 	var status = backend.HealthStatusOk
 	var message = "Success"
+
 	config, err := LoadSettings(req.PluginContext)
+
 	if err != nil {
 		return &backend.CheckHealthResult{
-			Status:  status,
-			Message: message,
+			Status:  backend.HealthStatusError,
+			Message: "Setting Configuration Read Fail",
 		}, nil
 	}
-	log.DefaultLogger.Info("config", config)
 
 	client, err := NewGoogleClient(ctx, config)
-	log.DefaultLogger.Info("client", client)
 
 	if err != nil {
 		return &backend.CheckHealthResult{
@@ -63,7 +63,11 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 	res, err := getReport(client)
 
 	if err != nil {
-		log.DefaultLogger.Info("GET request to analyticsreporting/v4 returned error", " ", " ")
+		log.DefaultLogger.Info("GET request to analyticsreporting/v4 returned error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Test Request Fail",
+		}
 	}
 
 	if res != nil {
