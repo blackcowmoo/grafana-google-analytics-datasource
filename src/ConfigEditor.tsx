@@ -68,6 +68,18 @@ export class ConfigEditor extends PureComponent<Props> {
           <>
             <div className="gf-form">
               <LegacyForms.SecretFormField
+                isConfigured={(secureJsonFields && secureJsonFields.viewId) as boolean}
+                value={secureJsonData?.viewId || ''}
+                label="Default ViewId"
+                labelWidth={10}
+                inputWidth={30}
+                placeholder="Default ViewId"
+                onReset={this.onResetViewId}
+                onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'viewId')}
+              />
+            </div>
+            <div className="gf-form">
+              <LegacyForms.SecretFormField
                 isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
                 value={secureJsonData?.apiKey || ''}
                 label="API Key"
