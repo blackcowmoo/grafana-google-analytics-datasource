@@ -33,6 +33,21 @@ export class ConfigEditor extends PureComponent<Props> {
     });
   };
 
+  onResetViewId = () => {
+    const { options } = this.props;
+    this.props.onOptionsChange({
+      ...options,
+      secureJsonData: {
+        ...options.secureJsonData,
+        viewId: '',
+      },
+      secureJsonFields: {
+        ...options.secureJsonFields,
+        viewId: false,
+      },
+    });
+  };
+
   render() {
     const { options, onOptionsChange } = this.props;
     const { secureJsonFields, jsonData } = options;
@@ -66,18 +81,32 @@ export class ConfigEditor extends PureComponent<Props> {
           </>
         )}
         {jsonData.authType === GoogleAuthType.JWT && (
-          <JWTConfig
-            isConfigured={(secureJsonFields && !!secureJsonFields.jwt) as boolean}
-            onChange={jwt => {
-              onOptionsChange({
-                ...options,
-                secureJsonData: {
-                  ...secureJsonData,
-                  jwt,
-                },
-              });
-            }}
-          ></JWTConfig>
+          <>
+            <div className="gf-form">
+              <LegacyForms.SecretFormField
+                isConfigured={(secureJsonFields && secureJsonFields.viewId) as boolean}
+                value={secureJsonData?.viewId || ''}
+                label="Default ViewId"
+                labelWidth={10}
+                inputWidth={30}
+                placeholder="Default ViewId"
+                onReset={this.onResetViewId}
+                onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'viewId')}
+              />
+            </div>
+            <JWTConfig
+              isConfigured={(secureJsonFields && !!secureJsonFields.jwt) as boolean}
+              onChange={jwt => {
+                onOptionsChange({
+                  ...options,
+                  secureJsonData: {
+                    ...secureJsonData,
+                    jwt,
+                  },
+                });
+              }}
+            ></JWTConfig>
+          </>
         )}
         <div className="grafana-info-box" style={{ marginTop: 24 }}>
           {jsonData.authType === GoogleAuthType.JWT ? (
