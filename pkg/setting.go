@@ -12,6 +12,7 @@ type DatasourceSettings struct {
 	AuthType string `json:"authType"` // jwt | key
 	APIKey   string `json:"apiKey"`
 	JWT      string `json:"jwt"`
+	ViewID   string `json:"viewId"`
 }
 
 // LoadSettings gets the relevant settings from the plugin context
@@ -26,6 +27,7 @@ func LoadSettings(ctx backend.PluginContext) (*DatasourceSettings, error) {
 
 	model.APIKey = settings.DecryptedSecureJSONData["apiKey"]
 	model.JWT = settings.DecryptedSecureJSONData["jwt"]
+	model.ViewID = settings.DecryptedSecureJSONData["viewId"]
 
 	return model, nil
 }

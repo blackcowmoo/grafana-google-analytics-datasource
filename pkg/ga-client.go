@@ -11,6 +11,14 @@ import (
 	ga "google.golang.org/api/analyticsreporting/v4"
 )
 
+type QueryData struct {
+	ViewID    string `json:"viewId"`
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+	Metric    string `json:"metric"`
+	Dimension string `json:"dimension"`
+}
+
 func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*ga.Service, error) {
 	analyticsreportingService, err := CreateGaService(ctx, auth)
 	if err != nil {
@@ -45,7 +53,7 @@ func CreateGaService(ctx context.Context, auth *DatasourceSettings) (*ga.Service
 	return nil, fmt.Errorf("invalid Auth Type: %s", auth.AuthType)
 }
 
-func getReport(client *ga.Service) (*ga.GetReportsResponse, error) {
+func getReport(client *ga.Service, query QueryData) (*ga.GetReportsResponse, error) {
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
 	req := &ga.GetReportsRequest{
@@ -54,17 +62,17 @@ func getReport(client *ga.Service) (*ga.GetReportsResponse, error) {
 		ReportRequests: []*ga.ReportRequest{
 			// Create the ReportRequest object.
 			{
-				ViewId: "111810456",
+				ViewId: query.ViewID,
 				DateRanges: []*ga.DateRange{
 					// Create the DateRange object.
-					{StartDate: "7daysAgo", EndDate: "today"},
+					{StartDate: query.StartDate, EndDate: query.EndDate},
 				},
 				Metrics: []*ga.Metric{
 					// Create the Metrics object.
-					{Expression: "ga:sessions"},
+					{Expression: query.Metric},
 				},
 				Dimensions: []*ga.Dimension{
-					{Name: "ga:country"},
+					{Name: query.Dimension},
 				},
 			},
 		},
@@ -76,7 +84,7 @@ func getReport(client *ga.Service) (*ga.GetReportsResponse, error) {
 }
 
 func printResponse(res *ga.GetReportsResponse) {
-	log.DefaultLogger.Info("Printing Response from analytics reporting", "", "")
+	log.DefaultLogger.Info("Printing Response from analytics reporting", "")
 	for _, report := range res.Reports {
 		header := report.ColumnHeader
 		dimHdrs := header.Dimensions
@@ -86,7 +94,6 @@ func printResponse(res *ga.GetReportsResponse) {
 		if rows == nil {
 			log.DefaultLogger.Info("no data", "")
 		}
-
 		for _, row := range rows {
 			dims := row.Dimensions
 			metrics := row.Metrics
