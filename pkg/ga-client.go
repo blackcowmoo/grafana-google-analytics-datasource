@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
@@ -140,40 +141,32 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 		return nil, err
 	}
 
-	var profilesList = make(chan *analytics.Profile)
+	var profilesList = make(chan *analytics.Profile, len(webproperties))
 	var wait sync.WaitGroup
-
 	var MAX_RETRY_COUNT = 10
 
 	for _, webproperty := range webproperties {
 		wait.Add(1)
 		go func(accountId string, webpropertyId string) {
 			defer wait.Done()
-			defer func() { log.DefaultLogger.Info("getProfilesList:Defer") }()
 			for i := 1; i <= MAX_RETRY_COUNT; i++ {
-				log.DefaultLogger.Info("getProfilesList", "accountId", accountId, "webpropertyId", webpropertyId, "retry", i)
 				profiles, err := client.getProfilesList(accountId, webpropertyId)
 				if err != nil {
 					if i < MAX_RETRY_COUNT {
-						// log.DefaultLogger.Info("getProfilesList:Time:start")
-						// time.Sleep(time.Second * 1)
-						// log.DefaultLogger.Info("getProfilesList:Time:end")
-					} else {
-						log.DefaultLogger.Error(err.Error())
-						panic(err)
+						time.Sleep(time.Second * 1)
+						continue
 					}
-				} else {
-					log.DefaultLogger.Info("getProfilesList:profiles:start", "len", len(profiles))
-					for _, profile := range profiles {
-						log.DefaultLogger.Info("getProfilesList:profile:start", "profile", profiles)
-						profilesList <- profile
-						log.DefaultLogger.Info("getProfilesList:profile:end", "profile", profiles)
-					}
-					i = MAX_RETRY_COUNT
-					log.DefaultLogger.Info("getProfilesList:profiles:end")
+
+					log.DefaultLogger.Error(err.Error())
+					panic(err)
 				}
+
+				for _, profile := range profiles {
+					profilesList <- profile
+				}
+
+				return
 			}
-			log.DefaultLogger.Info("getProfilesList:End")
 		}(webproperty.AccountId, webproperty.Id)
 	}
 	wait.Wait()
@@ -191,8 +184,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	profilesService := analytics.NewManagementProfilesService(client.analytics)
 	profiles, err := profilesService.List(accountId, webpropertyId).Do()
 	if err != nil {
-
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error(err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
 		return nil, err
 	}
 
