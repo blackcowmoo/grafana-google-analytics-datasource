@@ -153,7 +153,7 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 				profiles, err := client.getProfilesList(accountId, webpropertyId)
 				if err != nil {
 					if i < MAX_RETRY_COUNT {
-						time.Sleep(time.Second * 1)
+						time.Sleep(time.Millisecond * 500)
 						continue
 					}
 
