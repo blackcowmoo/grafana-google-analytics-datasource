@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
@@ -143,21 +144,31 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 	var profilesList = make(chan *analytics.Profile)
 	var wait sync.WaitGroup
 
+	var MAX_RETRY_COUNT = 10
+
 	for _, webproperty := range webproperties {
 		wait.Add(1)
 		go func(accountId string, webpropertyId string) {
-			defer wait.Done()
-
-			log.DefaultLogger.Info("getProfilesList", "accountId", accountId, "webpropertyId", webpropertyId)
-			profiles, err := client.getProfilesList(accountId, webpropertyId)
-			if err != nil {
-				log.DefaultLogger.Error(err.Error())
-				panic(err)
+			for i := 1; i <= MAX_RETRY_COUNT; i++ {
+				log.DefaultLogger.Info("getProfilesList", "accountId", accountId, "webpropertyId", webpropertyId, "retry", i)
+				profiles, err := client.getProfilesList(accountId, webpropertyId)
+				if err != nil {
+					if i < MAX_RETRY_COUNT {
+						time.Sleep(time.Second * 1)
+					} else {
+						log.DefaultLogger.Error(err.Error())
+						panic(err)
+						wait.Done()
+					}
+				} else {
+					for _, profile := range profiles {
+						profilesList <- profile
+					}
+					i = MAX_RETRY_COUNT
+					wait.Done()
+				}
 			}
-
-			for _, profile := range profiles {
-				profilesList <- profile
-			}
+			log.DefaultLogger.Info("getProfilesList:End", "retry", i)
 		}(webproperty.AccountId, webproperty.Id)
 	}
 	wait.Wait()
