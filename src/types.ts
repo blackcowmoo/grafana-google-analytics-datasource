@@ -39,4 +39,5 @@ export interface GADataSourceOptions extends DataSourceJsonData {
 export interface GASecureJsonData {
   apiKey?: string;
   jwt?: string;
+  viewId?: string;
 }
