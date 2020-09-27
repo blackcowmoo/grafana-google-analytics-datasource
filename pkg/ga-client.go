@@ -163,9 +163,11 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 						panic(err)
 					}
 				} else {
-					log.DefaultLogger.Info("getProfilesList:profiles:start")
+					log.DefaultLogger.Info("getProfilesList:profiles:start", "len", len(profiles))
 					for _, profile := range profiles {
+						log.DefaultLogger.Info("getProfilesList:profile:start", "profile", profiles)
 						profilesList <- profile
+						log.DefaultLogger.Info("getProfilesList:profile:end", "profile", profiles)
 					}
 					i = MAX_RETRY_COUNT
 					log.DefaultLogger.Info("getProfilesList:profiles:end")
