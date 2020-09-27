@@ -43,11 +43,10 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 	var message = "Success"
 
 	config, err := LoadSettings(req.PluginContext)
-
 	log.DefaultLogger.Info("LoadSetting", config.ViewID)
 
 	if err != nil {
-		log.DefaultLogger.Info("Fail LoadSetting", err.Error())
+		log.DefaultLogger.Error("Fail LoadSetting", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Setting Configuration Read Fail",
@@ -55,21 +54,28 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 	}
 
 	client, err := NewGoogleClient(ctx, config)
-
 	if err != nil {
-		log.DefaultLogger.Info("Fail NewGoogleClient", err.Error())
-
+		log.DefaultLogger.Error("Fail NewGoogleClient", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Invalid config",
 		}, nil
 	}
 
-	testData := QueryData{config.ViewID, "yesterday", "today", "ga:sessions", "ga:country"}
-	res, err := getReport(client, testData)
+	profiles, err := client.getAllProfilesList()
+	if err != nil {
+		log.DefaultLogger.Error("Fail getAllProfilesList", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Invalid config",
+		}, nil
+	}
+
+	testData := QueryData{profiles[0].Id, "yesterday", "today", "ga:sessions", "ga:country"}
+	res, err := client.getReport(testData)
 
 	if err != nil {
-		log.DefaultLogger.Info("GET request to analyticsreporting/v4 returned error", err.Error())
+		log.DefaultLogger.Error("GET request to analyticsreporting/v4 returned error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Test Request Fail",
@@ -77,7 +83,7 @@ func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.Che
 	}
 
 	if res != nil {
-		log.DefaultLogger.Info("HTTPStatusCode", res.HTTPStatusCode)
+		log.DefaultLogger.Info("HTTPStatusCode", "status", res.HTTPStatusCode)
 		log.DefaultLogger.Info("res", res)
 	}
 

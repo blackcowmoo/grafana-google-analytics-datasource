@@ -8,7 +8,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 
-	ga "google.golang.org/api/analyticsreporting/v4"
+	analytics "google.golang.org/api/analytics/v3"
+	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
 type QueryData struct {
@@ -19,16 +20,26 @@ type QueryData struct {
 	Dimension string `json:"dimension"`
 }
 
-func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*ga.Service, error) {
-	analyticsreportingService, err := CreateGaService(ctx, auth)
-	if err != nil {
-		return nil, err
-	}
-
-	return analyticsreportingService, nil
+type GoogleClient struct {
+	reporting *reporting.Service
+	analytics *analytics.Service
 }
 
-func CreateGaService(ctx context.Context, auth *DatasourceSettings) (*ga.Service, error) {
+func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*GoogleClient, error) {
+	reportingService, reportingError := createReportingService(ctx, auth)
+	if reportingError != nil {
+		return nil, reportingError
+	}
+
+	analyticsService, analyticsError := createAnalticsService(ctx, auth)
+	if analyticsError != nil {
+		return nil, analyticsError
+	}
+
+	return &GoogleClient{reportingService, analyticsService}, nil
+}
+
+func createReportingService(ctx context.Context, auth *DatasourceSettings) (*reporting.Service, error) {
 	if len(auth.AuthType) == 0 {
 		return nil, fmt.Errorf("missing AuthType setting")
 	}
@@ -37,41 +48,142 @@ func CreateGaService(ctx context.Context, auth *DatasourceSettings) (*ga.Service
 		if len(auth.APIKey) == 0 {
 			return nil, fmt.Errorf("missing API Key")
 		}
-		return ga.NewService(ctx, option.WithAPIKey(auth.APIKey))
+		return reporting.NewService(ctx, option.WithAPIKey(auth.APIKey))
 	}
 
 	if auth.AuthType == "jwt" {
-		jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), ga.AnalyticsReadonlyScope)
+		jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), reporting.AnalyticsReadonlyScope)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing JWT file: %w", err)
 		}
 
 		client := jwtConfig.Client(ctx)
-		return ga.NewService(ctx, option.WithHTTPClient(client))
+		return reporting.NewService(ctx, option.WithHTTPClient(client))
 	}
 
 	return nil, fmt.Errorf("invalid Auth Type: %s", auth.AuthType)
 }
 
-func getReport(client *ga.Service, query QueryData) (*ga.GetReportsResponse, error) {
+func createAnalticsService(ctx context.Context, auth *DatasourceSettings) (*analytics.Service, error) {
+	if len(auth.AuthType) == 0 {
+		return nil, fmt.Errorf("missing AuthType setting")
+	}
+
+	if auth.AuthType == "key" {
+		if len(auth.APIKey) == 0 {
+			return nil, fmt.Errorf("missing API Key")
+		}
+		return analytics.NewService(ctx, option.WithAPIKey(auth.APIKey))
+	}
+
+	if auth.AuthType == "jwt" {
+		jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), analytics.AnalyticsReadonlyScope)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing JWT file: %w", err)
+		}
+
+		client := jwtConfig.Client(ctx)
+		return analytics.NewService(ctx, option.WithHTTPClient(client))
+	}
+
+	return nil, fmt.Errorf("invalid Auth Type: %s", auth.AuthType)
+
+}
+
+func (client *GoogleClient) getAccountsList() ([]*analytics.Account, error) {
+	accountsService := analytics.NewManagementAccountsService(client.analytics)
+	accounts, err := accountsService.List().Do()
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, err
+	}
+
+	return accounts.Items, nil
+}
+
+func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty, error) {
+	accounts, err := client.getAccountsList()
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, err
+	}
+
+	var webpropertiesList = make([]*analytics.Webproperty, 0)
+	for _, account := range accounts {
+		webproperties, err := client.getWebpropertiesList(account.Id)
+		if err != nil {
+			log.DefaultLogger.Error(err.Error())
+			return nil, err
+		}
+
+		webpropertiesList = append(webpropertiesList, webproperties...)
+	}
+
+	return webpropertiesList, nil
+}
+
+func (client *GoogleClient) getWebpropertiesList(accountId string) ([]*analytics.Webproperty, error) {
+	webpropertiesService := analytics.NewManagementWebpropertiesService(client.analytics)
+	webproperties, err := webpropertiesService.List(accountId).Do()
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, err
+	}
+	return webproperties.Items, nil
+}
+
+func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
+	webproperties, err := client.getAllWebpropertiesList()
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, err
+	}
+
+	var profilesList = make([]*analytics.Profile, 0)
+	for _, webproperty := range webproperties {
+		profiles, err := client.getProfilesList(webproperty.AccountId, webproperty.Id)
+		if err != nil {
+			log.DefaultLogger.Error(err.Error())
+			return nil, err
+		}
+
+		profilesList = append(profilesList, profiles...)
+	}
+
+	return profilesList, nil
+}
+
+func (client *GoogleClient) getProfilesList(accountId string, webpropertyId string) ([]*analytics.Profile, error) {
+	profilesService := analytics.NewManagementProfilesService(client.analytics)
+	profiles, err := profilesService.List(accountId, webpropertyId).Do()
+	if err != nil {
+
+		log.DefaultLogger.Error(err.Error())
+		return nil, err
+	}
+
+	return profiles.Items, nil
+}
+
+func (client *GoogleClient) getReport(query QueryData) (*reporting.GetReportsResponse, error) {
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
-	req := &ga.GetReportsRequest{
+	req := &reporting.GetReportsRequest{
 		// Our request contains only one request
 		// So initialise the slice with one ga.ReportRequest object
-		ReportRequests: []*ga.ReportRequest{
+		ReportRequests: []*reporting.ReportRequest{
 			// Create the ReportRequest object.
 			{
 				ViewId: query.ViewID,
-				DateRanges: []*ga.DateRange{
+				DateRanges: []*reporting.DateRange{
 					// Create the DateRange object.
 					{StartDate: query.StartDate, EndDate: query.EndDate},
 				},
-				Metrics: []*ga.Metric{
+				Metrics: []*reporting.Metric{
 					// Create the Metrics object.
 					{Expression: query.Metric},
 				},
-				Dimensions: []*ga.Dimension{
+				Dimensions: []*reporting.Dimension{
 					{Name: query.Dimension},
 				},
 			},
@@ -80,10 +192,10 @@ func getReport(client *ga.Service, query QueryData) (*ga.GetReportsResponse, err
 
 	log.DefaultLogger.Info("Doing GET request from analytics reporting", req)
 	// Call the BatchGet method and return the response.
-	return client.Reports.BatchGet(req).Do()
+	return client.reporting.Reports.BatchGet(req).Do()
 }
 
-func printResponse(res *ga.GetReportsResponse) {
+func printResponse(res *reporting.GetReportsResponse) {
 	log.DefaultLogger.Info("Printing Response from analytics reporting", "")
 	for _, report := range res.Reports {
 		header := report.ColumnHeader
