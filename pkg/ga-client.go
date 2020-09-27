@@ -168,7 +168,7 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 					wait.Done()
 				}
 			}
-			log.DefaultLogger.Info("getProfilesList:End", "retry", i)
+			log.DefaultLogger.Info("getProfilesList:End")
 		}(webproperty.AccountId, webproperty.Id)
 	}
 	wait.Wait()
