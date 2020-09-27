@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
@@ -149,23 +148,27 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 	for _, webproperty := range webproperties {
 		wait.Add(1)
 		go func(accountId string, webpropertyId string) {
+			defer wait.Done()
+			defer func() { log.DefaultLogger.Info("getProfilesList:Defer") }()
 			for i := 1; i <= MAX_RETRY_COUNT; i++ {
 				log.DefaultLogger.Info("getProfilesList", "accountId", accountId, "webpropertyId", webpropertyId, "retry", i)
 				profiles, err := client.getProfilesList(accountId, webpropertyId)
 				if err != nil {
 					if i < MAX_RETRY_COUNT {
-						time.Sleep(time.Second * 1)
+						// log.DefaultLogger.Info("getProfilesList:Time:start")
+						// time.Sleep(time.Second * 1)
+						// log.DefaultLogger.Info("getProfilesList:Time:end")
 					} else {
 						log.DefaultLogger.Error(err.Error())
 						panic(err)
-						wait.Done()
 					}
 				} else {
+					log.DefaultLogger.Info("getProfilesList:profiles:start")
 					for _, profile := range profiles {
 						profilesList <- profile
 					}
 					i = MAX_RETRY_COUNT
-					wait.Done()
+					log.DefaultLogger.Info("getProfilesList:profiles:end")
 				}
 			}
 			log.DefaultLogger.Info("getProfilesList:End")
