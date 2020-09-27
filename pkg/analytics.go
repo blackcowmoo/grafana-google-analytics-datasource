@@ -7,6 +7,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 // newDatasource returns datasource.ServeOpts.
@@ -37,20 +38,50 @@ type AnalyticsDatasource struct {
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (td *AnalyticsDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+
 	var status = backend.HealthStatusOk
 	var message = "Success"
 
-	var secureJSONData = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData
-	if secureJSONData == nil {
-		secureJSONData = make(map[string]string)
+	config, err := LoadSettings(req.PluginContext)
+
+	log.DefaultLogger.Info("LoadSetting", config.ViewID)
+
+	if err != nil {
+		log.DefaultLogger.Info("Fail LoadSetting", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Setting Configuration Read Fail",
+		}, nil
 	}
 
-	// apiKey, apiKeyOk := secureJSONData["apiKey"]
-	_, apiKeyOk := secureJSONData["apiKey"]
-	if !apiKeyOk {
-		status = backend.HealthStatusError
-		message = "apiKey is required."
+	client, err := NewGoogleClient(ctx, config)
+
+	if err != nil {
+		log.DefaultLogger.Info("Fail NewGoogleClient", err.Error())
+
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Invalid config",
+		}, nil
 	}
+
+	testData := QueryData{config.ViewID, "yesterday", "today", "ga:sessions", "ga:country"}
+	res, err := getReport(client, testData)
+
+	if err != nil {
+		log.DefaultLogger.Info("GET request to analyticsreporting/v4 returned error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Test Request Fail",
+		}, nil
+	}
+
+	if res != nil {
+		log.DefaultLogger.Info("HTTPStatusCode", res.HTTPStatusCode)
+		log.DefaultLogger.Info("res", res)
+	}
+
+	printResponse(res)
 
 	return &backend.CheckHealthResult{
 		Status:  status,
