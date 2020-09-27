@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
@@ -139,18 +140,35 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 		return nil, err
 	}
 
-	var profilesList = make([]*analytics.Profile, 0)
-	for _, webproperty := range webproperties {
-		profiles, err := client.getProfilesList(webproperty.AccountId, webproperty.Id)
-		if err != nil {
-			log.DefaultLogger.Error(err.Error())
-			return nil, err
-		}
+	var profilesList = make(chan *analytics.Profile)
+	var wait sync.WaitGroup
 
-		profilesList = append(profilesList, profiles...)
+	for _, webproperty := range webproperties {
+		wait.Add(1)
+		go func(accountId string, webpropertyId string) {
+			defer wait.Done()
+
+			log.DefaultLogger.Info("getProfilesList", "accountId", accountId, "webpropertyId", webpropertyId)
+			profiles, err := client.getProfilesList(accountId, webpropertyId)
+			if err != nil {
+				log.DefaultLogger.Error(err.Error())
+				panic(err)
+			}
+
+			for _, profile := range profiles {
+				profilesList <- profile
+			}
+		}(webproperty.AccountId, webproperty.Id)
+	}
+	wait.Wait()
+	close(profilesList)
+
+	var profiles = make([]*analytics.Profile, 0)
+	for profile := range profilesList {
+		profiles = append(profiles, profile)
 	}
 
-	return profilesList, nil
+	return profiles, nil
 }
 
 func (client *GoogleClient) getProfilesList(accountId string, webpropertyId string) ([]*analytics.Profile, error) {
