@@ -142,11 +142,11 @@ export class QueryEditor extends PureComponent<Props> {
             viewId
           </InlineFormLabel>
           <SegmentAsync
-            loadOptions={() => datasource.getViewIds(webPropertyId)}
+            loadOptions={() => datasource.getViewIds(accountId, webPropertyId)}
             placeholder="Enter viewId"
             value={viewId}
             allowCustomValue={true}
-            onChange={this.onWebPropertyChange}
+            onChange={this.onViewIDChange}
           ></SegmentAsync>
           {viewId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
