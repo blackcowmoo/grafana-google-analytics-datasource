@@ -169,6 +169,6 @@ func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.Respons
 		return
 	}
 
-	res, err := ds.analytics.GetWebProperties(ctx, config, "68819384")
+	res, err := ds.analytics.GetWebProperties(ctx, config, req.URL.Query().Get("accountId"))
 	writeResult(rw, "webProperties", res, err)
 }
