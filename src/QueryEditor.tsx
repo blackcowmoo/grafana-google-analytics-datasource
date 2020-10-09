@@ -41,7 +41,7 @@ export class QueryEditor extends PureComponent<Props> {
 
     const v = item.value;
     // Check for pasted full URLs
-    onChange({ ...query, viewId: v });
+    onChange({ ...query, profileId: v });
     onRunQuery();
   };
 
@@ -72,7 +72,7 @@ export class QueryEditor extends PureComponent<Props> {
   };
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, viewId } = query;
+    const { accountId, webPropertyId, profileId: viewId } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -142,7 +142,7 @@ export class QueryEditor extends PureComponent<Props> {
             viewId
           </InlineFormLabel>
           <SegmentAsync
-            loadOptions={() => datasource.getViewIds(accountId, webPropertyId)}
+            loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
             placeholder="Enter viewId"
             value={viewId}
             allowCustomValue={true}

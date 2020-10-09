@@ -3,7 +3,7 @@ import { DataQuery, DataSourceJsonData } from '@grafana/data';
 export interface GAQuery extends DataQuery {
   accountId: string;
   webPropertyId: string;
-  viewId: string;
+  profileId: string;
   startDate: string;
   endDate: string;
   metrics: string;
