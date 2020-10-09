@@ -1,21 +1,31 @@
 package main
 
 import (
+	"net/http"
 	"os"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 )
 
 func main() {
 	// Start listening to requests send from Grafana. This call is blocking so
 	// it wont finish until Grafana shutsdown the process or the plugin choose
 	// to exit close down by itself
-	err := datasource.Serve(newDatasource())
+	backend.SetupPluginEnvironment("google-analytics-datasource")
 
-	// Log any error if we could start the plugin.
+	mux := http.NewServeMux()
+	ds := NewDataSource(mux)
+	httpResourceHandler := httpadapter.New(mux)
+
+	err := backend.Serve(backend.ServeOpts{
+		CallResourceHandler: httpResourceHandler,
+		QueryDataHandler:    ds,
+		CheckHealthHandler:  ds,
+	})
+
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		backend.Logger.Error(err.Error())
 		os.Exit(1)
 	}
 }

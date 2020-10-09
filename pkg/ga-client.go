@@ -14,7 +14,7 @@ import (
 	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
-type QueryData struct {
+type QueryDataType struct {
 	ViewID    string `json:"viewId"`
 	StartDate string `json:"startDate"`
 	EndDate   string `json:"endDate"`
@@ -100,6 +100,7 @@ func (client *GoogleClient) getAccountsList() ([]*analytics.Account, error) {
 		return nil, err
 	}
 
+	log.DefaultLogger.Info("getAccountsList", "accounts", accounts.Items)
 	return accounts.Items, nil
 }
 
@@ -191,7 +192,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	return profiles.Items, nil
 }
 
-func (client *GoogleClient) getReport(query QueryData) (*reporting.GetReportsResponse, error) {
+func (client *GoogleClient) getReport(query QueryDataType) (*reporting.GetReportsResponse, error) {
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
 	req := &reporting.GetReportsRequest{
