@@ -28,6 +28,7 @@ func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
 
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
 	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
+	mux.HandleFunc("/profiles", ds.handleResourceProfiles)
 	return ds
 }
 
@@ -157,7 +158,6 @@ func (ds *GoogleAnalyticsDataSource) handleResourceAccounts(rw http.ResponseWrit
 }
 
 func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.ResponseWriter, req *http.Request) {
-	log.DefaultLogger.Info("handleResourceWebProperties")
 	if req.Method != http.MethodGet {
 		return
 	}
@@ -169,6 +169,22 @@ func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.Respons
 		return
 	}
 
-	res, err := ds.analytics.GetWebProperties(ctx, config, "68819384")
+	res, err := ds.analytics.GetWebProperties(ctx, config, req.URL.Query().Get("accountId"))
 	writeResult(rw, "webProperties", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceProfiles(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	ctx := req.Context()
+	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	if err != nil {
+		writeResult(rw, "?", nil, err)
+		return
+	}
+
+	res, err := ds.analytics.GetProfiles(ctx, config, req.URL.Query().Get("webPropertyId"))
+	writeResult(rw, "profiles", res, err)
 }
