@@ -27,7 +27,6 @@ func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
 	}
 
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
-	log.DefaultLogger.Info("NewDataSource:ds.handleResourceAccounts")
 	return ds
 }
 
