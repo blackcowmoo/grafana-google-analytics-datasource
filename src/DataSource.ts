@@ -25,9 +25,6 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
 
   async getProfileIds(accountId: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
-    // let test = { aa: '123', bb: '456' };
-    // let abc = Object.entries(test).map(([value, label]) => ({ label, value } as SelectableValue<string>));
-    // return abc;
     return this.getResource('profiles', { accountId, webPropertyId }).then(({ profiles }) => {
       return profiles
         ? Object.entries(profiles).map(([value, label]) => ({ label, value } as SelectableValue<string>))
