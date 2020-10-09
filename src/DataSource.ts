@@ -8,7 +8,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     console.log('instanceSettings', instanceSettings);
   }
 
-  async getAccountId(): Promise<Array<SelectableValue<string>>> {
+  async getAccountIds(): Promise<Array<SelectableValue<string>>> {
     return this.getResource('accounts').then(({ accounts }) => {
       console.log(accounts);
       return accounts
@@ -17,7 +17,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getWebProperties(accountId: string): Promise<Array<SelectableValue<string>>> {
+  async getWebPropertyIds(accountId: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('web-properties', { accountId }).then(({ webProperties }) =>
       webProperties
         ? Object.entries(webProperties).map(([value, label]) => ({ label, value } as SelectableValue<string>))
@@ -25,11 +25,11 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     );
   }
 
-  async getViewId(): Promise<Array<SelectableValue<string>>> {
+  async getViewIds(webPropertyId : string): Promise<Array<SelectableValue<string>>> {
     // let test = { aa: '123', bb: '456' };
     // let abc = Object.entries(test).map(([value, label]) => ({ label, value } as SelectableValue<string>));
     // return abc;
-    return this.getResource('profiles').then(({ profiles }) => {
+    return this.getResource('profiles',{webPropertyId}).then(({ profiles }) => {
       return profiles
         ? Object.entries(profiles).map(([value, label]) => ({ label, value } as SelectableValue<string>))
         : [];

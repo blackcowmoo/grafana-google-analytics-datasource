@@ -2,7 +2,7 @@ import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface GAQuery extends DataQuery {
   accountId: string;
-  webProperty: string;
+  webPropertyId: string;
   viewId: string;
   startDate: string;
   endDate: string;

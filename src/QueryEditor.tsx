@@ -67,12 +67,12 @@ export class QueryEditor extends PureComponent<Props> {
 
     const v = item.value;
     // Check for pasted full URLs
-    onChange({ ...query, webProperty: v });
+    onChange({ ...query, webPropertyId: v });
     onRunQuery();
   };
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webProperty, viewId } = query;
+    const { accountId, webPropertyId, viewId } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -89,7 +89,7 @@ export class QueryEditor extends PureComponent<Props> {
             Account ID
           </InlineFormLabel>
           <SegmentAsync
-            loadOptions={() => datasource.getAccountId()}
+            loadOptions={() => datasource.getAccountIds()}
             placeholder="Enter Account ID"
             value={accountId}
             allowCustomValue={true}
@@ -111,16 +111,18 @@ export class QueryEditor extends PureComponent<Props> {
               </p>
             }
           >
-            WebProperty
+            webPropertyId
           </InlineFormLabel>
           <SegmentAsync
-            loadOptions={() => datasource.getWebProperties(accountId)}
-            placeholder="Enter SpreadsheetID"
-            value={webProperty}
+            loadOptions={() => datasource.getWebPropertyIds(accountId)}
+            placeholder="Enter webPropertyId"
+            value={webPropertyId}
             allowCustomValue={true}
             onChange={this.onWebPropertyChange}
           ></SegmentAsync>
-          {webProperty && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
+          {webPropertyId && (
+            <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>
+          )}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
@@ -140,8 +142,8 @@ export class QueryEditor extends PureComponent<Props> {
             viewId
           </InlineFormLabel>
           <SegmentAsync
-            loadOptions={() => datasource.getViewId()}
-            placeholder="Enter SpreadsheetID"
+            loadOptions={() => datasource.getViewIds(webPropertyId)}
+            placeholder="Enter viewId"
             value={viewId}
             allowCustomValue={true}
             onChange={this.onWebPropertyChange}
