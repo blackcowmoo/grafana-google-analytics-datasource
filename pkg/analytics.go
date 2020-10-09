@@ -12,7 +12,6 @@ type GoogleAnalytics struct {
 	Cache *cache.Cache
 }
 
-// GetSpreadsheets gets spreadsheets from the Google API.
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSettings) (map[string]string, error) {
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
@@ -32,7 +31,6 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 	return accountNames, nil
 }
 
-// GetSpreadsheets gets spreadsheets from the Google API.
 func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *DatasourceSettings, accountId string) (map[string]string, error) {
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
@@ -50,4 +48,23 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *Datasou
 	}
 
 	return WebpropertyNames, nil
+}
+
+func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSettings, accountId string, webPropertyId string) (map[string]string, error) {
+	client, err := NewGoogleClient(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	profiles, err := client.getProfilesList(accountId, webPropertyId)
+	if err != nil {
+		return nil, err
+	}
+
+	profileNames := map[string]string{}
+	for _, i := range profiles {
+		profileNames[i.Id] = i.Name
+	}
+
+	return profileNames, nil
 }
