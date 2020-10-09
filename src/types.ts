@@ -1,8 +1,15 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface GAQuery extends DataQuery {
-  queryText?: string;
-  constant: number;
+  accountId: string;
+  webProperty: string;
+  viewId: string;
+  startDate: string;
+  endDate: string;
+  metrics: string;
+  dimensions?: string;
+  sort?: string;
+  cacheDurationSeconds?: number;
 }
 
 export interface JWT {
@@ -23,7 +30,7 @@ export const googleAuthTypes = [
 ];
 
 export const defaultQuery: Partial<GAQuery> = {
-  constant: 6.5,
+  // constant: 6.5,
 };
 
 /**
