@@ -50,13 +50,13 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *Datasou
 	return WebpropertyNames, nil
 }
 
-func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSettings, webPropertyId string) (map[string]string, error) {
+func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSettings, accountId string, webPropertyId string) (map[string]string, error) {
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
 	}
 
-	profiles, err := client.getProfilesList(webPropertyId)
+	profiles, err := client.getProfilesList(accountId, webPropertyId)
 	if err != nil {
 		return nil, err
 	}
