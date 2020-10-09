@@ -9,17 +9,19 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
 
   async getAccountId(): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('accounts').then(({ account }) => {
-      console.log(account);
-      return account
-        ? Object.entries(account).map(([value, label]) => ({ label, value } as SelectableValue<string>))
+    return this.getResource('accounts').then(({ accounts }) => {
+      console.log(accounts);
+      return accounts
+        ? Object.entries(accounts).map(([value, label]) => ({ label, value } as SelectableValue<string>))
         : [];
     });
   }
 
-  async getWebProperties(): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('spreadsheets').then(({ viewIds }) =>
-      viewIds ? Object.entries(viewIds).map(([value, label]) => ({ label, value } as SelectableValue<string>)) : []
+  async getWebProperties(accountId: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('web-properties', { accountId }).then(({ webProperties }) =>
+      webProperties
+        ? Object.entries(webProperties).map(([value, label]) => ({ label, value } as SelectableValue<string>))
+        : []
     );
   }
 
@@ -27,10 +29,9 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     // let test = { aa: '123', bb: '456' };
     // let abc = Object.entries(test).map(([value, label]) => ({ label, value } as SelectableValue<string>));
     // return abc;
-    return this.getResource('spreadsheets').then(({ viewIds }) => {
-      console.log(viewIds);
-      return viewIds
-        ? Object.entries(viewIds).map(([value, label]) => ({ label, value } as SelectableValue<string>))
+    return this.getResource('profiles').then(({ profiles }) => {
+      return profiles
+        ? Object.entries(profiles).map(([value, label]) => ({ label, value } as SelectableValue<string>))
         : [];
     });
   }

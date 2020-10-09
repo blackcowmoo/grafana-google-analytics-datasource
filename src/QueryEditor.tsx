@@ -72,6 +72,7 @@ export class QueryEditor extends PureComponent<Props> {
   };
   render() {
     const { query, datasource } = this.props;
+    const { accountId, webProperty, viewId } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -90,13 +91,11 @@ export class QueryEditor extends PureComponent<Props> {
           <SegmentAsync
             loadOptions={() => datasource.getAccountId()}
             placeholder="Enter Account ID"
-            value={query.accountId}
+            value={accountId}
             allowCustomValue={true}
             onChange={this.onAccountIDChange}
           ></SegmentAsync>
-          {query.accountId && (
-            <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>
-          )}
+          {accountId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
@@ -112,18 +111,42 @@ export class QueryEditor extends PureComponent<Props> {
               </p>
             }
           >
-            View ID
+            WebProperty
+          </InlineFormLabel>
+          <SegmentAsync
+            loadOptions={() => datasource.getWebProperties(accountId)}
+            placeholder="Enter SpreadsheetID"
+            value={webProperty}
+            allowCustomValue={true}
+            onChange={this.onWebPropertyChange}
+          ></SegmentAsync>
+          {webProperty && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
+          <div className="gf-form gf-form--grow">
+            <div className="gf-form-label gf-form-label--grow" />
+          </div>
+        </div>
+
+        <div className="gf-form-inline">
+          <InlineFormLabel
+            width={10}
+            className="query-keyword"
+            tooltip={
+              <p>
+                The <code>viewId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This ID
+                is the value between the "/d/" and the "/edit" in the URL of your GoogleAnalytics.
+              </p>
+            }
+          >
+            viewId
           </InlineFormLabel>
           <SegmentAsync
             loadOptions={() => datasource.getViewId()}
             placeholder="Enter SpreadsheetID"
-            value={query.viewId}
+            value={viewId}
             allowCustomValue={true}
-            onChange={this.onViewIDChange}
+            onChange={this.onWebPropertyChange}
           ></SegmentAsync>
-          {query.viewId && (
-            <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>
-          )}
+          {viewId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
