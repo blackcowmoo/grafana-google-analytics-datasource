@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/patrickmn/go-cache"
 )
 
 // GoogleAnalyticsDataSource handler for google sheets
@@ -17,14 +19,15 @@ type GoogleAnalyticsDataSource struct {
 
 // NewDataSource creates the google analytics datasource and sets up all the routes
 func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
-	// cache := cache.New(300*time.Second, 5*time.Second)
+	cache := cache.New(300*time.Second, 5*time.Second)
 	ds := &GoogleAnalyticsDataSource{
 		analytics: &GoogleAnalytics{
-			// Cache: cache,
+			Cache: cache,
 		},
 	}
 
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
+	log.DefaultLogger.Info("NewDataSource:ds.handleResourceAccounts")
 	return ds
 }
 
@@ -138,7 +141,6 @@ func writeResult(rw http.ResponseWriter, path string, val interface{}, err error
 }
 
 func (ds *GoogleAnalyticsDataSource) handleResourceAccounts(rw http.ResponseWriter, req *http.Request) {
-	backend.Logger.Debug("handleResourceAccounts", "req", req)
 	if req.Method != http.MethodGet {
 		return
 	}
