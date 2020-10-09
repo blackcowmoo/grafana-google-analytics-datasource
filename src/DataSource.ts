@@ -10,7 +10,6 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   async getAccountIds(): Promise<Array<SelectableValue<string>>> {
     return this.getResource('accounts').then(({ accounts }) => {
-      console.log(accounts);
       return accounts
         ? Object.entries(accounts).map(([value, label]) => ({ label, value } as SelectableValue<string>))
         : [];
