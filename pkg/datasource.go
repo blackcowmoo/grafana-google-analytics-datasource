@@ -25,6 +25,7 @@ func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
 	}
 
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
+	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
 	return ds
 }
 
@@ -152,4 +153,21 @@ func (ds *GoogleAnalyticsDataSource) handleResourceAccounts(rw http.ResponseWrit
 
 	res, err := ds.analytics.GetAccounts(ctx, config)
 	writeResult(rw, "accounts", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.ResponseWriter, req *http.Request) {
+	log.DefaultLogger.Info("handleResourceWebProperties")
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	ctx := req.Context()
+	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	if err != nil {
+		writeResult(rw, "?", nil, err)
+		return
+	}
+
+	res, err := ds.analytics.GetWebProperties(ctx, config, "68819384")
+	writeResult(rw, "webProperties", res, err)
 }

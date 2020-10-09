@@ -31,3 +31,23 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 
 	return accountNames, nil
 }
+
+// GetSpreadsheets gets spreadsheets from the Google API.
+func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *DatasourceSettings, accountId string) (map[string]string, error) {
+	client, err := NewGoogleClient(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	Webproperties, err := client.getWebpropertiesList(accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	WebpropertyNames := map[string]string{}
+	for _, i := range Webproperties {
+		WebpropertyNames[i.Id] = i.Name
+	}
+
+	return WebpropertyNames, nil
+}
