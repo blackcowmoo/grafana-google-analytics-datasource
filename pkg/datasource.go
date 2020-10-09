@@ -185,6 +185,6 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfiles(rw http.ResponseWrit
 		return
 	}
 
-	res, err := ds.analytics.GetProfiles(ctx, config, req.URL.Query().Get("webPropertyId"))
+	res, err := ds.analytics.GetProfiles(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"))
 	writeResult(rw, "profiles", res, err)
 }
