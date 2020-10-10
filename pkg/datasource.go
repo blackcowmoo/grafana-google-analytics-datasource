@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -65,7 +66,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := QueryDataType{profiles[0].Id, "yesterday", "today", "ga:sessions", "ga:country"}
+	testData := &QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", "ga:sessions", "ga:country"}
 	res, err := client.getReport(testData)
 
 	if err != nil {
@@ -92,28 +93,44 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 // QueryData queries for data.
 func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	res := backend.NewQueryDataResponse()
-	log.DefaultLogger.Info("LoadSetting", "test", res)
+	config, err := LoadSettings(req.PluginContext)
+	if err != nil {
+		return nil, err
+	}
 
-	// config, err := models.LoadSettings(req.PluginContext)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	client, err := NewGoogleClient(ctx, config)
+	if err != nil {
+		return nil, err
+	}
 
-	// for _, q := range req.Queries {
-	// 	queryModel, err := models.GetQueryModel(q)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to read query: %w", err)
-	// 	}
+	for _, q := range req.Queries {
+		log.DefaultLogger.Info("QueryData", "QueryData", q)
 
-	// 	if len(queryModel.Spreadsheet) < 1 {
-	// 		continue // not query really exists
-	// 	}
-	// 	dr := ds.googlesheet.Query(ctx, q.RefID, queryModel, config, q.TimeRange)
-	// 	if dr.Error != nil {
-	// 		backend.Logger.Error("Query failed", "refId", q.RefID, "error", dr.Error)
-	// 	}
-	// 	res.Responses[q.RefID] = dr
-	// }
+		queryModel, err := GetQueryModel(q)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read query: %w", err)
+		}
+
+		if len(queryModel.AccountID) < 1 {
+			continue
+		}
+
+		if len(queryModel.WebPropertyId) < 1 {
+			continue
+		}
+
+		if len(queryModel.ProfileID) < 1 {
+			continue
+		}
+
+		report, err := client.getReport(queryModel)
+		if err != nil {
+			log.DefaultLogger.Error("Query failed", "queryModel", queryModel, "refId", queryModel.RefID, "error", err)
+			return nil, err
+		}
+
+		res.Responses[queryModel.RefID] = backend.DataResponse{Frames: report, nil}
+	}
 
 	return res, nil
 }

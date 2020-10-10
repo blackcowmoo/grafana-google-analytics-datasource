@@ -14,14 +14,6 @@ import (
 	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
-type QueryDataType struct {
-	ViewID    string `json:"viewId"`
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
-	Metric    string `json:"metric"`
-	Dimension string `json:"dimension"`
-}
-
 type GoogleClient struct {
 	reporting *reporting.Service
 	analytics *analytics.Service
@@ -191,7 +183,9 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	return profiles.Items, nil
 }
 
-func (client *GoogleClient) getReport(query QueryDataType) (*reporting.GetReportsResponse, error) {
+func (client *GoogleClient) getReport(query *QueryModel) (*reporting.GetReportsResponse, error) {
+	log.DefaultLogger.Info("getReport", "query", query)
+
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
 	req := &reporting.GetReportsRequest{
@@ -200,17 +194,19 @@ func (client *GoogleClient) getReport(query QueryDataType) (*reporting.GetReport
 		ReportRequests: []*reporting.ReportRequest{
 			// Create the ReportRequest object.
 			{
-				ViewId: query.ViewID,
+				ViewId: query.ProfileID,
 				DateRanges: []*reporting.DateRange{
 					// Create the DateRange object.
 					{StartDate: query.StartDate, EndDate: query.EndDate},
 				},
 				Metrics: []*reporting.Metric{
 					// Create the Metrics object.
-					{Expression: query.Metric},
+					// {Expression: query.Metric},
+					{Expression: "ga:sessions"},
 				},
 				Dimensions: []*reporting.Dimension{
-					{Name: query.Dimension},
+					// {Name: query.Dimension},
+					{Name: "ga:country"},
 				},
 			},
 		},
