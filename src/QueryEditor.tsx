@@ -100,9 +100,17 @@ export class QueryEditor extends PureComponent<Props> {
     onRunQuery();
   };
 
+  onSortChange = (item: any) => {
+    const { query, onRunQuery, onChange } = this.props;
+    const v = item.split(',');
+
+    onChange({ ...query, sort: v });
+    onRunQuery();
+  };
+
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, startDate, endDate, metrics, dimensions } = query;
+    const { accountId, webPropertyId, profileId, startDate, endDate, metrics, dimensions, sort } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -254,6 +262,25 @@ export class QueryEditor extends PureComponent<Props> {
           <SegmentInput
             onChange={this.onDimensionsChange}
             value={dimensions ? dimensions.toString() : ''}
+            placeholder={'ga:dateHourMinute'}
+          ></SegmentInput>
+        </div>
+
+        <div className="gf-form-inline">
+          <InlineFormLabel
+            width={10}
+            className="query-keyword"
+            tooltip={
+              <p>
+                The <code>sort</code> asc = ga:* , desc = -ga:*
+              </p>
+            }
+          >
+            Sort
+          </InlineFormLabel>
+          <SegmentInput
+            onChange={this.onSortChange}
+            value={sort ? sort.toString() : ''}
             placeholder={'ga:dateHourMinute'}
           ></SegmentInput>
         </div>
