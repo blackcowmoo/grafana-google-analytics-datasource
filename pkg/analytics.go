@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/patrickmn/go-cache"
 )
@@ -18,6 +19,11 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
 	}
 
+	cacheKey := "analytics:accounts"
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.(map[string]string), nil
+	}
+
 	accounts, err := client.getAccountsList()
 	if err != nil {
 		return nil, err
@@ -28,6 +34,7 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 		accountNames[i.Id] = i.Name
 	}
 
+	ga.Cache.Set(cacheKey, accountNames, 60*time.Second)
 	return accountNames, nil
 }
 
@@ -35,6 +42,11 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *Datasou
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:account:%s:webproperties", accountId)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.(map[string]string), nil
 	}
 
 	Webproperties, err := client.getWebpropertiesList(accountId)
@@ -47,6 +59,7 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *Datasou
 		WebpropertyNames[i.Id] = i.Name
 	}
 
+	ga.Cache.Set(cacheKey, WebpropertyNames, 60*time.Second)
 	return WebpropertyNames, nil
 }
 
@@ -54,6 +67,11 @@ func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSe
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:account:%s:webproperty:%s:profiles", accountId, webPropertyId)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.(map[string]string), nil
 	}
 
 	profiles, err := client.getProfilesList(accountId, webPropertyId)
@@ -66,5 +84,6 @@ func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSe
 		profileNames[i.Id] = i.Name
 	}
 
+	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
 	return profileNames, nil
 }
