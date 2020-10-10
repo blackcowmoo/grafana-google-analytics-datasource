@@ -5,12 +5,45 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/patrickmn/go-cache"
 )
 
 // GoogleAnalyticsDataSource handler for google sheets
 type GoogleAnalytics struct {
 	Cache *cache.Cache
+}
+
+func (ga *GoogleAnalytics) Query(client *GoogleClient, q backend.DataQuery) (*data.Frames, error) {
+	log.DefaultLogger.Info("Query")
+	queryModel, err := GetQueryModel(q)
+	if err != nil {
+		log.DefaultLogger.Error(err.Error())
+		return nil, fmt.Errorf("failed to read query: %w", err)
+	}
+
+	if len(queryModel.AccountID) < 1 {
+		log.DefaultLogger.Error("Query:Required AccountID")
+		return nil, fmt.Errorf("Required AccountID")
+	}
+
+	if len(queryModel.WebPropertyId) < 1 {
+		return nil, fmt.Errorf("Required WebPropertyId")
+	}
+
+	if len(queryModel.ProfileID) < 1 {
+		return nil, fmt.Errorf("Required ProfileID")
+	}
+
+	report, err := client.getReport(queryModel)
+	if err != nil {
+		log.DefaultLogger.Error("Query failed", "queryModel", queryModel, "refId", queryModel.RefID, "error", err)
+		return nil, err
+	}
+
+	return transformReportToDataFrame(report, queryModel)
 }
 
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSettings) (map[string]string, error) {

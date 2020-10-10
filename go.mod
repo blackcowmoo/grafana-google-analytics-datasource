@@ -3,6 +3,7 @@ module github.com/grafana/simple-datasource-backend
 go 1.14
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-macaron/session v0.0.0-20200329073812-7d919ce6a8d2 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect

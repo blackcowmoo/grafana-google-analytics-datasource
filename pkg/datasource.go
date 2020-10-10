@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -106,30 +105,8 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 	for _, q := range req.Queries {
 		log.DefaultLogger.Info("QueryData", "QueryData", q)
 
-		queryModel, err := GetQueryModel(q)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read query: %w", err)
-		}
-
-		if len(queryModel.AccountID) < 1 {
-			continue
-		}
-
-		if len(queryModel.WebPropertyId) < 1 {
-			continue
-		}
-
-		if len(queryModel.ProfileID) < 1 {
-			continue
-		}
-
-		report, err := client.getReport(queryModel)
-		if err != nil {
-			log.DefaultLogger.Error("Query failed", "queryModel", queryModel, "refId", queryModel.RefID, "error", err)
-			return nil, err
-		}
-
-		res.Responses[queryModel.RefID] = backend.DataResponse{Frames: report, nil}
+		frames, err := ds.analytics.Query(client, q)
+		res.Responses[q.RefID] = backend.DataResponse{*frames, err}
 	}
 
 	return res, nil
