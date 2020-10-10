@@ -65,8 +65,8 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := &QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", "ga:sessions", "ga:country"}
-	res, err := client.getReport(testData)
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", "ga:sessions", "ga:country"}
+	res, err := client.getReport([]QueryModel{testData})
 
 	if err != nil {
 		log.DefaultLogger.Error("GET request to analyticsreporting/v4 returned error", err.Error())
@@ -102,12 +102,17 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 		return nil, err
 	}
 
-	for _, q := range req.Queries {
-		log.DefaultLogger.Info("QueryData", "QueryData", q)
-
-		frames, err := ds.analytics.Query(client, q)
-		res.Responses[q.RefID] = backend.DataResponse{*frames, err}
+	log.DefaultLogger.Info("QueryData", "QueryData", req.Queries)
+	for _, query := range req.Queries {
+		frames, err := ds.analytics.Query(client, query)
+		if err != nil {
+			log.DefaultLogger.Error(err.Error())
+			return nil, err
+		}
+		log.DefaultLogger.Info("QueryData", "frames", frames)
 	}
+
+	// res.Responses[q.RefID] = backend.DataResponse{*frames, err}
 
 	return res, nil
 }

@@ -6,29 +6,32 @@ import (
 	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
-func transformReportToDataFrame(reportsResponse *reporting.GetReportsResponse, queryModel *QueryModel) (*data.Frames, error) {
+func transformReportToDataFrame(reportsResponse *reporting.GetReportsResponse) (*data.Frames, error) {
 	log.DefaultLogger.Info("transformReportToDataFrame", "report", reportsResponse)
 
 	for _, report := range reportsResponse.Reports {
+		log.DefaultLogger.Info("transformReportToDataFrame", "report", report)
 
-    for _, dimension := range report.ColumnHeader.Dimensions {
+		// var frames = make([]*data.Frame, len(report.Data.Rows))
 
-      for _, row := range report.Data.Rows {
+		// for _, dimension := range report.ColumnHeader.Dimensions {
+		// 	var frame = &data.Frame{Name: dimension}
+		// 	// for _, row := range report.Data.Rows {
 
-      }
-    }
-
-
-
-		// columns := report.ColumnHeader.Dimensions
-		// converters := make([]data.FieldConverter, len(columns))
-		// for i, column := range columns {
-		// 	fc, ok := converterMap[column.GetType()]
-		// 	if !ok {
-		// 		return nil, fmt.Errorf("unknown column type: %s", column.GetType())
-		// 	}
-		// 	converters[i] = fc
+		// 	// }
 		// }
+
+	}
+
+	// columns := report.ColumnHeader.Dimensions
+	// converters := make([]data.FieldConverter, len(columns))
+	// for i, column := range columns {
+	// 	fc, ok := converterMap[column.GetType()]
+	// 	if !ok {
+	// 		return nil, fmt.Errorf("unknown column type: %s", column.GetType())
+	// 	}
+	// 	converters[i] = fc
+	// }
 
 	// 	for _, row := range report.Data.Rows {
 	// 		// row.Dimensions = append(row.Dimensions[:tokenIndex], row.Dimensions[tokenIndex+1:]...)

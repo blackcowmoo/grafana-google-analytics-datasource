@@ -183,37 +183,41 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	return profiles.Items, nil
 }
 
-func (client *GoogleClient) getReport(query *QueryModel) (*reporting.GetReportsResponse, error) {
-	log.DefaultLogger.Info("getReport", "query", query)
+func (client *GoogleClient) getReport(queries []QueryModel) (*reporting.GetReportsResponse, error) {
+	log.DefaultLogger.Info("getReport", "queries", queries)
+
+	var reportRequests = make([]*reporting.ReportRequest, len(queries))
+	for index, query := range queries {
+		reportRequests[index] = &reporting.ReportRequest{
+			ViewId: query.ProfileID,
+			DateRanges: []*reporting.DateRange{
+				// Create the DateRange object.
+				{StartDate: query.StartDate, EndDate: query.EndDate},
+			},
+			Metrics: []*reporting.Metric{
+				// Create the Metrics object.
+				// {Expression: query.Metric},
+				{Expression: "ga:sessions"},
+			},
+			Dimensions: []*reporting.Dimension{
+				// {Name: query.Dimension},
+				{Name: "ga:country"},
+				{Name: "ga:dateHourMinute"},
+			},
+		}
+	}
+
+	log.DefaultLogger.Info("getReport", "reportRequests", reportRequests, "len", len(reportRequests), "cap", cap(reportRequests))
 
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
 	req := &reporting.GetReportsRequest{
 		// Our request contains only one request
 		// So initialise the slice with one ga.ReportRequest object
-		ReportRequests: []*reporting.ReportRequest{
-			// Create the ReportRequest object.
-			{
-				ViewId: query.ProfileID,
-				DateRanges: []*reporting.DateRange{
-					// Create the DateRange object.
-					{StartDate: query.StartDate, EndDate: query.EndDate},
-				},
-				Metrics: []*reporting.Metric{
-					// Create the Metrics object.
-					// {Expression: query.Metric},
-					{Expression: "ga:sessions"},
-				},
-				Dimensions: []*reporting.Dimension{
-					// {Name: query.Dimension},
-					{Name: "ga:country"},
-					{Name: "ga:dateHourMinute"},
-				},
-			},
-		},
+		ReportRequests: reportRequests,
 	}
 
-	log.DefaultLogger.Info("Doing GET request from analytics reporting", req)
+	log.DefaultLogger.Info("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	return client.reporting.Reports.BatchGet(req).Do()
 }

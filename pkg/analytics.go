@@ -16,9 +16,9 @@ type GoogleAnalytics struct {
 	Cache *cache.Cache
 }
 
-func (ga *GoogleAnalytics) Query(client *GoogleClient, q backend.DataQuery) (*data.Frames, error) {
+func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) (*data.Frames, error) {
 	log.DefaultLogger.Info("Query")
-	queryModel, err := GetQueryModel(q)
+	queryModel, err := GetQueryModel(query)
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		return nil, fmt.Errorf("failed to read query: %w", err)
@@ -37,13 +37,13 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, q backend.DataQuery) (*da
 		return nil, fmt.Errorf("Required ProfileID")
 	}
 
-	report, err := client.getReport(queryModel)
+	report, err := client.getReport([]QueryModel{*queryModel})
 	if err != nil {
-		log.DefaultLogger.Error("Query failed", "queryModel", queryModel, "refId", queryModel.RefID, "error", err)
+		log.DefaultLogger.Error("Query failed", "error", err)
 		return nil, err
 	}
 
-	return transformReportToDataFrame(report, queryModel)
+	return transformReportToDataFrame(report)
 }
 
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSettings) (map[string]string, error) {
