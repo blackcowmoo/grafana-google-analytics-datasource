@@ -86,24 +86,16 @@ export class QueryEditor extends PureComponent<Props> {
 
   onMetricsChange = (item: any) => {
     const { query, onRunQuery, onChange } = this.props;
+    const v = item.split(',');
 
-    if (!item.value) {
-      return;
-    }
-
-    const v = item.value;
     onChange({ ...query, metrics: v });
     onRunQuery();
   };
 
   onDimensionsChange = (item: any) => {
     const { query, onRunQuery, onChange } = this.props;
+    const v = item.split(',');
 
-    if (!item.value) {
-      return;
-    }
-
-    const v = item.value;
     onChange({ ...query, dimensions: v });
     onRunQuery();
   };
@@ -240,7 +232,11 @@ export class QueryEditor extends PureComponent<Props> {
           >
             Metrics
           </InlineFormLabel>
-          <SegmentInput onChange={this.onMetricsChange} value={metrics} placeholder={'ga:sessions'}></SegmentInput>
+          <SegmentInput
+            onChange={this.onMetricsChange}
+            value={metrics ? metrics.toString() : ''}
+            placeholder={'ga:sessions'}
+          ></SegmentInput>
         </div>
 
         <div className="gf-form-inline">
@@ -257,7 +253,7 @@ export class QueryEditor extends PureComponent<Props> {
           </InlineFormLabel>
           <SegmentInput
             onChange={this.onDimensionsChange}
-            value={dimensions ? dimensions : ''}
+            value={dimensions ? dimensions.toString() : ''}
             placeholder={'ga:dateHourMinute'}
           ></SegmentInput>
         </div>
