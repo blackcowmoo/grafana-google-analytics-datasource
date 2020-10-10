@@ -6,22 +6,26 @@ import (
 	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
-func transformReportToDataFrame(reportsResponse *reporting.GetReportsResponse) (*data.Frames, error) {
+func transformReportToDataFrame(reportsResponse *reporting.GetReportsResponse, refId string) (*data.Frames, error) {
 	log.DefaultLogger.Info("transformReportToDataFrame", "report", reportsResponse)
 
-	for _, report := range reportsResponse.Reports {
+	var frames = make([]*data.Frame, len(reportsResponse.Reports))
+	for reportIndex, report := range reportsResponse.Reports {
 		log.DefaultLogger.Info("transformReportToDataFrame", "report", report)
+		frames[reportIndex] = &data.Frame{Name: refId, RefID: refId, Meta: &data.FrameMeta{}}
+		var fields = make([]*data.Field, len(report.ColumnHeader.Dimensions))
+		for index, dimension := range report.ColumnHeader.Dimensions {
+			var field = &data.Field{Name: dimension, Labels: data.Labels{}, Config: &data.FieldConfig{}}
+			log.DefaultLogger.Info("transformReportToDataFrame:field", "field", field)
+			// for _, row := range report.Data.Rows {
 
-		// var frames = make([]*data.Frame, len(report.Data.Rows))
-
-		// for _, dimension := range report.ColumnHeader.Dimensions {
-		// 	var frame = &data.Frame{Name: dimension}
-		// 	// for _, row := range report.Data.Rows {
-
-		// 	// }
-		// }
-
+			// }
+		}
+		frames[reportIndex].Fields = fields
 	}
+
+	log.DefaultLogger.Info("transformReportToDataFrame:frame", "frames", frames)
+	return data.Frames{frames}, nil
 
 	// columns := report.ColumnHeader.Dimensions
 	// converters := make([]data.FieldConverter, len(columns))
@@ -43,7 +47,7 @@ func transformReportToDataFrame(reportsResponse *reporting.GetReportsResponse) (
 	// 	log.DefaultLogger.Info("transformReportToDataFrame:report", "report", report)
 	// }
 
-	return nil, nil
+	// return nil, nil
 	// columns, start := getColumnDefinitions(sheet.RowData)
 	// warnings := []string{}
 

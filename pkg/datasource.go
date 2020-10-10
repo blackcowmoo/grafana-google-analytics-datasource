@@ -110,9 +110,8 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 			return nil, err
 		}
 		log.DefaultLogger.Info("QueryData", "frames", frames)
+		res.Responses[query.RefID] = backend.DataResponse{*frames, err}
 	}
-
-	// res.Responses[q.RefID] = backend.DataResponse{*frames, err}
 
 	return res, nil
 }
