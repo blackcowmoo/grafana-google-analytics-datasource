@@ -100,7 +100,6 @@ func (client *GoogleClient) getAccountsList() ([]*analytics.Account, error) {
 		return nil, err
 	}
 
-	log.DefaultLogger.Info("getAccountsList", "accounts", accounts.Items)
 	return accounts.Items, nil
 }
 

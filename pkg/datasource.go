@@ -38,7 +38,6 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	var message = "Success"
 
 	config, err := LoadSettings(req.PluginContext)
-	log.DefaultLogger.Info("LoadSetting", config.ViewID)
 
 	if err != nil {
 		log.DefaultLogger.Error("Fail LoadSetting", err.Error())
