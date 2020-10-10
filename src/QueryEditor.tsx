@@ -1,5 +1,5 @@
 import { QueryEditorProps } from '@grafana/data';
-import { InlineFormLabel, LinkButton, SegmentAsync } from '@grafana/ui';
+import { Alert, InlineFormLabel, LinkButton, SegmentAsync, SegmentInput } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
@@ -18,6 +18,11 @@ export const formatCacheTimeLabel = (s: number = defaultCacheDuration) => {
   return s / 3600 + 'h';
 };
 
+export const checkDateForm = (date: string): boolean => {
+  const exp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$|^today$|^yesterday$|^[0-9]+(daysAgo)$');
+  return exp.test(date);
+};
+
 export class QueryEditor extends PureComponent<Props> {
   componentWillMount() {
     if (!this.props.query.hasOwnProperty('cacheDurationSeconds')) {
@@ -25,54 +30,87 @@ export class QueryEditor extends PureComponent<Props> {
     }
   }
 
-  // onRangeChange = (event: ChangeEvent<HTMLInputElement>) => {
-  //   this.props.onChange({
-  //     ...this.props.query,
-  //     range: event.target.value,
-  //   });
-  // };
+  onStartDateChange = (event: React.ReactText) => {
+    const { query, onChange } = this.props;
+    const date = event.toString();
+    const result = checkDateForm(date);
+    console.log('start', date, result);
+    if (result) {
+      onChange({ ...query, startDate: date });
+    }
+  };
 
-  onViewIDChange = (item: any) => {
-    const { query, onRunQuery, onChange } = this.props;
+  onEndDateChange = (event: React.ReactText) => {
+    const { query, onChange } = this.props;
+    const date = event.toString();
+    const result = checkDateForm(date);
+    console.log('end', date, result);
+    if (result) {
+      onChange({ ...query, endDate: date });
+    }
+  };
+
+  onProfileIdChange = (item: any) => {
+    const { query, onChange } = this.props;
 
     if (!item.value) {
-      return; // ignore delete?
+      return;
     }
 
     const v = item.value;
-    // Check for pasted full URLs
     onChange({ ...query, profileId: v });
-    onRunQuery();
   };
 
-  onAccountIDChange = (item: any) => {
-    const { query, onRunQuery, onChange } = this.props;
+  onAccountIdChange = (item: any) => {
+    const { query, onChange } = this.props;
 
     if (!item.value) {
-      return; // ignore delete?
+      return;
     }
 
     const v = item.value;
-    // Check for pasted full URLs
     onChange({ ...query, accountId: v });
-    onRunQuery();
   };
 
-  onWebPropertyChange = (item: any) => {
+  onWebPropertyIdChange = (item: any) => {
     const { query, onRunQuery, onChange } = this.props;
 
     if (!item.value) {
-      return; // ignore delete?
+      return;
     }
 
     const v = item.value;
-    // Check for pasted full URLs
     onChange({ ...query, webPropertyId: v });
     onRunQuery();
   };
+
+  onMetricsChange = (item: any) => {
+    const { query, onRunQuery, onChange } = this.props;
+
+    if (!item.value) {
+      return;
+    }
+
+    const v = item.value;
+    onChange({ ...query, metrics: v });
+    onRunQuery();
+  };
+
+  onDimensionsChange = (item: any) => {
+    const { query, onRunQuery, onChange } = this.props;
+
+    if (!item.value) {
+      return;
+    }
+
+    const v = item.value;
+    onChange({ ...query, dimensions: v });
+    onRunQuery();
+  };
+
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId: viewId } = query;
+    const { accountId, webPropertyId, profileId, startDate, endDate, metrics, dimensions } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -93,7 +131,7 @@ export class QueryEditor extends PureComponent<Props> {
             placeholder="Enter Account ID"
             value={accountId}
             allowCustomValue={true}
-            onChange={this.onAccountIDChange}
+            onChange={this.onAccountIdChange}
           ></SegmentAsync>
           {accountId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
@@ -106,19 +144,19 @@ export class QueryEditor extends PureComponent<Props> {
             className="query-keyword"
             tooltip={
               <p>
-                The <code>viewId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This ID
-                is the value between the "/d/" and the "/edit" in the URL of your GoogleAnalytics.
+                The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This
+                ID is the value between the "/d/" and the "/edit" in the URL of your GoogleAnalytics.
               </p>
             }
           >
-            webPropertyId
+            Web Property ID
           </InlineFormLabel>
           <SegmentAsync
             loadOptions={() => datasource.getWebPropertyIds(accountId)}
-            placeholder="Enter webPropertyId"
+            placeholder="Enter Web Property ID"
             value={webPropertyId}
             allowCustomValue={true}
-            onChange={this.onWebPropertyChange}
+            onChange={this.onWebPropertyIdChange}
           ></SegmentAsync>
           {webPropertyId && (
             <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>
@@ -134,25 +172,97 @@ export class QueryEditor extends PureComponent<Props> {
             className="query-keyword"
             tooltip={
               <p>
-                The <code>viewId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This ID
-                is the value between the "/d/" and the "/edit" in the URL of your GoogleAnalytics.
+                The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This
+                ID is the value between the "/d/" and the "/edit" in the URL of your GoogleAnalytics.
               </p>
             }
           >
-            viewId
+            Profile ID
           </InlineFormLabel>
           <SegmentAsync
             loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
-            placeholder="Enter viewId"
-            value={viewId}
+            placeholder="Enter Profile ID"
+            value={profileId}
             allowCustomValue={true}
-            onChange={this.onViewIDChange}
+            onChange={this.onProfileIdChange}
           ></SegmentAsync>
-          {viewId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
+          {profileId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
         </div>
+
+        <div className="gf-form-inline">
+          <InlineFormLabel
+            width={10}
+            className="query-keyword"
+            tooltip={
+              <p>
+                The <code>StartDate</code> data format regular expression is
+                <code>
+                  [0-9]{4}-[0-9]{2}-[0-9]{2}|today|yesterday|[0-9]+(daysAgo)
+                </code>
+              </p>
+            }
+          >
+            Start Date
+          </InlineFormLabel>
+          <SegmentInput onChange={this.onStartDateChange} value={startDate} placeholder={'YYYY-MM-DD'}></SegmentInput>
+        </div>
+
+        <div className="gf-form-inline">
+          <InlineFormLabel
+            width={10}
+            className="query-keyword"
+            tooltip={
+              <p>
+                The <code>EndDate</code> data format regular expression is
+                <code>
+                  [0-9]{4}-[0-9]{2}-[0-9]{2}|today|yesterday|[0-9]+(daysAgo)
+                </code>
+              </p>
+            }
+          >
+            End Date
+          </InlineFormLabel>
+          <SegmentInput onChange={this.onEndDateChange} value={endDate} placeholder={'YYYY-MM-DD'}></SegmentInput>
+        </div>
+
+        <div className="gf-form-inline">
+          <InlineFormLabel
+            width={10}
+            className="query-keyword"
+            tooltip={
+              <p>
+                The <code>metrics</code> ga:*
+              </p>
+            }
+          >
+            Metrics
+          </InlineFormLabel>
+          <SegmentInput onChange={this.onMetricsChange} value={metrics} placeholder={'ga:sessions'}></SegmentInput>
+        </div>
+
+        <div className="gf-form-inline">
+          <InlineFormLabel
+            width={10}
+            className="query-keyword"
+            tooltip={
+              <p>
+                The <code>dimensions</code> ga:*
+              </p>
+            }
+          >
+            Dimensions
+          </InlineFormLabel>
+          <SegmentInput
+            onChange={this.onDimensionsChange}
+            value={dimensions ? dimensions : ''}
+            placeholder={'ga:dateHourMinute'}
+          ></SegmentInput>
+        </div>
+        {!startDate && <Alert title={'Start Date Invalid'}></Alert>}
+        {!endDate && <Alert title={'End Date Invalid'}></Alert>}
       </>
     );
   }
