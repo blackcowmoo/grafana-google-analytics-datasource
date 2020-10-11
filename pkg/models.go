@@ -46,15 +46,38 @@ const (
 	// ColumTypeTime is the TIME type
 	ColumTypeTime ColumnType = "TIME"
 	// ColumTypeNumber is the NUMBER type
-	ColumTypeNumber = "NUMBER"
+	ColumTypeNumber ColumnType = "NUMBER"
 	// ColumTypeString is the STRING type
-	ColumTypeString = "STRING"
+	ColumTypeString ColumnType = "STRING"
 )
 
 // ColumnDefinition represents a spreadsheet column definition.
 type ColumnDefinition struct {
 	Header      string
 	ColumnIndex int
-	types       map[ColumnType]bool
-	units       map[string]bool
+	columnType  ColumnType
+}
+
+// GetType gets the type of a ColumnDefinition.
+func (cd *ColumnDefinition) GetType() ColumnType {
+	return cd.columnType
+}
+
+func getColumnType(headerType string) ColumnType {
+	switch headerType {
+	case "INTEGER":
+		return ColumTypeNumber
+	default:
+		return ColumTypeString
+	}
+}
+
+// NewColumnDefinition creates a new ColumnDefinition.
+func NewColumnDefinition(header string, index int, headerType string) *ColumnDefinition {
+
+	return &ColumnDefinition{
+		Header:      header,
+		ColumnIndex: index,
+		columnType:  getColumnType(headerType),
+	}
 }
