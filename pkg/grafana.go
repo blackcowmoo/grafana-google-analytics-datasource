@@ -2,31 +2,18 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
-	"time"
 
-	"github.com/araddon/dateparse"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	reporting "google.golang.org/api/analyticsreporting/v4"
-	"google.golang.org/api/sheets/v4"
 )
 
-func transformMetricToDataFrame(rows []*reporting.ReportRow, refId string) (*data.Frame, error) {
-	converters := make([]data.FieldConverter, len(rows))
-	for i, column := range columns {
-		fc, ok := converterMap[column.GetType()]
-		if !ok {
-			return nil, fmt.Errorf("unknown column type: %s", column.GetType())
-		}
-		converters[i] = fc
-	}
-
-}
-
-func transformReportToDataFrames(report *reporting.Report, refId string) (*data.Frames, error) {
-	columns, dateIndex := getColumnDefinitions(report.ColumnHeader)
-	// warnings := []string{}
+func transformReportToDataFrame(report *reporting.Report, refId string) (*data.Frame, error) {
+	columns, _ := getColumnDefinitions(report.ColumnHeader)
+	warnings := []string{}
+	meta := map[string]interface{}{}
 
 	converters := make([]data.FieldConverter, len(columns))
 	for i, column := range columns {
@@ -46,6 +33,8 @@ func transformReportToDataFrames(report *reporting.Report, refId string) (*data.
 	frame.RefID = refId
 	frame.Name = refId // TODO: should set the name from metadata
 
+	log.DefaultLogger.Info("transformReportToDataFrame:1", "frame", frame)
+
 	for i, column := range columns {
 		field := frame.Fields[i]
 		field.Name = column.Header
@@ -55,35 +44,37 @@ func transformReportToDataFrames(report *reporting.Report, refId string) (*data.
 		}
 	}
 
+	log.DefaultLogger.Info("transformReportToDataFrame:2", "frame", frame)
+
 	for rowIndex, row := range report.Data.Rows {
 		for metricIndex, metrics := range row.Metrics {
-			d := row.Dimensions[dateIndex]
-			for valueIndex, value := range metrics.Values {
-				err := inputConverter.Set(columnIndex, rowIndex-start, cellData)
+			// d := row.Dimensions[dateIndex]
+			for _, value := range metrics.Values {
+				log.DefaultLogger.Info("transformReportToDataFrame:4", "metricIndex", metricIndex, "rowIndex", rowIndex, "value", value)
+				err := inputConverter.Set(metricIndex, rowIndex, value)
 				if err != nil {
 					warnings = append(warnings, err.Error())
 				}
+				log.DefaultLogger.Info("transformReportToDataFrame:5", "warnings", warnings)
 			}
 		}
 	}
 
-	log.DefaultLogger.Info("transformReportToDataFrame", "frame", frame)
-	return nil, nil
+	log.DefaultLogger.Info("transformReportToDataFrame:3", "frame", frame)
 
-	// meta["warnings"] = warnings
-	// meta["spreadsheetId"] = qm.Spreadsheet
+	meta["warnings"] = warnings
 	// meta["range"] = qm.Range
-	// frame.Meta = &data.FrameMeta{Custom: meta}
-	// backend.Logger.Debug("frame.Meta: %s", spew.Sdump(frame.Meta))
-	// return frame, nil
+	frame.Meta = &data.FrameMeta{Custom: meta}
+	log.DefaultLogger.Info("transformReportToDataFrame", "frame.Meta", frame.Meta)
+	return frame, nil
 }
 
 func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string) (*data.Frames, error) {
-	log.DefaultLogger.Info("transformReportToDataFrame", "report", reportsResponse)
+	log.DefaultLogger.Info("transformReportsResponseToDataFrames", "report", reportsResponse)
 
 	var frames = make(data.Frames, len(reportsResponse.Reports))
 	for _, report := range reportsResponse.Reports {
-		frame, err := transformReportToDataFrames(report, refId)
+		frame, err := transformReportToDataFrame(report, refId)
 		if err != nil {
 			return nil, err
 		}
@@ -205,16 +196,18 @@ func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsR
 var timeConverter = data.FieldConverter{
 	OutputFieldType: data.FieldTypeNullableTime,
 	Converter: func(i interface{}) (interface{}, error) {
-		var t *time.Time
-		cellData, ok := i.(*sheets.CellData)
-		if !ok {
-			return t, fmt.Errorf("expected type *sheets.CellData, but got %T", i)
-		}
-		parsedTime, err := dateparse.ParseLocal(cellData.FormattedValue)
-		if err != nil {
-			return t, fmt.Errorf("Error while parsing date '%v'", cellData.FormattedValue)
-		}
-		return &parsedTime, nil
+		return nil, fmt.Errorf("error: %s", i)
+		// return i, nil
+		// var t *time.Time
+		// cellData, ok := i.(*sheets.CellData)
+		// if !ok {
+		// 	return t, fmt.Errorf("expected type *sheets.CellData, but got %T", i)
+		// }
+		// parsedTime, err := dateparse.ParseLocal(cellData.FormattedValue)
+		// if err != nil {
+		// 	return t, fmt.Errorf("Error while parsing date '%v'", cellData.FormattedValue)
+		// }
+		// return &parsedTime, nil
 	},
 }
 
@@ -222,12 +215,11 @@ var timeConverter = data.FieldConverter{
 var stringConverter = data.FieldConverter{
 	OutputFieldType: data.FieldTypeNullableString,
 	Converter: func(i interface{}) (interface{}, error) {
-		var s *string
-		cellData, ok := i.(*sheets.CellData)
+		value, ok := i.(string)
 		if !ok {
-			return s, fmt.Errorf("expected type *sheets.CellData, but got %T", i)
+			return nil, fmt.Errorf("expected type string, but got %T", i)
 		}
-		return &cellData.FormattedValue, nil
+		return value, nil
 	},
 }
 
@@ -235,14 +227,20 @@ var stringConverter = data.FieldConverter{
 var numberConverter = data.FieldConverter{
 	OutputFieldType: data.FieldTypeNullableFloat64,
 	Converter: func(i interface{}) (interface{}, error) {
-		cellData, ok := i.(*sheets.CellData)
+		value, ok := i.(string)
 		if !ok {
-			return nil, fmt.Errorf("expected type *sheets.CellData, but got %T", i)
+			log.DefaultLogger.Info("numberConverter", "ok", ok)
+			return nil, fmt.Errorf("expected type string, but got %T", i)
 		}
-		if &cellData.EffectiveValue.NumberValue != nil {
-			return cellData.EffectiveValue.NumberValue, nil
+
+		num, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			log.DefaultLogger.Info("numberConverter", "err", err)
+			return nil, fmt.Errorf("expected type string, but got %T", value)
 		}
-		return nil, nil
+
+		log.DefaultLogger.Info("numberConverter", "return", num)
+		return num, nil
 	},
 }
 
@@ -254,7 +252,7 @@ var converterMap = map[ColumnType]data.FieldConverter{
 	"NUMBER": numberConverter,
 }
 
-func getColumnDefinitions(header *reporting.ColumnHeader) []*ColumnDefinition {
+func getColumnDefinitions(header *reporting.ColumnHeader) ([]*ColumnDefinition, int) {
 	columns := []*ColumnDefinition{}
 	headerRow := header.MetricHeader.MetricHeaderEntries
 
@@ -263,5 +261,5 @@ func getColumnDefinitions(header *reporting.ColumnHeader) []*ColumnDefinition {
 		columns = append(columns, NewColumnDefinition(name, columnIndex, headerCell.Type))
 	}
 
-	return columns
+	return columns, -1
 }

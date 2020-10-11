@@ -203,7 +203,7 @@ func (client *GoogleClient) getReport(queries []QueryModel) (*reporting.GetRepor
 			Dimensions: []*reporting.Dimension{
 				// {Name: query.Dimension},
 				{Name: "ga:country"},
-				{Name: "ga:dateHourMinute"},
+				// {Name: "ga:dateHourMinute"},
 			},
 		}
 	}
