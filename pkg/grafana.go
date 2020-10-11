@@ -72,7 +72,7 @@ func transformReportToDataFrame(report *reporting.Report, refId string) (*data.F
 func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string) (*data.Frames, error) {
 	log.DefaultLogger.Info("transformReportsResponseToDataFrames", "report", reportsResponse)
 
-	var frames = make(data.Frames, len(reportsResponse.Reports))
+	var frames = make(data.Frames, 0)
 	for _, report := range reportsResponse.Reports {
 		frame, err := transformReportToDataFrame(report, refId)
 		if err != nil {
@@ -81,6 +81,7 @@ func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsR
 
 		frames = append(frames, frame)
 	}
+	log.DefaultLogger.Info("transformReportsResponseToDataFrames", "frames", frames)
 
 	// dataFrame data.Frames = frames
 	return &frames, nil
@@ -219,7 +220,8 @@ var stringConverter = data.FieldConverter{
 		if !ok {
 			return nil, fmt.Errorf("expected type string, but got %T", i)
 		}
-		return value, nil
+
+		return &value, nil
 	},
 }
 
@@ -240,7 +242,7 @@ var numberConverter = data.FieldConverter{
 		}
 
 		log.DefaultLogger.Info("numberConverter", "return", num)
-		return num, nil
+		return &num, nil
 	},
 }
 
