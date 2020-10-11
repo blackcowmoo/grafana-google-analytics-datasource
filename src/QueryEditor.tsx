@@ -19,7 +19,7 @@ export const formatCacheTimeLabel = (s: number = defaultCacheDuration) => {
 };
 
 export const checkDateForm = (date: string): boolean => {
-  const exp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$|^today$|^yesterday$|^[0-9]+(daysAgo)$');
+  const exp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2}|today|yesterday|[0-9]+(daysAgo))$');
   return exp.test(date);
 };
 
