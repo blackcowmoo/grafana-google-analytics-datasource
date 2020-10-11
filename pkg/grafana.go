@@ -9,23 +9,24 @@ import (
 func transformReportToDataFrame(reportsResponse *reporting.GetReportsResponse, refId string) (*data.Frames, error) {
 	log.DefaultLogger.Info("transformReportToDataFrame", "report", reportsResponse)
 
-	var frames = make([]*data.Frame, len(reportsResponse.Reports))
+	var frame = make([]*data.Frame, len(reportsResponse.Reports))
 	for reportIndex, report := range reportsResponse.Reports {
 		log.DefaultLogger.Info("transformReportToDataFrame", "report", report)
-		frames[reportIndex] = &data.Frame{Name: refId, RefID: refId, Meta: &data.FrameMeta{}}
+		frame[reportIndex] = &data.Frame{Name: refId, RefID: refId, Meta: &data.FrameMeta{}}
 		var fields = make([]*data.Field, len(report.ColumnHeader.Dimensions))
-		for index, dimension := range report.ColumnHeader.Dimensions {
+		for _, dimension := range report.ColumnHeader.Dimensions {
 			var field = &data.Field{Name: dimension, Labels: data.Labels{}, Config: &data.FieldConfig{}}
 			log.DefaultLogger.Info("transformReportToDataFrame:field", "field", field)
 			// for _, row := range report.Data.Rows {
 
 			// }
 		}
-		frames[reportIndex].Fields = fields
+		frame[reportIndex].Fields = fields
 	}
 
-	log.DefaultLogger.Info("transformReportToDataFrame:frame", "frames", frames)
-	return data.Frames{frames}, nil
+	// log.DefaultLogger.Info("transformReportToDataFrame:frame", "frames", frames)
+	var frames data.Frames = frame
+	return &frames, nil
 
 	// columns := report.ColumnHeader.Dimensions
 	// converters := make([]data.FieldConverter, len(columns))

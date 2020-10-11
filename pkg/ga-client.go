@@ -198,6 +198,7 @@ func (client *GoogleClient) getReport(queries []QueryModel) (*reporting.GetRepor
 				// Create the Metrics object.
 				// {Expression: query.Metric},
 				{Expression: "ga:sessions"},
+				{Expression: "ga:users"},
 			},
 			Dimensions: []*reporting.Dimension{
 				// {Name: query.Dimension},
