@@ -175,10 +175,7 @@ var timeConverter = data.FieldConverter{
 			return nil, fmt.Errorf("expected type string, but got %T", i)
 		}
 
-		log.DefaultLogger.Info("timeConverter", "sTime", sTime, "pad", padRightSide(sTime, "0", 12-len(sTime)))
-
-		// time, err := time.Parse("200601021504", padRightSide(sTime, "0", 12-len(sTime)))
-		time, err := time.Parse("200601021504", sTime)
+		time, err := time.Parse("200601021504", padRightSide(sTime, "0", 12-len(sTime)))
 		if err != nil {
 			log.DefaultLogger.Info("timeConverter", "err", err)
 			return nil, err

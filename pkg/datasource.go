@@ -106,7 +106,8 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 		frames, err := ds.analytics.Query(client, query)
 		if err != nil {
 			log.DefaultLogger.Error(err.Error())
-			return nil, err
+			continue
+			// return nil, err
 		}
 		res.Responses[query.RefID] = backend.DataResponse{*frames, err}
 	}
