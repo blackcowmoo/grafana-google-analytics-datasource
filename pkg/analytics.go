@@ -43,7 +43,7 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		return nil, err
 	}
 
-	return transformReportToDataFrame(report, queryModel.RefID)
+	return transformReportsResponseToDataFrames(report, queryModel.RefID)
 }
 
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSettings) (map[string]string, error) {

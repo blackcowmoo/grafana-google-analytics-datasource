@@ -38,3 +38,23 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 	// model.MaxDataPoints = query.MaxDataPoints
 	return model, nil
 }
+
+// ColumnType is the set of possible column types
+type ColumnType string
+
+const (
+	// ColumTypeTime is the TIME type
+	ColumTypeTime ColumnType = "TIME"
+	// ColumTypeNumber is the NUMBER type
+	ColumTypeNumber = "NUMBER"
+	// ColumTypeString is the STRING type
+	ColumTypeString = "STRING"
+)
+
+// ColumnDefinition represents a spreadsheet column definition.
+type ColumnDefinition struct {
+	Header      string
+	ColumnIndex int
+	types       map[ColumnType]bool
+	units       map[string]bool
+}
