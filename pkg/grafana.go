@@ -5,11 +5,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
 func transformReportToDataFrame(report *reporting.Report, refId string) (*data.Frame, error) {
+	log.DefaultLogger.Info("transformReportToDataFrame", "report", report)
 	columns, _ := getColumnDefinitions(report.ColumnHeader)
 	warnings := []string{}
 	meta := map[string]interface{}{}
@@ -42,16 +44,18 @@ func transformReportToDataFrame(report *reporting.Report, refId string) (*data.F
 	}
 
 	for rowIndex, row := range report.Data.Rows {
-		for metricIndex, metrics := range row.Metrics {
+		for _, metrics := range row.Metrics {
 			// d := row.Dimensions[dateIndex]
-			for _, value := range metrics.Values {
-				err := inputConverter.Set(metricIndex, rowIndex, value)
+			for valueIndex, value := range metrics.Values {
+				err := inputConverter.Set(valueIndex, rowIndex, value)
 				if err != nil {
 					warnings = append(warnings, err.Error())
 				}
 			}
 		}
 	}
+
+	// log.DefaultLogger.Info("transformReportToDataFrame", "frame", frame)
 
 	meta["warnings"] = warnings
 	frame.Meta = &data.FrameMeta{Custom: meta}
