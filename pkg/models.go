@@ -67,6 +67,8 @@ func getColumnType(headerType string) ColumnType {
 	switch headerType {
 	case "INTEGER":
 		return ColumTypeNumber
+	case "TIME":
+		return ColumTypeTime
 	default:
 		return ColumTypeString
 	}

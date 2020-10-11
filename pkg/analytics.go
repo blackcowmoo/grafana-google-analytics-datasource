@@ -17,7 +17,6 @@ type GoogleAnalytics struct {
 }
 
 func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) (*data.Frames, error) {
-	log.DefaultLogger.Info("Query")
 	queryModel, err := GetQueryModel(query)
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
