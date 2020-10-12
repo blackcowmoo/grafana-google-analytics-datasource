@@ -33,17 +33,17 @@ export class ConfigEditor extends PureComponent<Props> {
     });
   };
 
-  onResetViewId = () => {
+  onResetProfileId = () => {
     const { options } = this.props;
     this.props.onOptionsChange({
       ...options,
       secureJsonData: {
         ...options.secureJsonData,
-        viewId: '',
+        profileId: '',
       },
       secureJsonFields: {
         ...options.secureJsonFields,
-        viewId: false,
+        profileId: false,
       },
     });
   };
@@ -68,14 +68,14 @@ export class ConfigEditor extends PureComponent<Props> {
           <>
             <div className="gf-form">
               <LegacyForms.SecretFormField
-                isConfigured={(secureJsonFields && secureJsonFields.viewId) as boolean}
-                value={secureJsonData?.viewId || ''}
-                label="Default ViewId"
+                isConfigured={(secureJsonFields && secureJsonFields.profileId) as boolean}
+                value={secureJsonData?.profileId || ''}
+                label="Default ProfileId"
                 labelWidth={10}
                 inputWidth={30}
-                placeholder="Default ViewId"
-                onReset={this.onResetViewId}
-                onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'viewId')}
+                placeholder="Default ProfileId"
+                onReset={this.onResetProfileId}
+                onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'profileId')}
               />
             </div>
             <div className="gf-form">
@@ -96,14 +96,14 @@ export class ConfigEditor extends PureComponent<Props> {
           <>
             <div className="gf-form">
               <LegacyForms.SecretFormField
-                isConfigured={(secureJsonFields && secureJsonFields.viewId) as boolean}
-                value={secureJsonData?.viewId || ''}
-                label="Default ViewId"
+                isConfigured={(secureJsonFields && secureJsonFields.profileId) as boolean}
+                value={secureJsonData?.profileId || ''}
+                label="Default ProfileId"
                 labelWidth={10}
                 inputWidth={30}
-                placeholder="Default ViewId"
-                onReset={this.onResetViewId}
-                onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'viewId')}
+                placeholder="Default ProfileId"
+                onReset={this.onResetProfileId}
+                onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'profileId')}
               />
             </div>
             <JWTConfig

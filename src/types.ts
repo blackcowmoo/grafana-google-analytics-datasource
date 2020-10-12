@@ -6,12 +6,12 @@ export interface GAQuery extends DataQuery {
   profileId: string;
   startDate: string;
   endDate: string;
-  metrics: string;
-  dimensions?: string;
-  sort?: string;
+  metrics: string[];
+  dimensions?: string[];
+  sort?: string[];
   cacheDurationSeconds?: number;
 }
-
+// mapping on google-key.json
 export interface JWT {
   private_key: any;
   token_uri: any;
@@ -46,5 +46,5 @@ export interface GADataSourceOptions extends DataSourceJsonData {
 export interface GASecureJsonData {
   apiKey?: string;
   jwt?: string;
-  viewId?: string;
+  profileId?: string;
 }
