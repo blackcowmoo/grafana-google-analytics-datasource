@@ -109,7 +109,7 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 			continue
 			// return nil, err
 		}
-		res.Responses[query.RefID] = backend.DataResponse{*frames, err}
+		res.Responses[query.RefID] = backend.DataResponse{Frames: *frames, Error: err}
 	}
 
 	return res, nil
