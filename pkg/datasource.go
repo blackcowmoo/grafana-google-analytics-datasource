@@ -38,7 +38,6 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	var message = "Success"
 
 	config, err := LoadSettings(req.PluginContext)
-	log.DefaultLogger.Info("LoadSetting", config.ViewID)
 
 	if err != nil {
 		log.DefaultLogger.Error("Fail LoadSetting", err.Error())
@@ -66,8 +65,8 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := QueryDataType{profiles[0].Id, "yesterday", "today", "ga:sessions", "ga:country"}
-	res, err := client.getReport(testData)
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", "ga:sessions", "ga:country"}
+	res, err := client.getReport([]QueryModel{testData})
 
 	if err != nil {
 		log.DefaultLogger.Error("GET request to analyticsreporting/v4 returned error", err.Error())
@@ -93,28 +92,25 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 // QueryData queries for data.
 func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	res := backend.NewQueryDataResponse()
-	log.DefaultLogger.Info("LoadSetting", "test", res)
+	config, err := LoadSettings(req.PluginContext)
+	if err != nil {
+		return nil, err
+	}
 
-	// config, err := models.LoadSettings(req.PluginContext)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	client, err := NewGoogleClient(ctx, config)
+	if err != nil {
+		return nil, err
+	}
 
-	// for _, q := range req.Queries {
-	// 	queryModel, err := models.GetQueryModel(q)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to read query: %w", err)
-	// 	}
-
-	// 	if len(queryModel.Spreadsheet) < 1 {
-	// 		continue // not query really exists
-	// 	}
-	// 	dr := ds.googlesheet.Query(ctx, q.RefID, queryModel, config, q.TimeRange)
-	// 	if dr.Error != nil {
-	// 		backend.Logger.Error("Query failed", "refId", q.RefID, "error", dr.Error)
-	// 	}
-	// 	res.Responses[q.RefID] = dr
-	// }
+	for _, query := range req.Queries {
+		frames, err := ds.analytics.Query(client, query)
+		if err != nil {
+			log.DefaultLogger.Error(err.Error())
+			continue
+			// return nil, err
+		}
+		res.Responses[query.RefID] = backend.DataResponse{Frames: *frames, Error: err}
+	}
 
 	return res, nil
 }
