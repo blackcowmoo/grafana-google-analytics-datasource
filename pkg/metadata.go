@@ -81,7 +81,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem
     }
     if item.Attributes.Type == AttributeTypeDimension {
       dimensionItems = append(dimensionItems, item)
-    } else {
+    } else if item.Attributes.Type == AttributeTypeMetric {
       metricItems = append(metricItems, item)
     }
   }
