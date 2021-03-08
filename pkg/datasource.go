@@ -29,6 +29,8 @@ func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
 	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
 	mux.HandleFunc("/profiles", ds.handleResourceProfiles)
+	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
+	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
 	return ds
 }
 
@@ -183,4 +185,22 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfiles(rw http.ResponseWrit
 
 	res, err := ds.analytics.GetProfiles(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"))
 	writeResult(rw, "profiles", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceDimensions(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	res, err := ds.analytics.GetDimensions()
+	writeResult(rw, "dimensions", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceMetrics(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	res, err := ds.analytics.GetMetrics()
+	writeResult(rw, "metrics", res, err)
 }
