@@ -1,0 +1,6 @@
+.git*
+.circle*
+.vscode
+coverage
+dist
+node_modules
