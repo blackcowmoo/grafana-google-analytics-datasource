@@ -1,6 +1,9 @@
-.git*
-.circle*
+.git
+.github
+.circleci
 .vscode
 coverage
 dist
 node_modules
+LICENSE
+README.md

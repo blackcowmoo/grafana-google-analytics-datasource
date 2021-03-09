@@ -14,7 +14,6 @@ For more information about backend plugins, refer to the documentation on [Backe
 
 A data source backend plugin consists of both frontend and backend components.
 
-
 ### Use Dockerfile
 
 ```BASH
