@@ -11,6 +11,7 @@ COPY . .
 RUN yarn build
 
 FROM grafana/grafana:7.4.3
-ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics
+ARG PLUGINS_NAME=google-analytics
+ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=${PLUGINS_NAME}
 COPY --from=go_build /build/dist /var/lib/grafana/plugins
 COPY --from=node_build /build/dist /var/lib/grafana/plugins
