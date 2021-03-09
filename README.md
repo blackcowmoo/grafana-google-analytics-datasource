@@ -14,6 +14,14 @@ For more information about backend plugins, refer to the documentation on [Backe
 
 A data source backend plugin consists of both frontend and backend components.
 
+
+### Use Dockerfile
+
+```BASH
+docker build . -t blackcowmoo/grafana-ga-ds
+docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds blackcowmoo/grafana-ga-ds
+```
+
 ### Frontend
 
 1. Install dependencies
