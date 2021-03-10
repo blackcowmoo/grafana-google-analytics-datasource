@@ -1,5 +1,5 @@
 import { QueryEditorProps } from '@grafana/data';
-import { Alert, InlineFormLabel, LinkButton, SegmentAsync, SegmentInput } from '@grafana/ui';
+import { InlineFormLabel, LinkButton, SegmentAsync } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
@@ -18,37 +18,12 @@ export const formatCacheTimeLabel = (s: number = defaultCacheDuration) => {
   return s / 3600 + 'h';
 };
 
-export const checkDateForm = (date: string): boolean => {
-  const exp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2}|today|yesterday|[0-9]+(daysAgo))$');
-  return exp.test(date);
-};
-
 export class QueryEditor extends PureComponent<Props> {
   componentWillMount() {
     if (!this.props.query.hasOwnProperty('cacheDurationSeconds')) {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
     }
   }
-
-  onStartDateChange = (event: React.ReactText) => {
-    const { query, onChange } = this.props;
-    const date = event.toString();
-    const result = checkDateForm(date);
-    console.log('start', date, result);
-    if (result) {
-      onChange({ ...query, startDate: date });
-    }
-  };
-
-  onEndDateChange = (event: React.ReactText) => {
-    const { query, onChange } = this.props;
-    const date = event.toString();
-    const result = checkDateForm(date);
-    console.log('end', date, result);
-    if (result) {
-      onChange({ ...query, endDate: date });
-    }
-  };
 
   onProfileIdChange = (item: any) => {
     const { query, onChange } = this.props;
@@ -84,33 +59,31 @@ export class QueryEditor extends PureComponent<Props> {
     onRunQuery();
   };
 
-  onMetricsChange = (item: any) => {
-    const { query, onRunQuery, onChange } = this.props;
-    const v = item.split(',');
+  onMetricChange = (item: any) => {
+    const { query, onChange } = this.props;
 
-    onChange({ ...query, metrics: v });
-    onRunQuery();
+    if (!item.value) {
+      return;
+    }
+
+    const v = item.value;
+    onChange({ ...query, metric: v });
   };
 
-  onDimensionsChange = (item: any) => {
-    const { query, onRunQuery, onChange } = this.props;
-    const v = item.split(',');
+  onDimensionChange = (item: any) => {
+    const { query, onChange } = this.props;
 
-    onChange({ ...query, dimensions: v });
-    onRunQuery();
-  };
+    if (!item.value) {
+      return;
+    }
 
-  onSortChange = (item: any) => {
-    const { query, onRunQuery, onChange } = this.props;
-    const v = item.split(',');
-
-    onChange({ ...query, sort: v });
-    onRunQuery();
+    const v = item.value;
+    onChange({ ...query, dimension: v });
   };
 
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, startDate, endDate, metrics, dimensions, sort } = query;
+    const { accountId, webPropertyId, profileId, metric, dimension } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -198,53 +171,19 @@ export class QueryEditor extends PureComponent<Props> {
             className="query-keyword"
             tooltip={
               <p>
-                The <code>StartDate</code> data format regular expression is
-                <code>
-                  [0-9]{4}-[0-9]{2}-[0-9]{2}|today|yesterday|[0-9]+(daysAgo)
-                </code>
+                The <code>metric</code> ga:*
               </p>
             }
           >
-            Start Date
+            Metric
           </InlineFormLabel>
-          <SegmentInput onChange={this.onStartDateChange} value={startDate} placeholder={'YYYY-MM-DD'}></SegmentInput>
-        </div>
-
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code>EndDate</code> data format regular expression is
-                <code>
-                  [0-9]{4}-[0-9]{2}-[0-9]{2}|today|yesterday|[0-9]+(daysAgo)
-                </code>
-              </p>
-            }
-          >
-            End Date
-          </InlineFormLabel>
-          <SegmentInput onChange={this.onEndDateChange} value={endDate} placeholder={'YYYY-MM-DD'}></SegmentInput>
-        </div>
-
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code>metrics</code> ga:*
-              </p>
-            }
-          >
-            Metrics
-          </InlineFormLabel>
-          <SegmentInput
-            onChange={this.onMetricsChange}
-            value={metrics ? metrics.toString() : ''}
+          <SegmentAsync
+            loadOptions={() => datasource.getMetrics()}
             placeholder={'ga:sessions'}
-          ></SegmentInput>
+            value={metric}
+            allowCustomValue={true}
+            onChange={this.onMetricChange}
+          ></SegmentAsync>
         </div>
 
         <div className="gf-form-inline">
@@ -253,39 +192,20 @@ export class QueryEditor extends PureComponent<Props> {
             className="query-keyword"
             tooltip={
               <p>
-                The <code>dimensions</code> ga:*
+                The <code>dimension</code> ga:*
               </p>
             }
           >
-            Dimensions
+            Dimension
           </InlineFormLabel>
-          <SegmentInput
-            onChange={this.onDimensionsChange}
-            value={dimensions ? dimensions.toString() : ''}
+          <SegmentAsync
+            loadOptions={() => datasource.getDimensions()}
             placeholder={'ga:dateHourMinute'}
-          ></SegmentInput>
+            value={dimension}
+            allowCustomValue={true}
+            onChange={this.onDimensionChange}
+          ></SegmentAsync>
         </div>
-
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code>sort</code> asc = ga:* , desc = -ga:*
-              </p>
-            }
-          >
-            Sort
-          </InlineFormLabel>
-          <SegmentInput
-            onChange={this.onSortChange}
-            value={sort ? sort.toString() : ''}
-            placeholder={'ga:dateHourMinute'}
-          ></SegmentInput>
-        </div>
-        {!startDate && <Alert title={'Start Date Invalid'}></Alert>}
-        {!endDate && <Alert title={'End Date Invalid'}></Alert>}
       </>
     );
   }

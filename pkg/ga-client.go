@@ -188,6 +188,7 @@ func (client *GoogleClient) getReport(queries []QueryModel) (*reporting.GetRepor
 
 	var reportRequests = make([]*reporting.ReportRequest, len(queries))
 	for index, query := range queries {
+	log.DefaultLogger.Info("query", query)
 		reportRequests[index] = &reporting.ReportRequest{
 			ViewId: query.ProfileID,
 			DateRanges: []*reporting.DateRange{
@@ -196,15 +197,15 @@ func (client *GoogleClient) getReport(queries []QueryModel) (*reporting.GetRepor
 			},
 			Metrics: []*reporting.Metric{
 				// Create the Metrics object.
-				// {Expression: query.Metric},
-				{Expression: "ga:sessions"},
-				{Expression: "ga:users"},
+				 {Expression: query.Metric},
+				//{Expression: "ga:sessions"},
+				//{Expression: "ga:users"},
 			},
 			Dimensions: []*reporting.Dimension{
 				// {Name: query.Dimension},
 				// {Name: "ga:country"},
 				// {Name: "ga:dateHourMinute"},
-				{Name: "ga:dateHour"},
+				{Name: query.Dimension},
 			},
 		}
 	}

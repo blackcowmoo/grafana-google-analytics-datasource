@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
@@ -65,7 +64,7 @@ func (cd *ColumnDefinition) GetType() ColumnType {
 
 func getColumnType(headerType string) ColumnType {
 	switch headerType {
-	case "INTEGER":
+	case "INTEGER", "FLOAT", "CURRENCY", "PERCENT":
 		return ColumTypeNumber
 	case "TIME":
 		return ColumTypeTime
