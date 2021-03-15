@@ -19,11 +19,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/grafana/simple-datasource-backend"
+        "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource"
       },
       {
         "name": "License",
-        "url": "https://github.com/grafana/simple-datasource-backend/blob/master/LICENSE"
+        "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/master/LICENSE"
       }
     ],
     "screenshots": [],
