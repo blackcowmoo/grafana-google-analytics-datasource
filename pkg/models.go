@@ -16,6 +16,8 @@ type QueryModel struct {
 	RefID         string `json:"refId"`
 	Metric        string `json:"metric"`
 	Dimension     string `json:"dimension"`
+	PageSize      int64  `json:"pageSize,omitempty"`
+	PageToken     string `json:"pageToken,omitempty"`
 
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
@@ -24,7 +26,9 @@ type QueryModel struct {
 
 // GetQueryModel returns the well typed query model
 func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
-	model := &QueryModel{}
+	model := &QueryModel{
+		PageSize: 100000,
+	}
 
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {

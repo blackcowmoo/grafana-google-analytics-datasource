@@ -67,8 +67,8 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", "ga:sessions", "ga:country"}
-	res, err := client.getReport([]QueryModel{testData})
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", "ga:sessions", "ga:country", 1, ""}
+	res, err := client.getReport(testData)
 
 	if err != nil {
 		log.DefaultLogger.Error("GET request to analyticsreporting/v4 returned error", err.Error())

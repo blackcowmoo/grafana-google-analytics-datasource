@@ -36,7 +36,7 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		return nil, fmt.Errorf("Required ProfileID")
 	}
 
-	report, err := client.getReport([]QueryModel{*queryModel})
+	report, err := client.getReport(*queryModel)
 	if err != nil {
 		log.DefaultLogger.Error("Query failed", "error", err)
 		return nil, err
