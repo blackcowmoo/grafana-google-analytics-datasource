@@ -27,7 +27,7 @@ type QueryModel struct {
 // GetQueryModel returns the well typed query model
 func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 	model := &QueryModel{
-		PageSize:    100000,
+		PageSize:    GaReportMaxResult,
 		PageToken:   "",
 		UseNextPage: true,
 	}

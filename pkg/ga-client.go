@@ -86,7 +86,7 @@ func createAnalticsService(ctx context.Context, auth *DatasourceSettings) (*anal
 
 func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, error) {
 	accountsService := analytics.NewManagementAccountsService(client.analytics)
-	accounts, err := accountsService.List().StartIndex(idx).MaxResults(GaMaxItemPerPage).Do()
+	accounts, err := accountsService.List().StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		return nil, err
@@ -130,7 +130,7 @@ func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty,
 
 func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([]*analytics.Webproperty, error) {
 	webpropertiesService := analytics.NewManagementWebpropertiesService(client.analytics)
-	webproperties, err := webpropertiesService.List(accountId).StartIndex(idx).MaxResults(GaMaxItemPerPage).Do()
+	webproperties, err := webpropertiesService.List(accountId).StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		return nil, err
@@ -201,7 +201,7 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 
 func (client *GoogleClient) getProfilesList(accountId string, webpropertyId string, idx int64) ([]*analytics.Profile, error) {
 	profilesService := analytics.NewManagementProfilesService(client.analytics)
-	profiles, err := profilesService.List(accountId, webpropertyId).MaxResults(GaMaxItemPerPage).StartIndex(idx).Do()
+	profiles, err := profilesService.List(accountId, webpropertyId).MaxResults(GaManageMaxResult).StartIndex(idx).Do()
 	if err != nil {
 		log.DefaultLogger.Error(err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
 		return nil, err

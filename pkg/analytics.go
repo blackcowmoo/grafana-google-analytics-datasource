@@ -56,7 +56,7 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 		return item.(map[string]string), nil
 	}
 
-	accounts, err := client.getAccountsList(1)
+	accounts, err := client.getAccountsList(GaDefaultIdx)
 	if err != nil {
 		return nil, err
 	}
