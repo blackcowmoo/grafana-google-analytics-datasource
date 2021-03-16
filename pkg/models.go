@@ -18,7 +18,7 @@ type QueryModel struct {
 	Dimension     string `json:"dimension"`
 	PageSize      int64  `json:"pageSize,omitempty"`
 	PageToken     string `json:"pageToken,omitempty"`
-
+	UseNextPage   bool   `json:"useNextpage,omitempty"`
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`
@@ -27,8 +27,9 @@ type QueryModel struct {
 // GetQueryModel returns the well typed query model
 func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 	model := &QueryModel{
-		PageSize: 100000,
-    PageToken: "",
+		PageSize:    100000,
+		PageToken:   "",
+		UseNextPage: true,
 	}
 
 	err := json.Unmarshal(query.JSON, &model)
