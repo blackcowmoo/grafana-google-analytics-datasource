@@ -28,6 +28,7 @@ type QueryModel struct {
 func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 	model := &QueryModel{
 		PageSize: 100000,
+    PageToken: "",
 	}
 
 	err := json.Unmarshal(query.JSON, &model)
