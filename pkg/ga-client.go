@@ -94,10 +94,10 @@ func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, er
 
 	itemPerPage := accounts.ItemsPerPage
 	nextLink := accounts.NextLink
-	startIndex := accounts.StartIndex
+	startIdx := accounts.StartIndex
 
 	if nextLink != "" {
-		newAccounts, err := client.getAccountsList(startIndex + itemPerPage)
+		newAccounts, err := client.getAccountsList(startIdx + itemPerPage)
 		if err != nil {
 			return nil, err
 		}
@@ -140,10 +140,10 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([
 
 	nextLink := webproperties.NextLink
 	itemPerPage := webproperties.ItemsPerPage
-	startIndex := webproperties.StartIndex
+	startIdx := webproperties.StartIndex
 
 	if nextLink != "" {
-		nextWebproperties, err := client.getWebpropertiesList(accountId, startIndex+itemPerPage)
+		nextWebproperties, err := client.getWebpropertiesList(accountId, startIdx+itemPerPage)
 		if err != nil {
 			return nil, err
 		}
@@ -209,10 +209,10 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 
 	nextLink := profiles.NextLink
 	itemPerPage := profiles.ItemsPerPage
-	startIndex := profiles.StartIndex
+	startIdx := profiles.StartIndex
 
 	if nextLink != "" {
-		nextProfiles, err := client.getProfilesList(accountId, webpropertyId, startIndex+itemPerPage)
+		nextProfiles, err := client.getProfilesList(accountId, webpropertyId, startIdx+itemPerPage)
 		if err != nil {
 			return nil, err
 		}

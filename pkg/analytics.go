@@ -28,8 +28,8 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		return nil, fmt.Errorf("Required AccountID")
 	}
 
-	if len(queryModel.WebPropertyId) < 1 {
-		return nil, fmt.Errorf("Required WebPropertyId")
+	if len(queryModel.WebPropertyID) < 1 {
+		return nil, fmt.Errorf("Required WebPropertyID")
 	}
 
 	if len(queryModel.ProfileID) < 1 {

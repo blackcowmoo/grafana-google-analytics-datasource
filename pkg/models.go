@@ -9,7 +9,7 @@ import (
 
 type QueryModel struct {
 	AccountID     string `json:"accountId"`
-	WebPropertyId string `json:"webPropertyId"`
+	WebPropertyID string `json:"webPropertyId"`
 	ProfileID     string `json:"profileId"`
 	StartDate     string `json:"startDate"`
 	EndDate       string `json:"endDate"`
