@@ -26,8 +26,7 @@ export const defaultQuery: Partial<GAQuery> = {
 /**
  * These are options configured for each DataSource instance
  */
-export interface GADataSourceOptions extends DataSourceJsonData {
-}
+export interface GADataSourceOptions extends DataSourceJsonData {}
 
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend
