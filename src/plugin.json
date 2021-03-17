@@ -1,12 +1,12 @@
 {
   "type": "datasource",
   "name": " Google Analytics",
-  "id": "blackcowmoo-google-analytics-datasource",
+  "id": "blackcowmoo-googleanalytics-datasource",
   "metrics": true,
   "backend": true,
-  "executable": "gpx_ Google-Analytics",
+  "executable": "gpx_ blackcowmoo-googleanalytics-datasource",
   "info": {
-    "description": " Google-Analytics to Grafana",
+    "description": " GoogleAnalytics Visualize & datasource",
     "author": {
       "name": "blackcowmoo",
       "url": "https://github.com/blackcowmoo"
