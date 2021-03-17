@@ -12,7 +12,6 @@ const (
 	AttributeTypeMetric    AttributeType = "METRIC"
 )
 
-
 type Metadata struct {
 	Kind           string         `json:"kind"`
 	Etag           string         `json:"etag"`

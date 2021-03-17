@@ -34,54 +34,23 @@ func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*GoogleClie
 }
 
 func createReportingService(ctx context.Context, auth *DatasourceSettings) (*reporting.Service, error) {
-	if len(auth.AuthType) == 0 {
-		return nil, fmt.Errorf("missing AuthType setting")
+	jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), reporting.AnalyticsReadonlyScope)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing JWT file: %w", err)
 	}
 
-	if auth.AuthType == "key" {
-		if len(auth.APIKey) == 0 {
-			return nil, fmt.Errorf("missing API Key")
-		}
-		return reporting.NewService(ctx, option.WithAPIKey(auth.APIKey))
-	}
-
-	if auth.AuthType == "jwt" {
-		jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), reporting.AnalyticsReadonlyScope)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing JWT file: %w", err)
-		}
-
-		client := jwtConfig.Client(ctx)
-		return reporting.NewService(ctx, option.WithHTTPClient(client))
-	}
-
-	return nil, fmt.Errorf("invalid Auth Type: %s", auth.AuthType)
+	client := jwtConfig.Client(ctx)
+	return reporting.NewService(ctx, option.WithHTTPClient(client))
 }
 
 func createAnalticsService(ctx context.Context, auth *DatasourceSettings) (*analytics.Service, error) {
-	if len(auth.AuthType) == 0 {
-		return nil, fmt.Errorf("missing AuthType setting")
+	jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), analytics.AnalyticsReadonlyScope)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing JWT file: %w", err)
 	}
 
-	if auth.AuthType == "key" {
-		if len(auth.APIKey) == 0 {
-			return nil, fmt.Errorf("missing API Key")
-		}
-		return analytics.NewService(ctx, option.WithAPIKey(auth.APIKey))
-	}
-
-	if auth.AuthType == "jwt" {
-		jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), analytics.AnalyticsReadonlyScope)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing JWT file: %w", err)
-		}
-
-		client := jwtConfig.Client(ctx)
-		return analytics.NewService(ctx, option.WithHTTPClient(client))
-	}
-
-	return nil, fmt.Errorf("invalid Auth Type: %s", auth.AuthType)
-
+	client := jwtConfig.Client(ctx)
+	return analytics.NewService(ctx, option.WithHTTPClient(client))
 }
 
 func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, error) {
