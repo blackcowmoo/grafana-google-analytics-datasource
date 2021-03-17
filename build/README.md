@@ -4,19 +4,16 @@ A data source backend plugin consists of both frontend and backend components.
 
 ## Use Dockerfile
 
+Build & Run & Apply Change
+
 ```BASH
 docker build . -t blackcowmoo/grafana-ga-ds --build-arg=PLUGINS_NAME=blackcowmoo-googleanalytics-datasource
 docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds  blackcowmoo/grafana-ga-ds
 ```
 
-### Apply Change
-
-```BASH
-docker build . -t blackcowmoo/grafana-ga-ds --build-arg=PLUGINS_NAME=blackcowmoo-googleanalytics-datasource
-docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds blackcowmoo/grafana-ga-ds
-```
-
 ## Local Build
+
+Require nodejs, go, mage
 
 ### Frontend
 
