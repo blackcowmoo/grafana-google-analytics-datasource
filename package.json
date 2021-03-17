@@ -1,5 +1,5 @@
 {
-  "name": "google-analytics",
+  "name": "blackcowmoo-googleanalytics-datasource",
   "version": "1.0.0",
   "description": " Google-Analytics to Grafana",
   "scripts": {
@@ -19,6 +19,6 @@
     "@types/react-dropzone": "^5.1.0"
   },
   "engines": {
-    "node": ">=12 <13"
+    "node": ">=12"
   }
 }
