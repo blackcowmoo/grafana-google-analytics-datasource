@@ -5,14 +5,14 @@ A data source backend plugin consists of both frontend and backend components.
 ## Use Dockerfile
 
 ```BASH
-docker build . -t blackcowmoo/grafana-ga-ds
-docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds blackcowmoo/grafana-ga-ds
+docker build . -t blackcowmoo/grafana-ga-ds --build-arg=PLUGINS_NAME=blackcowmoo-googleanalytics-datasource
+docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds  blackcowmoo/grafana-ga-ds
 ```
 
 ### Apply Change
 
 ```BASH
-docker build . -t blackcowmoo/grafana-ga-ds
+docker build . -t blackcowmoo/grafana-ga-ds --build-arg=PLUGINS_NAME=blackcowmoo-googleanalytics-datasource
 docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds blackcowmoo/grafana-ga-ds
 ```
 
@@ -67,7 +67,7 @@ mage -l
 ### Run
 
 ```BASH
-docker run --rm -p 3000:3000 -v "$(pwd)":/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
+docker run --rm -p 3000:3000 -v "$(pwd)":/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=blackcowmoo-googleanalytics-datasource" grafana/grafana
 ```
 
 ### Apply Change
