@@ -1,12 +1,12 @@
 {
   "type": "datasource",
-  "name": " Google-Analytics",
-  "id": "google-analytics",
+  "name": " Google Analytics",
+  "id": "blackcowmoo-googleanalytics-datasource",
   "metrics": true,
   "backend": true,
-  "executable": "gpx_ Google-Analytics",
+  "executable": "gpx_ blackcowmoo-googleanalytics-datasource",
   "info": {
-    "description": " Google-Analytics to Grafana",
+    "description": " GoogleAnalytics Visualize & datasource",
     "author": {
       "name": "blackcowmoo",
       "url": "https://github.com/blackcowmoo"
@@ -19,11 +19,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/grafana/simple-datasource-backend"
+        "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource"
       },
       {
         "name": "License",
-        "url": "https://github.com/grafana/simple-datasource-backend/blob/master/LICENSE"
+        "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/master/LICENSE"
       }
     ],
     "screenshots": [],
@@ -31,7 +31,7 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaVersion": "7.x.x",
+    "grafanaDependency": "7.x.x",
     "plugins": []
   }
 }

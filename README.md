@@ -1,88 +1,35 @@
-# Grafana Data Source Backend Plugin Template
+![](https://img.shields.io/github/v/release/blackcowmoo/Grafana-Google-Analytics-DataSource?style=plastic) [![CodeQL](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml)
+# Google Analytics data source
 
-[![CircleCI](https://circleci.com/gh/grafana/simple-datasource-backend/tree/master.svg?style=svg)](https://circleci.com/gh/grafana/simple-datasource-backend/tree/master)
+Visualize data from GA(Google Analytics)
 
-This template is a starting point for building Grafana Data Source Backend Plugins
+## Feature
+- AutoComplete AccountID & WebpropertyID & ProfileID
+- AutoComplete Metrics & Dimensions
+- Query using Metrics & Dimensions
 
-## What is Grafana Data Source Backend Plugin?
+## Preparations
+### Generate a JWT file
 
-Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
+1.  if you don't have gcp project, add new gcp project. [link](https://cloud.google.com/resource-manager/docs/creating-managing-projects#console)
+2.  Open the [Credentials](https://console.developers.google.com/apis/credentials) page in the Google API Console.
+3.  Click **Create Credentials** then click **Service account**.
+4.  On the Create service account page, enter the Service account details.
+5.  On the `Create service account` page, fill in the `Service account details` and then click `Create`
+6.  On the `Service account permissions` page, don't add a role to the service account. Just click `Continue`
+7.  In the next step, click `Create Key`. Choose key type `JSON` and click `Create`. A JSON key file will be created and downloaded to your computer
+8.  Note your `service account email` ex) *@*.iam.gserviceaccount.com
+9.  Open the [Google Analytics API](https://console.cloud.google.com/apis/library/analytics.googleapis.com)  in API Library and enable access for your account
+10. Open the [Google Analytics Reporting API](https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com?q=search&referrer=search&project=composed-apogee-307906)  in API Library and enable access for your GA Data
 
-For more information about backend plugins, refer to the documentation on [Backend plugins](https://grafana.com/docs/grafana/latest/developers/plugins/backend/).
+### Google Analytics Setting
 
-## Getting started
+1. Open the [Google Analytics](https://analytics.google.com/)
+2. Select Your Analytics Account And Open Admin Page
+3. Click **Account User Management** on the **Account Tab**
+4. Click plus Button then Add users
+5. Enter `service account email` at **Generate a JWT file** 8th step and Permissions add `Read & Analyze`
 
-A data source backend plugin consists of both frontend and backend components.
-
-### Use Dockerfile
-
-```BASH
-docker build . -t blackcowmoo/grafana-ga-ds
-docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds blackcowmoo/grafana-ga-ds
-```
-
-### Frontend
-
-1. Install dependencies
-
-```BASH
-yarn install
-```
-
-2. Build plugin in development mode or run in watch mode
-
-```BASH
-yarn dev
-```
-
-or
-
-```BASH
-yarn watch
-```
-
-3. Build plugin in production mode
-
-```BASH
-yarn build
-```
-
-### Backend
-
-1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
-
-```bash
-go get -u github.com/grafana/grafana-plugin-sdk-go
-```
-
-2. Build backend plugin binaries for Linux, Windows and Darwin:
-
-```BASH
-mage -v
-```
-
-3. List all available Mage targets for additional commands:
-
-```BASH
-mage -l
-```
-
-## How To test
-
-```BASH
-docker run --rm -p 3000:3000 -v "$(pwd)":/var/lib/grafana/plugins --name=grafana -e "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=google-analytics" grafana/grafana
-```
-
-## Apply Change
-
-```BASH
-docker restart grafana
-```
-
-## Learn more
-
-- [Build a data source backend plugin tutorial](https://grafana.com/tutorials/build-a-data-source-backend-plugin)
-- [Grafana documentation](https://grafana.com/docs/)
-- [Grafana Tutorials](https://grafana.com/tutorials/) - Grafana Tutorials are step-by-step guides that help you make the most of Grafana
-- [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
-- [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/)
+### Grafana
+Go To Add Data source then Drag the file to the dotted zone above. Then click `Save & Test`.   
+The file contents will be encrypted and saved in the Grafana database.

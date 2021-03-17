@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	backend.SetupPluginEnvironment("google-analytics-datasource")
+	backend.SetupPluginEnvironment("blackcowmoo-googleanalytics-datasource")
 
 	mux := http.NewServeMux()
 	ds := NewDataSource(mux)
