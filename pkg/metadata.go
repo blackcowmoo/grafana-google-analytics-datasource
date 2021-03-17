@@ -12,7 +12,6 @@ const (
 	AttributeTypeMetric    AttributeType = "METRIC"
 )
 
-const metadataURL string = "https://www.googleapis.com/analytics/v3/metadata/ga/columns?pp=1"
 
 type Metadata struct {
 	Kind           string         `json:"kind"`
@@ -42,7 +41,7 @@ type MetadataItemAttribute struct {
 type AttributeType string
 
 func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
-	res, err := http.Get(metadataURL)
+	res, err := http.Get(GaMetadataURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metadata api %w", err)
 	}

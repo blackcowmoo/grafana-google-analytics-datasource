@@ -84,19 +84,31 @@ func createAnalticsService(ctx context.Context, auth *DatasourceSettings) (*anal
 
 }
 
-func (client *GoogleClient) getAccountsList() ([]*analytics.Account, error) {
+func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, error) {
 	accountsService := analytics.NewManagementAccountsService(client.analytics)
-	accounts, err := accountsService.List().Do()
+	accounts, err := accountsService.List().StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		return nil, err
+	}
+
+	itemPerPage := accounts.ItemsPerPage
+	nextLink := accounts.NextLink
+	startIdx := accounts.StartIndex
+
+	if nextLink != "" {
+		newAccounts, err := client.getAccountsList(startIdx + itemPerPage)
+		if err != nil {
+			return nil, err
+		}
+		accounts.Items = append(accounts.Items, newAccounts...)
 	}
 
 	return accounts.Items, nil
 }
 
 func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty, error) {
-	accounts, err := client.getAccountsList()
+	accounts, err := client.getAccountsList(GaDefaultIdx)
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		return nil, err
@@ -104,7 +116,7 @@ func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty,
 
 	var webpropertiesList = make([]*analytics.Webproperty, 0)
 	for _, account := range accounts {
-		webproperties, err := client.getWebpropertiesList(account.Id)
+		webproperties, err := client.getWebpropertiesList(account.Id, GaDefaultIdx)
 		if err != nil {
 			log.DefaultLogger.Error(err.Error())
 			return nil, err
@@ -116,13 +128,28 @@ func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty,
 	return webpropertiesList, nil
 }
 
-func (client *GoogleClient) getWebpropertiesList(accountId string) ([]*analytics.Webproperty, error) {
+func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([]*analytics.Webproperty, error) {
 	webpropertiesService := analytics.NewManagementWebpropertiesService(client.analytics)
-	webproperties, err := webpropertiesService.List(accountId).Do()
+	webproperties, err := webpropertiesService.List(accountId).StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		return nil, err
 	}
+
+	log.DefaultLogger.Info("getWebpropertiesList", "WebpropertiesList", webproperties)
+
+	nextLink := webproperties.NextLink
+	itemPerPage := webproperties.ItemsPerPage
+	startIdx := webproperties.StartIndex
+
+	if nextLink != "" {
+		nextWebproperties, err := client.getWebpropertiesList(accountId, startIdx+itemPerPage)
+		if err != nil {
+			return nil, err
+		}
+		webproperties.Items = append(webproperties.Items, nextWebproperties...)
+	}
+
 	return webproperties.Items, nil
 }
 
@@ -142,7 +169,7 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 		go func(accountId string, webpropertyId string) {
 			defer wait.Done()
 			for i := 1; i <= MAX_RETRY_COUNT; i++ {
-				profiles, err := client.getProfilesList(accountId, webpropertyId)
+				profiles, err := client.getProfilesList(accountId, webpropertyId, GaDefaultIdx)
 				if err != nil {
 					if i < MAX_RETRY_COUNT {
 						time.Sleep(time.Millisecond * 500)
@@ -172,56 +199,86 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 	return profiles, nil
 }
 
-func (client *GoogleClient) getProfilesList(accountId string, webpropertyId string) ([]*analytics.Profile, error) {
+func (client *GoogleClient) getProfilesList(accountId string, webpropertyId string, idx int64) ([]*analytics.Profile, error) {
 	profilesService := analytics.NewManagementProfilesService(client.analytics)
-	profiles, err := profilesService.List(accountId, webpropertyId).Do()
+	profiles, err := profilesService.List(accountId, webpropertyId).MaxResults(GaManageMaxResult).StartIndex(idx).Do()
 	if err != nil {
 		log.DefaultLogger.Error(err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
 		return nil, err
 	}
 
+	nextLink := profiles.NextLink
+	itemPerPage := profiles.ItemsPerPage
+	startIdx := profiles.StartIndex
+
+	if nextLink != "" {
+		nextProfiles, err := client.getProfilesList(accountId, webpropertyId, startIdx+itemPerPage)
+		if err != nil {
+			return nil, err
+		}
+		profiles.Items = append(profiles.Items, nextProfiles...)
+	}
+
 	return profiles.Items, nil
 }
 
-func (client *GoogleClient) getReport(queries []QueryModel) (*reporting.GetReportsResponse, error) {
-	log.DefaultLogger.Info("getReport", "queries", queries)
+func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
+	log.DefaultLogger.Info("getReport", "queries", query)
 
-	var reportRequests = make([]*reporting.ReportRequest, len(queries))
-	for index, query := range queries {
-		reportRequests[index] = &reporting.ReportRequest{
-			ViewId: query.ProfileID,
-			DateRanges: []*reporting.DateRange{
-				// Create the DateRange object.
-				{StartDate: query.StartDate, EndDate: query.EndDate},
-			},
-			Metrics: []*reporting.Metric{
-				// Create the Metrics object.
-				// {Expression: query.Metric},
-				{Expression: "ga:sessions"},
-				{Expression: "ga:users"},
-			},
-			Dimensions: []*reporting.Dimension{
-				// {Name: query.Dimension},
-				// {Name: "ga:country"},
-				// {Name: "ga:dateHourMinute"},
-				{Name: "ga:dateHour"},
-			},
-		}
+	reportRequest := reporting.ReportRequest{
+		ViewId: query.ProfileID,
+		DateRanges: []*reporting.DateRange{
+			// Create the DateRange object.
+			{StartDate: query.StartDate, EndDate: query.EndDate},
+		},
+		Metrics: []*reporting.Metric{
+			// Create the Metrics object.
+			// {Expression: query.Metric},
+			{Expression: "ga:sessions"},
+			{Expression: "ga:users"},
+		},
+		Dimensions: []*reporting.Dimension{
+			// {Name: query.Dimension},
+			// {Name: "ga:country"},
+			// {Name: "ga:dateHourMinute"},
+			{Name: "ga:dateHour"},
+		},
+		PageSize:  query.PageSize,
+		PageToken: query.PageToken,
 	}
 
-	log.DefaultLogger.Info("getReport", "reportRequests", reportRequests, "len", len(reportRequests), "cap", cap(reportRequests))
+	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)
 
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
 	req := &reporting.GetReportsRequest{
 		// Our request contains only one request
 		// So initialise the slice with one ga.ReportRequest object
-		ReportRequests: reportRequests,
+		ReportRequests: []*reporting.ReportRequest{&reportRequest},
 	}
 
 	log.DefaultLogger.Info("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
-	return client.reporting.Reports.BatchGet(req).Do()
+	report, err := client.reporting.Reports.BatchGet(req).Do()
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
+	log.DefaultLogger.Info("Do GET report", "report len", len(report.Reports), "report", report)
+
+	if query.UseNextPage && report.Reports[0].NextPageToken != "" {
+		query.PageToken = report.Reports[0].NextPageToken
+		newReport, err := client.getReport(query)
+		if err != nil {
+			return nil, fmt.Errorf(err.Error())
+		}
+
+		log.DefaultLogger.Info("newReport", "newReport", newReport)
+
+		report.Reports[0].Data.Rows = append(report.Reports[0].Data.Rows, newReport.Reports[0].Data.Rows...)
+		return report, nil
+	}
+	return report, nil
 }
 
 func printResponse(res *reporting.GetReportsResponse) {

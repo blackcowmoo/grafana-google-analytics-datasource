@@ -9,14 +9,16 @@ import (
 
 type QueryModel struct {
 	AccountID     string `json:"accountId"`
-	WebPropertyId string `json:"webPropertyId"`
+	WebPropertyID string `json:"webPropertyId"`
 	ProfileID     string `json:"profileId"`
 	StartDate     string `json:"startDate"`
 	EndDate       string `json:"endDate"`
 	RefID         string `json:"refId"`
 	Metric        string `json:"metric"`
 	Dimension     string `json:"dimension"`
-
+	PageSize      int64  `json:"pageSize,omitempty"`
+	PageToken     string `json:"pageToken,omitempty"`
+	UseNextPage   bool   `json:"useNextpage,omitempty"`
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`
@@ -24,7 +26,11 @@ type QueryModel struct {
 
 // GetQueryModel returns the well typed query model
 func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
-	model := &QueryModel{}
+	model := &QueryModel{
+		PageSize:    GaReportMaxResult,
+		PageToken:   "",
+		UseNextPage: true,
+	}
 
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {

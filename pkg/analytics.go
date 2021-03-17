@@ -28,15 +28,15 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		return nil, fmt.Errorf("Required AccountID")
 	}
 
-	if len(queryModel.WebPropertyId) < 1 {
-		return nil, fmt.Errorf("Required WebPropertyId")
+	if len(queryModel.WebPropertyID) < 1 {
+		return nil, fmt.Errorf("Required WebPropertyID")
 	}
 
 	if len(queryModel.ProfileID) < 1 {
 		return nil, fmt.Errorf("Required ProfileID")
 	}
 
-	report, err := client.getReport([]QueryModel{*queryModel})
+	report, err := client.getReport(*queryModel)
 	if err != nil {
 		log.DefaultLogger.Error("Query failed", "error", err)
 		return nil, err
@@ -51,12 +51,12 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
 	}
 
-	cacheKey := "analytics:accounts"
+	cacheKey := fmt.Sprintf("analytics:accounts:%s:%s:%s", config.AuthType, config.JWT, config.APIKey)
 	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return item.(map[string]string), nil
 	}
 
-	accounts, err := client.getAccountsList()
+	accounts, err := client.getAccountsList(GaDefaultIdx)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *Datasou
 		return item.(map[string]string), nil
 	}
 
-	Webproperties, err := client.getWebpropertiesList(accountId)
+	Webproperties, err := client.getWebpropertiesList(accountId, GaDefaultIdx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSe
 		return item.(map[string]string), nil
 	}
 
-	profiles, err := client.getProfilesList(accountId, webPropertyId)
+	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
 	if err != nil {
 		return nil, err
 	}
