@@ -113,11 +113,11 @@ Exit:
 					if metricDateDimensionIndex == index {
 						timezone, err := time.LoadLocation(timezone)
 						if err != nil {
-							log.DefaultLogger.Warn("LoadTimeZone", "err", err.Error())
+							log.DefaultLogger.Info("LoadTimeZone", "err", err.Error())
 						}
 						parsedTime, err := parseAndTimezoneTime(dimension, timezone)
 						if err != nil {
-							log.DefaultLogger.Warn("paresdTime", "err", err.Error())
+							log.DefaultLogger.Info("paresdTime", "err", err.Error())
 						}
 						sTime := parsedTime.Format(time.RFC3339)
 						row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
