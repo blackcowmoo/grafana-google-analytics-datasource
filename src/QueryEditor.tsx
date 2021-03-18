@@ -27,40 +27,47 @@ export class QueryEditor extends PureComponent<Props> {
   }
 
   onProfileIdChange = (item: any) => {
-    const { query, onChange } = this.props;
+    const {
+      query,
+      query: { metrics, dimensions },
+      onChange,
+    } = this.props;
+    let profileId = item.value;
 
-    if (!item.value) {
-      return;
-    }
-
-    onChange({ ...query, profileId: item.value });
-    this.willRunQuery();
+    onChange({ ...query, profileId });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
   onAccountIdChange = (item: any) => {
-    const { query, onChange } = this.props;
+    const {
+      query,
+      query: { profileId, metrics, dimensions },
+      onChange,
+    } = this.props;
+    let accountId = item.value;
 
-    if (!item.value) {
-      return;
-    }
-
-    onChange({ ...query, accountId: item.value });
-    this.willRunQuery();
+    onChange({ ...query, accountId });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
   onWebPropertyIdChange = (item: any) => {
-    const { query, onChange } = this.props;
+    const {
+      query,
+      query: { profileId, metrics, dimensions },
+      onChange,
+    } = this.props;
+    let webPropertyId = item.value;
 
-    if (!item.value) {
-      return;
-    }
-
-    onChange({ ...query, webPropertyId: item.value });
-    this.willRunQuery();
+    onChange({ ...query, webPropertyId });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
   onMetricChange = (items: Array<SelectableValue<string>>) => {
-    const { query, onChange } = this.props;
+    const {
+      query,
+      query: { profileId, dimensions },
+      onChange,
+    } = this.props;
 
     let metrics = [] as string[];
     items.map((item) => {
@@ -71,27 +78,30 @@ export class QueryEditor extends PureComponent<Props> {
     console.log(`metrics`, metrics);
 
     onChange({ ...query, selectedMetrics: items, metrics });
-    this.willRunQuery();
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
   onDimensionChange = (items: Array<SelectableValue<string>>) => {
-    const { query, onChange } = this.props;
-
+    const {
+      query,
+      query: { profileId, metrics },
+      onChange,
+    } = this.props;
     let dimensions = [] as string[];
     items.map((item) => {
       if (item.value) {
         dimensions.push(item.value);
       }
     });
+
     console.log(`dimensions`, dimensions);
 
     onChange({ ...query, selectedDimensions: items, dimensions });
-    this.willRunQuery();
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
-  willRunQuery = () => {
+  willRunQuery = (profileId: string, metrics: string[], dimensions: string[]) => {
     const { query, onRunQuery } = this.props;
-    const { profileId, metrics, dimensions } = query;
     console.log(`willRunQuery`);
     console.log(`query`, query);
     if (profileId && metrics && dimensions) {
