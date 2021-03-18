@@ -11,6 +11,7 @@ export interface GAQuery extends DataQuery {
   selectedMetrics: Array<SelectableValue<string>>;
   selectedDimensions: Array<SelectableValue<string>>;
   cacheDurationSeconds?: number;
+  timezone: string;
 }
 // mapping on google-key.json
 export interface JWT {
@@ -35,4 +36,5 @@ export interface GADataSourceOptions extends DataSourceJsonData {}
 export interface GASecureJsonData {
   jwt?: string;
   profileId?: string;
+  timezone?: string;
 }
