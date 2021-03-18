@@ -41,8 +41,8 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		log.DefaultLogger.Error("Query failed", "error", err)
 		return nil, err
 	}
-
-	return transformReportsResponseToDataFrames(report, queryModel.RefID)
+  
+	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone)
 }
 
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSettings) (map[string]string, error) {

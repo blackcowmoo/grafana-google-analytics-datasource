@@ -70,7 +70,7 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, report 
 
 var timeDimensions []string = []string{"ga:dateHourMinute", "ga:dateHour", "ga:date"}
 
-func transformReportToDataFrames(report *reporting.Report, refId string) ([]*data.Frame, error) {
+func transformReportToDataFrames(report *reporting.Report, refId string, timezone string) ([]*data.Frame, error) {
 	var metricDateDimensionIndex int = -1
 Exit:
 	for _, tDimension := range timeDimensions {
@@ -111,7 +111,16 @@ Exit:
 				if index == dateDimensionIndex {
 					find = true
 					if metricDateDimensionIndex == index {
-						row.Metrics[0].Values = append(row.Metrics[0].Values, dimension)
+						timezone, err := time.LoadLocation(timezone)
+						if err != nil {
+							log.DefaultLogger.Warn("LoadTimeZone", "err", err.Error())
+						}
+						parsedTime, err := parseAndTimezoneTime(dimension, timezone)
+						if err != nil {
+							log.DefaultLogger.Warn("paresdTime", "err", err.Error())
+						}
+						sTime := parsedTime.Format(time.RFC3339)
+						row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
 					}
 				}
 			}
@@ -148,10 +157,10 @@ Exit:
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string, timezone string) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
 	for _, report := range reportsResponse.Reports {
-		frame, err := transformReportToDataFrames(report, refId)
+		frame, err := transformReportToDataFrames(report, refId, timezone)
 		if err != nil {
 			return nil, err
 		}
@@ -166,6 +175,16 @@ func padRightSide(str string, item string, count int) string {
 	return str + strings.Repeat(item, count)
 }
 
+func parseAndTimezoneTime(sTime string, timezone *time.Location) (*time.Time, error) {
+	time, err := time.ParseInLocation("200601021504", padRightSide(sTime, "0", 12-len(sTime)), timezone)
+
+	if err != nil {
+		log.DefaultLogger.Info("timeConverter", "err", err)
+		return nil, err
+	}
+	return &time, nil
+}
+
 // timeConverter handles sheets TIME column types.
 var timeConverter = data.FieldConverter{
 	OutputFieldType: data.FieldTypeNullableTime,
@@ -174,13 +193,11 @@ var timeConverter = data.FieldConverter{
 		if !ok {
 			return nil, fmt.Errorf("expected type string, but got %T", i)
 		}
-
-		time, err := time.Parse("200601021504", padRightSide(sTime, "0", 12-len(sTime)))
+		time, err := time.Parse(time.RFC3339, sTime)
 		if err != nil {
 			log.DefaultLogger.Info("timeConverter", "err", err)
 			return nil, err
 		}
-
 		return &time, nil
 	},
 }
