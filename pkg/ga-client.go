@@ -25,7 +25,7 @@ func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*GoogleClie
 		return nil, reportingError
 	}
 
-	analyticsService, analyticsError := createAnalticsService(ctx, auth)
+	analyticsService, analyticsError := createAnalyticsService(ctx, auth)
 	if analyticsError != nil {
 		return nil, analyticsError
 	}
@@ -43,7 +43,7 @@ func createReportingService(ctx context.Context, auth *DatasourceSettings) (*rep
 	return reporting.NewService(ctx, option.WithHTTPClient(client))
 }
 
-func createAnalticsService(ctx context.Context, auth *DatasourceSettings) (*analytics.Service, error) {
+func createAnalyticsService(ctx context.Context, auth *DatasourceSettings) (*analytics.Service, error) {
 	jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), analytics.AnalyticsReadonlyScope)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing JWT file: %w", err)
