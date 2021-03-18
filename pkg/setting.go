@@ -9,10 +9,8 @@ import (
 
 // DatasourceSettings contains Google Sheets API authentication properties.
 type DatasourceSettings struct {
-	AuthType string `json:"authType"` // jwt | key
-	APIKey   string `json:"apiKey"`
-	JWT      string `json:"jwt"`
-	ViewID   string `json:"viewId"`
+	JWT    string `json:"jwt"`
+	ProfileId string `json:"profileId"`
 }
 
 // LoadSettings gets the relevant settings from the plugin context
@@ -25,9 +23,8 @@ func LoadSettings(ctx backend.PluginContext) (*DatasourceSettings, error) {
 		return nil, fmt.Errorf("error reading settings: %s", err.Error())
 	}
 
-	model.APIKey = settings.DecryptedSecureJSONData["apiKey"]
 	model.JWT = settings.DecryptedSecureJSONData["jwt"]
-	model.ViewID = settings.DecryptedSecureJSONData["viewId"]
+	model.ProfileId = settings.DecryptedSecureJSONData["profileId"]
 
 	return model, nil
 }

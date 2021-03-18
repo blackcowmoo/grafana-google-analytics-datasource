@@ -51,7 +51,7 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSe
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
 	}
 
-	cacheKey := fmt.Sprintf("analytics:accounts:%s:%s:%s", config.AuthType, config.JWT, config.APIKey)
+	cacheKey := fmt.Sprintf("analytics:accounts:%s", config.JWT)
 	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return item.(map[string]string), nil
 	}
