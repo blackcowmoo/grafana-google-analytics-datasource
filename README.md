@@ -7,6 +7,9 @@ Visualize data from GA(Google Analytics)
 - AutoComplete AccountID & WebpropertyID & ProfileID
 - AutoComplete Metrics & Dimensions
 - Query using Metrics & Dimensions
+- Setting with json
+
+![setting](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/feature/frontend/mulit-matric-and-dimension/src/img/query.png?raw=true)
 
 ## Preparations
 ### Generate a JWT file

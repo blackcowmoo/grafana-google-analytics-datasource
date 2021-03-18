@@ -1,4 +1,4 @@
-import { DataQuery, DataSourceJsonData } from '@grafana/data';
+import { DataQuery, DataSourceJsonData, SelectableValue } from '@grafana/data';
 
 export interface GAQuery extends DataQuery {
   accountId: string;
@@ -6,8 +6,10 @@ export interface GAQuery extends DataQuery {
   profileId: string;
   startDate: string;
   endDate: string;
-  metric: string;
-  dimension: string;
+  metrics: string[];
+  dimensions: string[];
+  selectedMetrics: Array<SelectableValue<string>>;
+  selectedDimensions: Array<SelectableValue<string>>;
   cacheDurationSeconds?: number;
 }
 // mapping on google-key.json

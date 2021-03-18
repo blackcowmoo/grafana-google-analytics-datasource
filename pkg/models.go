@@ -13,8 +13,8 @@ type QueryModel struct {
 	StartDate     string `json:"startDate"`
 	EndDate       string `json:"endDate"`
 	RefID         string `json:"refId"`
-	Metric        string `json:"metric"`
-	Dimension     string `json:"dimension"`
+	Metrics        []string `json:"metrics"`
+	Dimensions     []string `json:"dimensions"`
 	PageSize      int64  `json:"pageSize,omitempty"`
 	PageToken     string `json:"pageToken,omitempty"`
 	UseNextPage   bool   `json:"useNextpage,omitempty"`

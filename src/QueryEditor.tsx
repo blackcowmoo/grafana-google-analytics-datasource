@@ -1,5 +1,5 @@
-import { QueryEditorProps } from '@grafana/data';
-import { InlineFormLabel, LinkButton, SegmentAsync } from '@grafana/ui';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import { AsyncMultiSelect, InlineFormLabel, SegmentAsync } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
@@ -27,64 +27,98 @@ export class QueryEditor extends PureComponent<Props> {
   }
 
   onProfileIdChange = (item: any) => {
-    const { query, onChange } = this.props;
+    const {
+      query,
+      query: { metrics, dimensions },
+      onChange,
+    } = this.props;
+    let profileId = item.value;
 
-    if (!item.value) {
-      return;
-    }
-
-    const v = item.value;
-    onChange({ ...query, profileId: v });
+    onChange({ ...query, profileId });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
   onAccountIdChange = (item: any) => {
-    const { query, onChange } = this.props;
+    const {
+      query,
+      query: { profileId, metrics, dimensions },
+      onChange,
+    } = this.props;
+    let accountId = item.value;
 
-    if (!item.value) {
-      return;
-    }
-
-    const v = item.value;
-    onChange({ ...query, accountId: v });
+    onChange({ ...query, accountId });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
   onWebPropertyIdChange = (item: any) => {
-    const { query, onRunQuery, onChange } = this.props;
+    const {
+      query,
+      query: { profileId, metrics, dimensions },
+      onChange,
+    } = this.props;
+    let webPropertyId = item.value;
 
-    if (!item.value) {
-      return;
-    }
-
-    const v = item.value;
-    onChange({ ...query, webPropertyId: v });
-    onRunQuery();
+    onChange({ ...query, webPropertyId });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
-  onMetricChange = (item: any) => {
-    const { query, onChange } = this.props;
+  onMetricChange = (items: Array<SelectableValue<string>>) => {
+    const {
+      query,
+      query: { profileId, dimensions },
+      onChange,
+    } = this.props;
 
-    if (!item.value) {
-      return;
-    }
+    let metrics = [] as string[];
+    items.map((item) => {
+      if (item.value) {
+        metrics.push(item.value);
+      }
+    });
+    console.log(`metrics`, metrics);
 
-    const v = item.value;
-    onChange({ ...query, metric: v });
+    onChange({ ...query, selectedMetrics: items, metrics });
+    this.willRunQuery(profileId, metrics, dimensions);
   };
 
-  onDimensionChange = (item: any) => {
-    const { query, onChange } = this.props;
+  onDimensionChange = (items: Array<SelectableValue<string>>) => {
+    const {
+      query,
+      query: { profileId, metrics },
+      onChange,
+    } = this.props;
+    let dimensions = [] as string[];
+    items.map((item) => {
+      if (item.value) {
+        dimensions.push(item.value);
+      }
+    });
 
-    if (!item.value) {
-      return;
+    console.log(`dimensions`, dimensions);
+
+    onChange({ ...query, selectedDimensions: items, dimensions });
+    this.willRunQuery(profileId, metrics, dimensions);
+  };
+
+  willRunQuery = (profileId: string, metrics: string[], dimensions: string[]) => {
+    const { query, onRunQuery } = this.props;
+    console.log(`willRunQuery`);
+    console.log(`query`, query);
+    if (profileId && metrics && dimensions) {
+      console.log(`onRunQuery`);
+      onRunQuery();
     }
-
-    const v = item.value;
-    onChange({ ...query, dimension: v });
   };
 
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, metric, dimension } = query;
+    const {
+      accountId,
+      webPropertyId,
+      profileId,
+      selectedMetrics: selectMetrics,
+      selectedDimensions: selectDimensions,
+    } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -106,7 +140,6 @@ export class QueryEditor extends PureComponent<Props> {
             allowCustomValue={true}
             onChange={this.onAccountIdChange}
           ></SegmentAsync>
-          {accountId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
@@ -130,9 +163,6 @@ export class QueryEditor extends PureComponent<Props> {
             allowCustomValue={true}
             onChange={this.onWebPropertyIdChange}
           ></SegmentAsync>
-          {webPropertyId && (
-            <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>
-          )}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
@@ -157,7 +187,6 @@ export class QueryEditor extends PureComponent<Props> {
             allowCustomValue={true}
             onChange={this.onProfileIdChange}
           ></SegmentAsync>
-          {profileId && <LinkButton style={{ marginTop: 1 }} variant="link" icon="link" target="_blank"></LinkButton>}
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
@@ -173,15 +202,17 @@ export class QueryEditor extends PureComponent<Props> {
               </p>
             }
           >
-            Metric
+            Metrics
           </InlineFormLabel>
-          <SegmentAsync
-            loadOptions={() => datasource.getMetrics()}
+          <AsyncMultiSelect
+            loadOptions={(q) => datasource.getMetrics(q)}
             placeholder={'ga:sessions'}
-            value={metric}
-            allowCustomValue={true}
+            value={selectMetrics}
             onChange={this.onMetricChange}
-          ></SegmentAsync>
+            backspaceRemovesValue
+            cacheOptions
+            noOptionsMessage={'Search Metrics'}
+          ></AsyncMultiSelect>
         </div>
 
         <div className="gf-form-inline">
@@ -190,19 +221,21 @@ export class QueryEditor extends PureComponent<Props> {
             className="query-keyword"
             tooltip={
               <p>
-                The <code>dimension</code> ga:*
+                The <code> dimensions </code> At least one ga:date* is required.
               </p>
             }
           >
             Dimension
           </InlineFormLabel>
-          <SegmentAsync
-            loadOptions={() => datasource.getDimensions()}
-            placeholder={'ga:dateHourMinute'}
-            value={dimension}
-            allowCustomValue={true}
+          <AsyncMultiSelect
+            loadOptions={(q) => datasource.getDimensions(q)}
+            placeholder={'ga:dateHour'}
+            value={selectDimensions}
             onChange={this.onDimensionChange}
-          ></SegmentAsync>
+            backspaceRemovesValue
+            cacheOptions
+            noOptionsMessage={'Search Dimension'}
+          ></AsyncMultiSelect>
         </div>
       </>
     );
