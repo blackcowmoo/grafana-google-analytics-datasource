@@ -2,7 +2,7 @@
 
 A data source backend plugin consists of both frontend and backend components.
 
-## Use Dockerfile
+## Use Dockerfile(good for use)
 
 Build & Run & Apply Change
 
@@ -11,7 +11,7 @@ docker build . -t blackcowmoo/grafana-ga-ds --build-arg=PLUGINS_NAME=blackcowmoo
 docker run --rm -p 3000:3000  --name=blackcowmoo-grafana-ga-ds  blackcowmoo/grafana-ga-ds
 ```
 
-## Local Build
+## Local Build(good for development)
 
 Require nodejs, go, mage
 

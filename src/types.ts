@@ -6,9 +6,8 @@ export interface GAQuery extends DataQuery {
   profileId: string;
   startDate: string;
   endDate: string;
-  metrics: string[];
-  dimensions?: string[];
-  sort?: string[];
+  metric: string;
+  dimension: string;
   cacheDurationSeconds?: number;
 }
 // mapping on google-key.json

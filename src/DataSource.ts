@@ -31,4 +31,30 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         : [];
     });
   }
+
+  async getDimensions(): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('dimensions').then(({ dimensions }) => {
+      return dimensions
+        ? dimensions.map((dimension: any) => {
+            return {
+              label: dimension.id + ' ' + dimension.attributes.description,
+              value: dimension.id,
+            } as SelectableValue<string>;
+          })
+        : [];
+    });
+  }
+
+  async getMetrics(): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('metrics').then(({ metrics }) => {
+      return metrics
+        ? metrics.map((metric: any) => {
+            return {
+              label: metric.id + ' ' + metric.attributes.description,
+              value: metric.id,
+            } as SelectableValue<string>;
+          })
+        : [];
+    });
+  }
 }

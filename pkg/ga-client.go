@@ -202,15 +202,10 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 		},
 		Metrics: []*reporting.Metric{
 			// Create the Metrics object.
-			// {Expression: query.Metric},
-			{Expression: "ga:sessions"},
-			{Expression: "ga:users"},
+			{Expression: query.Metric},
 		},
 		Dimensions: []*reporting.Dimension{
-			// {Name: query.Dimension},
-			// {Name: "ga:country"},
-			// {Name: "ga:dateHourMinute"},
-			{Name: "ga:dateHour"},
+			{Name: query.Dimension},
 		},
 		PageSize:  query.PageSize,
 		PageToken: query.PageToken,

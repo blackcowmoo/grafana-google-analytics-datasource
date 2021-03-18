@@ -33,3 +33,6 @@ Visualize data from GA(Google Analytics)
 ### Grafana
 Go To Add Data source then Drag the file to the dotted zone above. Then click `Save & Test`.   
 The file contents will be encrypted and saved in the Grafana database.
+
+## How To Run
+[build directory](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/tree/master/build)

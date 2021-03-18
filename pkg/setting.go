@@ -9,7 +9,7 @@ import (
 
 // DatasourceSettings contains Google Sheets API authentication properties.
 type DatasourceSettings struct {
-	JWT    string `json:"jwt"`
+	JWT       string `json:"jwt"`
 	ProfileId string `json:"profileId"`
 }
 

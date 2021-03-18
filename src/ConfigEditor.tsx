@@ -45,7 +45,7 @@ export class ConfigEditor extends PureComponent<Props> {
         <>
           <JWTConfig
             isConfigured={(secureJsonFields && !!secureJsonFields.jwt) as boolean}
-            onChange={jwt => {
+            onChange={(jwt) => {
               onOptionsChange({
                 ...options,
                 secureJsonData: {

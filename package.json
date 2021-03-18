@@ -3,19 +3,19 @@
   "version": "1.0.0",
   "description": " Google-Analytics to Grafana",
   "scripts": {
-    "build": "grafana-toolkit plugin:build",
-    "test": "grafana-toolkit plugin:test",
-    "dev": "grafana-toolkit plugin:dev",
-    "watch": "grafana-toolkit plugin:dev --watch",
+    "build": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:build",
+    "test": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:test",
+    "dev": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:dev",
+    "watch": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:dev --watch",
     "sign": "grafana-toolkit plugin:sign"
   },
   "author": "blackcowmoo",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/data": "7.0.1",
-    "@grafana/toolkit": "7.0.1",
-    "@grafana/runtime": "7.0.1",
-    "@grafana/ui": "7.0.1",
+    "@grafana/data": "7.4.3",
+    "@grafana/toolkit": "7.4.3",
+    "@grafana/runtime": "7.4.3",
+    "@grafana/ui": "7.4.3",
     "@types/lodash": "latest",
     "@types/react-dropzone": "^5.1.0"
   },
