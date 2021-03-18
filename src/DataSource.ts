@@ -32,29 +32,33 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getDimensions(): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('dimensions').then(({ dimensions }) => {
-      return dimensions
-        ? dimensions.map((dimension: any) => {
-            return {
-              label: dimension.id + ' ' + dimension.attributes.description,
-              value: dimension.id,
-            } as SelectableValue<string>;
-          })
-        : [];
+  async getMetrics(query?: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('metrics').then(({ metrics }) => {
+      return metrics.reduce((pre: Array<SelectableValue<string>>, element: any) => {
+        let id = element.id as string;
+        if (query && id.toLowerCase().indexOf(query) > -1) {
+          pre.push({
+            label: element.id,
+            value: element.id,
+          } as SelectableValue<string>);
+        }
+        return pre;
+      }, []);
     });
   }
 
-  async getMetrics(): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('metrics').then(({ metrics }) => {
-      return metrics
-        ? metrics.map((metric: any) => {
-            return {
-              label: metric.id + ' ' + metric.attributes.description,
-              value: metric.id,
-            } as SelectableValue<string>;
-          })
-        : [];
+  async getDimensions(query?: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('dimensions').then(({ dimensions }) => {
+      return dimensions.reduce((pre: Array<SelectableValue<string>>, element: any) => {
+        let id = element.id as string;
+        if (query && id.toLowerCase().indexOf(query) > -1) {
+          pre.push({
+            label: element.id,
+            value: element.id,
+          } as SelectableValue<string>);
+        }
+        return pre;
+      }, []);
     });
   }
 }
