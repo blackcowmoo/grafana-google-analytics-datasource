@@ -33,7 +33,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
 
   async getProfileTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
-    return this.getResource('profile/timezone', { accountId, webPropertyId, profileId }).then(({timezone}) => {
+    return this.getResource('profile/timezone', { accountId, webPropertyId, profileId }).then(({ timezone }) => {
       return timezone;
     });
   }

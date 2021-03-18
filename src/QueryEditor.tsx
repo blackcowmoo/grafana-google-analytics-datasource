@@ -1,10 +1,5 @@
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import {
-  AlphaNotice,
-  AsyncMultiSelect,
-  InlineFormLabel,
-  SegmentAsync,
-} from '@grafana/ui';
+import { AsyncMultiSelect, InlineFormLabel, SegmentAsync } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
@@ -40,13 +35,14 @@ export class QueryEditor extends PureComponent<Props> {
     } = this.props;
     const profileId = item.value as string;
 
-    if (profileId)
+    if (profileId) {
       datasource.getProfileTimezone(accountId, webPropertyId, profileId).then((timezone) => {
         const { query, onChange } = this.props;
-        console.log(`timezone`, timezone)
+        console.log(`timezone`, timezone);
         onChange({ ...query, timezone });
         this.willRunQuery(profileId, metrics, dimensions);
       });
+    }
     onChange({ ...query, profileId });
     this.willRunQuery(profileId, metrics, dimensions);
   };
@@ -125,7 +121,7 @@ export class QueryEditor extends PureComponent<Props> {
 
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions, timezone } = query;
+    const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions } = query;
     return (
       <>
         <div className="gf-form-inline">
