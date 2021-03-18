@@ -9,7 +9,7 @@ Visualize data from GA(Google Analytics)
 - Query using Metrics & Dimensions
 - Setting with json
 
-![setting](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/feature/frontend/mulit-matric-and-dimension/img/query.png?raw=true)
+![setting](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/feature/frontend/mulit-matric-and-dimension/src/img/query.png?raw=true)
 
 ## Preparations
 ### Generate a JWT file

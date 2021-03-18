@@ -26,7 +26,20 @@
         "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/master/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Setting",
+        "path": "img/setting.png"
+      },
+      {
+        "name": "After Setting",
+        "path": "img/after-setting.png"
+      },
+      {
+        "name": "Dashboard",
+        "path": "img/query.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
