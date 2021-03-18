@@ -73,7 +73,7 @@ export class QueryEditor extends PureComponent<Props> {
     });
     console.log(`metrics`, metrics);
 
-    onChange({ ...query, selectMetrics: items, metrics });
+    onChange({ ...query, selectedMetrics: items, metrics });
     this.willRunQuery();
   };
 
@@ -92,7 +92,7 @@ export class QueryEditor extends PureComponent<Props> {
     });
     console.log(`dimensions`, dimensions);
 
-    onChange({ ...query, selectDimensions: items, dimensions });
+    onChange({ ...query, selectedDimensions: items, dimensions });
     this.willRunQuery();
   };
 
@@ -109,7 +109,13 @@ export class QueryEditor extends PureComponent<Props> {
 
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, selectMetrics, selectDimensions } = query;
+    const {
+      accountId,
+      webPropertyId,
+      profileId,
+      selectedMetrics: selectMetrics,
+      selectedDimensions: selectDimensions,
+    } = query;
     return (
       <>
         <div className="gf-form-inline">

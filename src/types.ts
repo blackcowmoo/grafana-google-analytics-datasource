@@ -8,8 +8,8 @@ export interface GAQuery extends DataQuery {
   endDate: string;
   metrics: string[];
   dimensions: string[];
-  selectMetrics: Array<SelectableValue<string>>;
-  selectDimensions: Array<SelectableValue<string>>;
+  selectedMetrics: Array<SelectableValue<string>>;
+  selectedDimensions: Array<SelectableValue<string>>;
   cacheDurationSeconds?: number;
 }
 // mapping on google-key.json
