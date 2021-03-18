@@ -62,9 +62,6 @@ export class QueryEditor extends PureComponent<Props> {
   onMetricChange = (items: Array<SelectableValue<string>>) => {
     const { query, onChange } = this.props;
 
-    if (!items.length) {
-      return;
-    }
     let metrics = [] as string[];
     items.map((item) => {
       if (item.value) {
@@ -79,10 +76,6 @@ export class QueryEditor extends PureComponent<Props> {
 
   onDimensionChange = (items: Array<SelectableValue<string>>) => {
     const { query, onChange } = this.props;
-
-    if (!items.length) {
-      return;
-    }
 
     let dimensions = [] as string[];
     items.map((item) => {
