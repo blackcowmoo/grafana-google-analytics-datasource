@@ -192,6 +192,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 }
 
 func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
+	defer Elapsed("getReport")()
 	log.DefaultLogger.Info("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
 	Dimensions := []*reporting.Dimension{}
