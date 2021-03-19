@@ -41,7 +41,7 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		log.DefaultLogger.Error("Query failed", "error", err)
 		return nil, err
 	}
-  
+
 	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone)
 }
 
@@ -139,8 +139,9 @@ func (ga *GoogleAnalytics) GetProfileTimezone(ctx context.Context, config *Datas
 	var timezone string
 	for _, profile := range profiles {
 		if profile.Id == profileId {
-      timezone = profile.Timezone
-    }
+			timezone = profile.Timezone
+			break
+		}
 	}
 
 	ga.Cache.Set(cacheKey, timezone, 60*time.Second)
