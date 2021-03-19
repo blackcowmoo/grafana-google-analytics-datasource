@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -68,20 +69,27 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, report 
 	return frame, nil
 }
 
+//                                      <--------- primary secondary --------->
 var timeDimensions []string = []string{"ga:dateHourMinute", "ga:dateHour", "ga:date"}
 
 func transformReportToDataFrames(report *reporting.Report, refId string, timezone string) ([]*data.Frame, error) {
 	var metricDateDimensionIndex int = -1
-Exit:
+	var dateDimensionsIndex []int = []int{}
+	var newDimensions []string = []string{}
+	// Find primary time dimension, classify time dimensions and other dimensions
 	for _, tDimension := range timeDimensions {
 		for index, dimension := range report.ColumnHeader.Dimensions {
 			if tDimension == dimension {
-				metricDateDimensionIndex = index
-				break Exit
+				if metricDateDimensionIndex == -1 {
+					metricDateDimensionIndex = index
+				}
+				dateDimensionsIndex = append(dateDimensionsIndex, index)
+			} else {
+				newDimensions = append(newDimensions, dimension)
 			}
 		}
 	}
-
+	// add primaryDimension in MetricHeader
 	if metricDateDimensionIndex >= 0 {
 		report.ColumnHeader.MetricHeader.MetricHeaderEntries = append(report.ColumnHeader.MetricHeader.MetricHeaderEntries, &reporting.MetricHeaderEntry{
 			Name: report.ColumnHeader.Dimensions[metricDateDimensionIndex],
@@ -89,42 +97,24 @@ Exit:
 		})
 	}
 
-	var dateDimensionsIndex []int = []int{}
-	var newDimensions []string = []string{}
-	for index, dimension := range report.ColumnHeader.Dimensions {
-		for _, tDimension := range timeDimensions {
-			if dimension == tDimension {
-				dateDimensionsIndex = append(dateDimensionsIndex, index)
-			} else {
-				newDimensions = append(newDimensions, dimension)
-			}
-		}
-	}
-
+	sort.Ints(dateDimensionsIndex)
 	report.ColumnHeader.Dimensions = newDimensions
 	var dimensions []string = []string{}
 	for _, row := range report.Data.Rows {
 		var rowDimensions []string = []string{}
 		for index, dimension := range row.Dimensions {
-			var find bool = false
-			for _, dateDimensionIndex := range dateDimensionsIndex {
-				if index == dateDimensionIndex {
-					find = true
-					if metricDateDimensionIndex == index {
-						timezone, err := time.LoadLocation(timezone)
-						if err != nil {
-							log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
-						}
-						parsedTime, err := parseAndTimezoneTime(dimension, timezone)
-						if err != nil {
-							log.DefaultLogger.Info("paresdTime err", "err", err.Error())
-						}
-						sTime := parsedTime.Format(time.RFC3339)
-						row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
-					}
+			if index == metricDateDimensionIndex {
+				timezone, err := time.LoadLocation(timezone)
+				if err != nil {
+					log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
 				}
-			}
-			if !find {
+				parsedTime, err := parseAndTimezoneTime(dimension, timezone)
+				if err != nil {
+					log.DefaultLogger.Info("paresdTime err", "err", err.Error())
+				}
+				sTime := parsedTime.Format(time.RFC3339)
+				row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
+			} else if result := sort.SearchInts(dateDimensionsIndex, index); result >= len(dateDimensionsIndex) {
 				rowDimensions = append(rowDimensions, dimension)
 			}
 		}
