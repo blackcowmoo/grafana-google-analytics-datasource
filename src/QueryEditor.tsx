@@ -29,11 +29,20 @@ export class QueryEditor extends PureComponent<Props> {
   onProfileIdChange = (item: any) => {
     const {
       query,
-      query: { metrics, dimensions },
+      query: { metrics, dimensions, accountId, webPropertyId },
       onChange,
+      datasource,
     } = this.props;
-    let profileId = item.value;
+    const profileId = item.value as string;
 
+    if (profileId) {
+      datasource.getProfileTimezone(accountId, webPropertyId, profileId).then((timezone) => {
+        const { query, onChange } = this.props;
+        console.log(`timezone`, timezone);
+        onChange({ ...query, timezone });
+        this.willRunQuery(profileId, metrics, dimensions);
+      });
+    }
     onChange({ ...query, profileId });
     this.willRunQuery(profileId, metrics, dimensions);
   };
@@ -112,13 +121,7 @@ export class QueryEditor extends PureComponent<Props> {
 
   render() {
     const { query, datasource } = this.props;
-    const {
-      accountId,
-      webPropertyId,
-      profileId,
-      selectedMetrics: selectMetrics,
-      selectedDimensions: selectDimensions,
-    } = query;
+    const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions } = query;
     return (
       <>
         <div className="gf-form-inline">
@@ -173,9 +176,9 @@ export class QueryEditor extends PureComponent<Props> {
             width={10}
             className="query-keyword"
             tooltip={
-              <p>
+              <div>
                 The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This
-              </p>
+              </div>
             }
           >
             Profile ID
@@ -187,6 +190,7 @@ export class QueryEditor extends PureComponent<Props> {
             allowCustomValue={true}
             onChange={this.onProfileIdChange}
           ></SegmentAsync>
+
           <div className="gf-form gf-form--grow">
             <div className="gf-form-label gf-form-label--grow" />
           </div>
@@ -207,7 +211,7 @@ export class QueryEditor extends PureComponent<Props> {
           <AsyncMultiSelect
             loadOptions={(q) => datasource.getMetrics(q)}
             placeholder={'ga:sessions'}
-            value={selectMetrics}
+            value={selectedMetrics}
             onChange={this.onMetricChange}
             backspaceRemovesValue
             cacheOptions
@@ -230,7 +234,7 @@ export class QueryEditor extends PureComponent<Props> {
           <AsyncMultiSelect
             loadOptions={(q) => datasource.getDimensions(q)}
             placeholder={'ga:dateHour'}
-            value={selectDimensions}
+            value={selectedDimensions}
             onChange={this.onDimensionChange}
             backspaceRemovesValue
             cacheOptions

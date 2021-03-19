@@ -1,5 +1,4 @@
-import { DataSourcePluginOptionsEditorProps, onUpdateDatasourceSecureJsonDataOption } from '@grafana/data';
-import { LegacyForms } from '@grafana/ui';
+import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GASecureJsonData } from 'types';
 import { JWTConfig } from './JWTConfig';
@@ -13,11 +12,9 @@ export class ConfigEditor extends PureComponent<Props> {
       ...options,
       secureJsonData: {
         ...options.secureJsonData,
-        profileId: '',
       },
       secureJsonFields: {
         ...options.secureJsonFields,
-        profileId: false,
       },
     });
   };
@@ -28,20 +25,6 @@ export class ConfigEditor extends PureComponent<Props> {
     const secureJsonData = options.secureJsonData as GASecureJsonData;
     return (
       <div className="gf-form-group">
-        <>
-          <div className="gf-form">
-            <LegacyForms.SecretFormField
-              isConfigured={(secureJsonFields && secureJsonFields.profileId) as boolean}
-              value={secureJsonData?.profileId || ''}
-              label="Default ProfileId"
-              labelWidth={10}
-              inputWidth={30}
-              placeholder="Default ProfileId"
-              onReset={this.onResetProfileId}
-              onChange={onUpdateDatasourceSecureJsonDataOption(this.props, 'profileId')}
-            />
-          </div>
-        </>
         <>
           <JWTConfig
             isConfigured={(secureJsonFields && !!secureJsonFields.jwt) as boolean}

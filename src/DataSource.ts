@@ -32,6 +32,12 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
+  async getProfileTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
+    return this.getResource('profile/timezone', { accountId, webPropertyId, profileId }).then(({ timezone }) => {
+      return timezone;
+    });
+  }
+
   async getMetrics(query?: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('metrics').then(({ metrics }) => {
       return metrics.reduce((pre: Array<SelectableValue<string>>, element: any) => {

@@ -29,6 +29,7 @@ func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
 	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
 	mux.HandleFunc("/profiles", ds.handleResourceProfiles)
+	mux.HandleFunc("/profile/timezone", ds.handleResourceProfileTimezone)
 	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
 	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
 	return ds
@@ -67,7 +68,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, []string{"ga:country"}, 1, "", false}
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, []string{"ga:dateHour"}, 1, "", false, "UTC"}
 	res, err := client.getReport(testData)
 
 	if err != nil {
@@ -203,4 +204,20 @@ func (ds *GoogleAnalyticsDataSource) handleResourceMetrics(rw http.ResponseWrite
 
 	res, err := ds.analytics.GetMetrics()
 	writeResult(rw, "metrics", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	ctx := req.Context()
+	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	if err != nil {
+		writeResult(rw, "?", nil, err)
+		return
+	}
+
+	res, err := ds.analytics.GetProfileTimezone(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"), req.URL.Query().Get("profileId"))
+	writeResult(rw, "timezone", res, err)
 }

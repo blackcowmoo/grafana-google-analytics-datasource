@@ -194,13 +194,13 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
 	log.DefaultLogger.Info("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
-  Dimensions := []*reporting.Dimension{}
-  for _, metric := range query.Metrics {
-    Metrics = append(Metrics, &reporting.Metric{Expression: metric})
-  }
-  for _, dimension := range query.Dimensions {
-    Dimensions = append(Dimensions, &reporting.Dimension{Name: dimension})
-  }
+	Dimensions := []*reporting.Dimension{}
+	for _, metric := range query.Metrics {
+		Metrics = append(Metrics, &reporting.Metric{Expression: metric})
+	}
+	for _, dimension := range query.Dimensions {
+		Dimensions = append(Dimensions, &reporting.Dimension{Name: dimension})
+	}
 
 	reportRequest := reporting.ReportRequest{
 		ViewId: query.ProfileID,
@@ -208,10 +208,10 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 			// Create the DateRange object.
 			{StartDate: query.StartDate, EndDate: query.EndDate},
 		},
-		Metrics: Metrics,
+		Metrics:    Metrics,
 		Dimensions: Dimensions,
-		PageSize:  query.PageSize,
-		PageToken: query.PageToken,
+		PageSize:   query.PageSize,
+		PageToken:  query.PageToken,
 	}
 
 	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)

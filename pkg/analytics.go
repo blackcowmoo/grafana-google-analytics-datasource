@@ -42,7 +42,7 @@ func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) 
 		return nil, err
 	}
 
-	return transformReportsResponseToDataFrames(report, queryModel.RefID)
+	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone)
 }
 
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *DatasourceSettings) (map[string]string, error) {
@@ -118,4 +118,32 @@ func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *DatasourceSe
 
 	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
 	return profileNames, nil
+}
+
+func (ga *GoogleAnalytics) GetProfileTimezone(ctx context.Context, config *DatasourceSettings, accountId string, webPropertyId string, profileId string) (string, error) {
+	client, err := NewGoogleClient(ctx, config)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:account:%s:webproperty:%s:profile:%s:timezone", accountId, webPropertyId, profileId)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.(string), nil
+	}
+
+	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
+	if err != nil {
+		return "", err
+	}
+
+	var timezone string
+	for _, profile := range profiles {
+		if profile.Id == profileId {
+			timezone = profile.Timezone
+			break
+		}
+	}
+
+	ga.Cache.Set(cacheKey, timezone, 60*time.Second)
+	return timezone, nil
 }
