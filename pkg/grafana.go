@@ -108,7 +108,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 				if err != nil {
 					log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
 				}
-				parsedTime, err := parseAndTimezoneTime(dimension, timezone)
+				parsedTime, err := ParseAndTimezoneTime(dimension, timezone)
 				if err != nil {
 					log.DefaultLogger.Info("paresdTime err", "err", err.Error())
 				}
@@ -163,16 +163,6 @@ func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsR
 
 func padRightSide(str string, item string, count int) string {
 	return str + strings.Repeat(item, count)
-}
-
-func parseAndTimezoneTime(sTime string, timezone *time.Location) (*time.Time, error) {
-	time, err := time.ParseInLocation("200601021504", padRightSide(sTime, "0", 12-len(sTime)), timezone)
-
-	if err != nil {
-		log.DefaultLogger.Info("timeConverter", "err", err)
-		return nil, err
-	}
-	return &time, nil
 }
 
 // timeConverter handles sheets TIME column types.
