@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -46,7 +47,7 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 		return nil, fmt.Errorf("error get timezone %s", err.Error())
 	}
 
-  log.DefaultLogger.Info("query timezone", "timezone", timezone)
+	log.DefaultLogger.Info("query timezone", "timezone", timezone.String())
 
 	model.StartDate = query.TimeRange.From.In(timezone).Format("2006-01-02")
 	model.EndDate = query.TimeRange.To.In(timezone).Format("2006-01-02")
@@ -98,4 +99,107 @@ func NewColumnDefinition(header string, index int, headerType string) *ColumnDef
 		ColumnIndex: index,
 		columnType:  getColumnType(headerType),
 	}
+}
+
+// Metadata
+const (
+	AttributeTypeDimension AttributeType = "DIMENSION"
+	AttributeTypeMetric    AttributeType = "METRIC"
+)
+
+type Metadata struct {
+	Kind           string         `json:"kind"`
+	Etag           string         `json:"etag"`
+	TotalResults   int64          `json:"totalResults"`
+	AttributeNames []string       `json:"attributeNames"`
+	Items          []MetadataItem `json:"items"`
+}
+
+type MetadataItem struct {
+	ID         string                `json:"id"`
+	Kind       string                `json:"kind"`
+	Attributes MetadataItemAttribute `json:"attributes"`
+}
+
+type MetadataItemAttribute struct {
+	Type              AttributeType `json:"type,omitempty"`
+	DataType          string        `json:"dataType,omitempty"`
+	Group             string        `json:"group,omitempty"`
+	Status            string        `json:"status,omitempty"`
+	UIName            string        `json:"uiName,omitempty"`
+	Description       string        `json:"description,omitempty"`
+	AllowedInSegments string        `json:"allowedInSegments,omitempty"`
+	AddedInAPIVersion string        `json:"addedInApiVersion,omitempty"`
+}
+
+type AttributeType string
+
+func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
+	res, err := http.Get(GaMetadataURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch metadata api %w", err)
+	}
+	defer res.Body.Close()
+
+	metadata := Metadata{}
+
+	err = json.NewDecoder(res.Body).Decode(&metadata)
+	if err != nil {
+		return nil, fmt.Errorf("fail to parsing metadata to json %w", err)
+	}
+	return &metadata, nil
+}
+
+func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem, error) {
+	metadata, err := ga.getMetadata()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// length := int(metadata.TotalResults)
+	var dimensionItems = make([]MetadataItem, 0)
+	var metricItems = make([]MetadataItem, 0)
+	for _, item := range metadata.Items {
+		if item.Attributes.Status == "DEPRECATED" {
+			continue
+		}
+		if item.Attributes.Type == AttributeTypeDimension {
+			dimensionItems = append(dimensionItems, item)
+		} else if item.Attributes.Type == AttributeTypeMetric {
+			metricItems = append(metricItems, item)
+		}
+	}
+
+	return dimensionItems, metadata.Items, nil
+}
+
+func (ga *GoogleAnalytics) GetDimensions() ([]MetadataItem, error) {
+	cacheKey := "ga:metadata:dimensions"
+	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return dimensions.([]MetadataItem), nil
+	}
+
+	dimensions, _, err := ga.getFilteredMetadata()
+	if err != nil {
+		return nil, err
+	}
+
+	ga.Cache.Set(cacheKey, dimensions, time.Hour)
+
+	return dimensions, nil
+}
+
+func (ga *GoogleAnalytics) GetMetrics() ([]MetadataItem, error) {
+	cacheKey := "ga:metadata:metrics"
+	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return metrics.([]MetadataItem), nil
+	}
+	_, metrics, err := ga.getFilteredMetadata()
+	if err != nil {
+		return nil, err
+	}
+
+	ga.Cache.Set(cacheKey, metrics, time.Hour)
+
+	return metrics, nil
 }
