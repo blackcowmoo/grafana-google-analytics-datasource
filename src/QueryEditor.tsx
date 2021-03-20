@@ -121,127 +121,132 @@ export class QueryEditor extends PureComponent<Props> {
 
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions } = query;
+    const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions, timezone } = query;
     return (
       <>
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code>accountId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-              </p>
-            }
-          >
-            Account ID
-          </InlineFormLabel>
-          <SegmentAsync
-            loadOptions={() => datasource.getAccountIds()}
-            placeholder="Enter Account ID"
-            value={accountId}
-            allowCustomValue={true}
-            onChange={this.onAccountIdChange}
-          ></SegmentAsync>
-          <div className="gf-form gf-form--grow">
-            <div className="gf-form-label gf-form-label--grow" />
+        <div className='gf-form-group'>
+          <div className="gf-form">
+            <InlineFormLabel
+              width={8}
+              className="query-keyword"
+              tooltip={
+                <p>
+                  The <code>accountId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
+                </p>
+              }
+            >
+              Account ID
+            </InlineFormLabel>
+            <SegmentAsync
+              loadOptions={() => datasource.getAccountIds()}
+              placeholder="Enter Account ID"
+              width={6}
+              value={accountId}
+              allowCustomValue
+              onChange={this.onAccountIdChange}
+            />
           </div>
-        </div>
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
+          <div className='gf-form'>
+            <InlineFormLabel
+              width={8}
+              className="query-keyword"
+              tooltip={
+                <p>
+                  The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
               </p>
-            }
-          >
-            Web Property ID
+              }
+            >
+              Web Property ID
           </InlineFormLabel>
-          <SegmentAsync
-            loadOptions={() => datasource.getWebPropertyIds(accountId)}
-            placeholder="Enter Web Property ID"
-            value={webPropertyId}
-            allowCustomValue={true}
-            onChange={this.onWebPropertyIdChange}
-          ></SegmentAsync>
-          <div className="gf-form gf-form--grow">
-            <div className="gf-form-label gf-form-label--grow" />
+            <SegmentAsync
+              loadOptions={() => datasource.getWebPropertyIds(accountId)}
+              placeholder="Enter Web Property ID"
+              value={webPropertyId}
+              allowCustomValue
+              onChange={this.onWebPropertyIdChange} />
           </div>
-        </div>
 
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <div>
-                The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+              width={8}
+              tooltip={
+                <div>
+                  The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This
               </div>
-            }
-          >
-            Profile ID
+              }
+            >
+              Profile ID
           </InlineFormLabel>
-          <SegmentAsync
-            loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
-            placeholder="Enter Profile ID"
-            value={profileId}
-            allowCustomValue={true}
-            onChange={this.onProfileIdChange}
-          ></SegmentAsync>
-
-          <div className="gf-form gf-form--grow">
-            <div className="gf-form-label gf-form-label--grow" />
+            <SegmentAsync
+              loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
+              placeholder="Enter Profile ID"
+              value={profileId}
+              allowCustomValue
+              onChange={this.onProfileIdChange}
+            />
+            {timezone && (<InlineFormLabel
+              className="query-keyword"
+              width={'auto'}
+              tooltip={
+                <p>
+                  GA timeZone
+                </p>
+              }
+            >
+              {timezone}
+          </InlineFormLabel>)}
           </div>
-        </div>
-
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code>metric</code> ga:*
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+              width={10}
+              tooltip={
+                <p>
+                  The <code>metric</code> ga:*
               </p>
-            }
-          >
-            Metrics
+              }
+            >
+              Metrics
           </InlineFormLabel>
-          <AsyncMultiSelect
-            loadOptions={(q) => datasource.getMetrics(q)}
-            placeholder={'ga:sessions'}
-            value={selectedMetrics}
-            onChange={this.onMetricChange}
-            backspaceRemovesValue
-            cacheOptions
-            noOptionsMessage={'Search Metrics'}
-          ></AsyncMultiSelect>
-        </div>
+            <AsyncMultiSelect
+              loadOptions={(q) => datasource.getMetrics(q)}
+              placeholder={'ga:sessions'}
+              value={selectedMetrics}
+              onChange={this.onMetricChange}
+              backspaceRemovesValue
+              cacheOptions
+              noOptionsMessage={'Search Metrics'}
+            />
+          </div>
 
-        <div className="gf-form-inline">
-          <InlineFormLabel
-            width={10}
-            className="query-keyword"
-            tooltip={
-              <p>
-                The <code> dimensions </code> At least one ga:date* is required.
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+              width={10}
+              tooltip={
+                <p>
+                  The <code> dimensions </code> At least one ga:date* is required.
               </p>
-            }
-          >
-            Dimension
-          </InlineFormLabel>
-          <AsyncMultiSelect
-            loadOptions={(q) => datasource.getDimensions(q)}
-            placeholder={'ga:dateHour'}
-            value={selectedDimensions}
-            onChange={this.onDimensionChange}
-            backspaceRemovesValue
-            cacheOptions
-            noOptionsMessage={'Search Dimension'}
-          ></AsyncMultiSelect>
+              }
+            >
+              Dimension
+            </InlineFormLabel>
+            <AsyncMultiSelect
+              loadOptions={(q) => datasource.getDimensions(q)}
+              placeholder={'ga:dateHour'}
+              value={selectedDimensions}
+              onChange={this.onDimensionChange}
+              backspaceRemovesValue
+              cacheOptions
+              noOptionsMessage={'Search Dimension'}
+            />
+          </div>
+
         </div>
       </>
-    );
+    )
   }
 }
+
+
