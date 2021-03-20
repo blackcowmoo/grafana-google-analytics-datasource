@@ -192,7 +192,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 }
 
 func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
-	defer Elapsed("getReport")()
+	defer Elapsed("Get report data at GA API")()
 	log.DefaultLogger.Info("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
 	Dimensions := []*reporting.Dimension{}
@@ -240,8 +240,6 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 		if err != nil {
 			return nil, fmt.Errorf(err.Error())
 		}
-
-		log.DefaultLogger.Info("newReport", "newReport", newReport)
 
 		report.Reports[0].Data.Rows = append(report.Reports[0].Data.Rows, newReport.Reports[0].Data.Rows...)
 		return report, nil

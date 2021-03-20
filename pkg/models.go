@@ -46,7 +46,7 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 		return nil, fmt.Errorf("error get timezone %s", err.Error())
 	}
 
-  log.DefaultLogger.Info("query timezone", "timezone", timezone)
+	log.DefaultLogger.Info("query timezone", "timezone", timezone.String())
 
 	model.StartDate = query.TimeRange.From.In(timezone).Format("2006-01-02")
 	model.EndDate = query.TimeRange.To.In(timezone).Format("2006-01-02")

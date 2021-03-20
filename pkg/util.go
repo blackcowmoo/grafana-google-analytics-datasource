@@ -8,6 +8,6 @@ import (
 func Elapsed(what string) func() {
 	start := time.Now()
 	return func() {
-		log.DefaultLogger.Info("function Elapsed", what, time.Since(start).String())
+		log.DefaultLogger.Info("Elapsed", what, time.Since(start).String())
 	}
 }
