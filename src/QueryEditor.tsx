@@ -1,5 +1,5 @@
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { AsyncMultiSelect, InlineFormLabel, SegmentAsync } from '@grafana/ui';
+import { AsyncMultiSelect, InlineFormLabel, InlineLabel, SegmentAsync } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
@@ -185,9 +185,10 @@ export class QueryEditor extends PureComponent<Props> {
               allowCustomValue
               onChange={this.onProfileIdChange}
             />
-            {timezone && (<InlineFormLabel
+            {timezone && (<InlineLabel
               className="query-keyword"
               width={'auto'}
+              transparent
               tooltip={
                 <p>
                   GA timeZone
@@ -195,7 +196,7 @@ export class QueryEditor extends PureComponent<Props> {
               }
             >
               {timezone}
-          </InlineFormLabel>)}
+          </InlineLabel>)}
           </div>
           <div className="gf-form">
             <InlineFormLabel
