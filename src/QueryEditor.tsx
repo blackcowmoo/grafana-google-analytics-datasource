@@ -182,11 +182,10 @@ export class QueryEditor extends PureComponent<Props> {
               allowCustomValue
               onChange={this.onProfileIdChange}
             />
-            {timezone && (
-              <InlineFormLabel className="query-keyword" width={'auto'} tooltip={<p>GA timeZone</p>}>
-                {timezone}
-              </InlineFormLabel>
-            )}
+            <InlineFormLabel className="query-keyword" width={'auto'} tooltip={<p>GA timeZone</p>}>
+              Timezone
+            </InlineFormLabel>
+            <InlineFormLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineFormLabel>
           </div>
           <div className="gf-form">
             <InlineFormLabel

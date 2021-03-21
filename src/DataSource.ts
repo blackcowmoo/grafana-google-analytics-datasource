@@ -1,6 +1,6 @@
 import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend } from '@grafana/runtime';
-import { GADataSourceOptions, GAQuery } from './types';
+import { GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
   constructor(instanceSettings: DataSourceInstanceSettings<GADataSourceOptions>) {
@@ -38,14 +38,17 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getMetrics(query?: string): Promise<Array<SelectableValue<string>>> {
+  async getMetrics(query: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('metrics').then(({ metrics }) => {
-      return metrics.reduce((pre: Array<SelectableValue<string>>, element: any) => {
-        let id = element.id as string;
-        if (query && id.toLowerCase().indexOf(query) > -1) {
+      return metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
+        if (
+          element.id.toLowerCase().indexOf(query) > -1 ||
+          element.attributes.uiName.toLowerCase().indexOf(query) > -1
+        ) {
           pre.push({
-            label: element.id,
+            label: element.attributes.uiName,
             value: element.id,
+            description: element.attributes.description,
           } as SelectableValue<string>);
         }
         return pre;
@@ -53,14 +56,17 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getDimensions(query?: string): Promise<Array<SelectableValue<string>>> {
+  async getDimensions(query: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('dimensions').then(({ dimensions }) => {
-      return dimensions.reduce((pre: Array<SelectableValue<string>>, element: any) => {
-        let id = element.id as string;
-        if (query && id.toLowerCase().indexOf(query) > -1) {
+      return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
+        if (
+          element.id.toLowerCase().indexOf(query) > -1 ||
+          element.attributes.uiName.toLowerCase().indexOf(query) > -1
+        ) {
           pre.push({
-            label: element.id,
+            label: element.attributes.uiName,
             value: element.id,
+            description: element.attributes.description,
           } as SelectableValue<string>);
         }
         return pre;
