@@ -130,6 +130,7 @@ type MetadataItemAttribute struct {
 	Description       string        `json:"description,omitempty"`
 	AllowedInSegments string        `json:"allowedInSegments,omitempty"`
 	AddedInAPIVersion string        `json:"addedInApiVersion,omitempty"`
+	ReplacedBy        string        `json:"replacedBy,omitempty"`
 }
 
 type AttributeType string
@@ -160,7 +161,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem
 	var dimensionItems = make([]MetadataItem, 0)
 	var metricItems = make([]MetadataItem, 0)
 	for _, item := range metadata.Items {
-		if item.Attributes.Status == "DEPRECATED" {
+		if item.Attributes.Status == "DEPRECATED" || item.Attributes.ReplacedBy != "" {
 			continue
 		}
 		if item.Attributes.Type == AttributeTypeDimension {
@@ -170,7 +171,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem
 		}
 	}
 
-	return dimensionItems, metadata.Items, nil
+	return metricItems, dimensionItems, nil
 }
 
 func (ga *GoogleAnalytics) GetDimensions() ([]MetadataItem, error) {
@@ -179,7 +180,7 @@ func (ga *GoogleAnalytics) GetDimensions() ([]MetadataItem, error) {
 		return dimensions.([]MetadataItem), nil
 	}
 
-	dimensions, _, err := ga.getFilteredMetadata()
+	_, dimensions, err := ga.getFilteredMetadata()
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +195,7 @@ func (ga *GoogleAnalytics) GetMetrics() ([]MetadataItem, error) {
 	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return metrics.([]MetadataItem), nil
 	}
-	_, metrics, err := ga.getFilteredMetadata()
+	metrics, _, err := ga.getFilteredMetadata()
 	if err != nil {
 		return nil, err
 	}

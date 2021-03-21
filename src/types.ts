@@ -38,3 +38,20 @@ export interface GASecureJsonData {
   profileId?: string;
   timezone?: string;
 }
+
+export interface GAMetadata {
+  id: string;
+  kind: string;
+  attributes: GAMetadataAttribute;
+}
+
+export interface GAMetadataAttribute {
+  type: string;
+  dataType: string;
+  group: string;
+  status?: string;
+  uiName: string;
+  description: string;
+  allowedInSegments?: string;
+  addedInAPIVersion?: string;
+}
