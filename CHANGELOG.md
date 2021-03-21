@@ -5,7 +5,8 @@
 - add timezone label at query editor
 - get metric bug fix
 - add Metrics & Dimensions description
-- remove unuse function
+- add Metadata type for typescript
+- remove unused function
 
 
 ## 0.1.0
