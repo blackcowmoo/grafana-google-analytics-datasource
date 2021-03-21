@@ -124,7 +124,7 @@ export class QueryEditor extends PureComponent<Props> {
     const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions, timezone } = query;
     return (
       <>
-        <div className='gf-form-group'>
+        <div className="gf-form-group">
           <div className="gf-form">
             <InlineFormLabel
               width={8}
@@ -145,39 +145,36 @@ export class QueryEditor extends PureComponent<Props> {
               allowCustomValue
               onChange={this.onAccountIdChange}
             />
-          </div>
-          <div className='gf-form'>
             <InlineFormLabel
               width={8}
               className="query-keyword"
               tooltip={
                 <p>
                   The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-              </p>
+                </p>
               }
             >
               Web Property ID
-          </InlineFormLabel>
+            </InlineFormLabel>
             <SegmentAsync
               loadOptions={() => datasource.getWebPropertyIds(accountId)}
               placeholder="Enter Web Property ID"
               value={webPropertyId}
               allowCustomValue
-              onChange={this.onWebPropertyIdChange} />
-          </div>
-
-          <div className="gf-form">
+              onChange={this.onWebPropertyIdChange}
+            />
             <InlineFormLabel
               className="query-keyword"
               width={8}
               tooltip={
                 <div>
-                  The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered. This
-              </div>
+                  The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
+                  This
+                </div>
               }
             >
               Profile ID
-          </InlineFormLabel>
+            </InlineFormLabel>
             <SegmentAsync
               loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
               placeholder="Enter Profile ID"
@@ -185,17 +182,11 @@ export class QueryEditor extends PureComponent<Props> {
               allowCustomValue
               onChange={this.onProfileIdChange}
             />
-            {timezone && (<InlineFormLabel
-              className="query-keyword"
-              width={'auto'}
-              tooltip={
-                <p>
-                  GA timeZone
-                </p>
-              }
-            >
-              {timezone}
-          </InlineFormLabel>)}
+            {timezone && (
+              <InlineFormLabel className="query-keyword" width={'auto'} tooltip={<p>GA timeZone</p>}>
+                {timezone}
+              </InlineFormLabel>
+            )}
           </div>
           <div className="gf-form">
             <InlineFormLabel
@@ -204,11 +195,11 @@ export class QueryEditor extends PureComponent<Props> {
               tooltip={
                 <p>
                   The <code>metric</code> ga:*
-              </p>
+                </p>
               }
             >
               Metrics
-          </InlineFormLabel>
+            </InlineFormLabel>
             <AsyncMultiSelect
               loadOptions={(q) => datasource.getMetrics(q)}
               placeholder={'ga:sessions'}
@@ -217,6 +208,7 @@ export class QueryEditor extends PureComponent<Props> {
               backspaceRemovesValue
               cacheOptions
               noOptionsMessage={'Search Metrics'}
+              defaultOptions
             />
           </div>
 
@@ -226,11 +218,11 @@ export class QueryEditor extends PureComponent<Props> {
               width={10}
               tooltip={
                 <p>
-                  The <code> dimensions </code> At least one ga:date* is required.
-              </p>
+                  The <code>dimensions</code> At least one ga:date* is required.
+                </p>
               }
             >
-              Dimension
+              Dimensions
             </InlineFormLabel>
             <AsyncMultiSelect
               loadOptions={(q) => datasource.getDimensions(q)}
@@ -240,13 +232,11 @@ export class QueryEditor extends PureComponent<Props> {
               backspaceRemovesValue
               cacheOptions
               noOptionsMessage={'Search Dimension'}
+              defaultOptions
             />
           </div>
-
         </div>
       </>
-    )
+    );
   }
 }
-
-
