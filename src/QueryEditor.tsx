@@ -130,9 +130,9 @@ export class QueryEditor extends PureComponent<Props> {
               width={8}
               className="query-keyword"
               tooltip={
-                <p>
+                <>
                   The <code>accountId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                </p>
+                </>
               }
             >
               Account ID
@@ -149,9 +149,9 @@ export class QueryEditor extends PureComponent<Props> {
               width={8}
               className="query-keyword"
               tooltip={
-                <p>
+                <>
                   The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                </p>
+                </>
               }
             >
               Web Property ID
@@ -167,10 +167,9 @@ export class QueryEditor extends PureComponent<Props> {
               className="query-keyword"
               width={8}
               tooltip={
-                <div>
+                <>
                   The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                  This
-                </div>
+                </>
               }
             >
               Profile ID
@@ -182,7 +181,7 @@ export class QueryEditor extends PureComponent<Props> {
               allowCustomValue
               onChange={this.onProfileIdChange}
             />
-            <InlineFormLabel className="query-keyword" width={'auto'} tooltip={<p>GA timeZone</p>}>
+            <InlineFormLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
               Timezone
             </InlineFormLabel>
             <InlineFormLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineFormLabel>
@@ -192,9 +191,9 @@ export class QueryEditor extends PureComponent<Props> {
               className="query-keyword"
               width={10}
               tooltip={
-                <p>
+                <>
                   The <code>metric</code> ga:*
-                </p>
+                </>
               }
             >
               Metrics
@@ -216,9 +215,9 @@ export class QueryEditor extends PureComponent<Props> {
               className="query-keyword"
               width={10}
               tooltip={
-                <p>
+                <>
                   The <code>dimensions</code> At least one ga:date* is required.
-                </p>
+                </>
               }
             >
               Dimensions
