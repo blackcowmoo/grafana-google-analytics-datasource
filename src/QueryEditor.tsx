@@ -8,16 +8,6 @@ type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
 
-export const formatCacheTimeLabel = (s: number = defaultCacheDuration) => {
-  if (s < 60) {
-    return s + 's';
-  } else if (s < 3600) {
-    return s / 60 + 'm';
-  }
-
-  return s / 3600 + 'h';
-};
-
 export class QueryEditor extends PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
@@ -181,10 +171,11 @@ export class QueryEditor extends PureComponent<Props> {
               allowCustomValue
               onChange={this.onProfileIdChange}
             />
-            <InlineFormLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
+            <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
               Timezone
-            </InlineFormLabel>
-            <InlineFormLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineFormLabel>
+            </InlineLabel>
+            <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
+            <div className="gf-form-label gf-form-label--grow" />
           </div>
           <div className="gf-form">
             <InlineFormLabel
