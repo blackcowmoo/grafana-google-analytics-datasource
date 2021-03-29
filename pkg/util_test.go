@@ -6,26 +6,12 @@ import (
 	"time"
 )
 
-func TestElapsed(t *testing.T) {
-	type args struct {
-		what string
-	}
-	tests := []struct {
-		name string
-		args args
-		want func()
-	}{
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Elapsed(tt.args.what); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Elapsed() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestParseAndTimezoneTime(t *testing.T) {
+	localTimezone := time.Now().Local().Location()
+	now := time.Now()
+	now = now.Truncate(time.Minute)
+	dateHourMinFormat := "200601021504"
+	dateHourMin := now.Format(dateHourMinFormat)
 	type args struct {
 		sTime    string
 		timezone *time.Location
@@ -36,7 +22,15 @@ func TestParseAndTimezoneTime(t *testing.T) {
 		want    *time.Time
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "dateHour",
+			args: args{
+				sTime:    dateHourMin,
+				timezone: localTimezone,
+			},
+			wantErr: false,
+			want:    &now,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
