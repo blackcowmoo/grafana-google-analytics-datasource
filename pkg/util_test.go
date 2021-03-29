@@ -8,8 +8,7 @@ import (
 
 func TestParseAndTimezoneTime(t *testing.T) {
 	localTimezone := time.Now().Local().Location()
-	now := time.Now()
-	now = now.Truncate(time.Minute)
+	now := time.Now().Truncate(time.Minute)
 	dateHourMinFormat := "200601021504"
 	dateHourMin := now.Format(dateHourMinFormat)
 	type args struct {
