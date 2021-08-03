@@ -1,5 +1,5 @@
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { AsyncMultiSelect, InlineFormLabel, InlineLabel, SegmentAsync } from '@grafana/ui';
+import { AsyncMultiSelect, AsyncSelect, InlineFormLabel, InlineLabel, SegmentAsync } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
@@ -19,7 +19,7 @@ export class QueryEditor extends PureComponent<Props> {
   onProfileIdChange = (item: any) => {
     const {
       query,
-      query: { metrics, dimensions, accountId, webPropertyId },
+      query: { accountId, webPropertyId },
       onChange,
       datasource,
     } = this.props;
@@ -30,43 +30,31 @@ export class QueryEditor extends PureComponent<Props> {
         const { query, onChange } = this.props;
         console.log(`timezone`, timezone);
         onChange({ ...query, timezone });
-        this.willRunQuery(profileId, metrics, dimensions);
+        this.willRunQuery();
       });
     }
     onChange({ ...query, profileId });
-    this.willRunQuery(profileId, metrics, dimensions);
+    this.willRunQuery();
   };
 
   onAccountIdChange = (item: any) => {
-    const {
-      query,
-      query: { profileId, metrics, dimensions },
-      onChange,
-    } = this.props;
+    const { query, onChange } = this.props;
     let accountId = item.value;
 
     onChange({ ...query, accountId });
-    this.willRunQuery(profileId, metrics, dimensions);
+    this.willRunQuery();
   };
 
   onWebPropertyIdChange = (item: any) => {
-    const {
-      query,
-      query: { profileId, metrics, dimensions },
-      onChange,
-    } = this.props;
+    const { query, onChange } = this.props;
     let webPropertyId = item.value;
 
     onChange({ ...query, webPropertyId });
-    this.willRunQuery(profileId, metrics, dimensions);
+    this.willRunQuery();
   };
 
   onMetricChange = (items: Array<SelectableValue<string>>) => {
-    const {
-      query,
-      query: { profileId, dimensions },
-      onChange,
-    } = this.props;
+    const { query, onChange } = this.props;
 
     let metrics = [] as string[];
     items.map((item) => {
@@ -77,15 +65,22 @@ export class QueryEditor extends PureComponent<Props> {
     console.log(`metrics`, metrics);
 
     onChange({ ...query, selectedMetrics: items, metrics });
-    this.willRunQuery(profileId, metrics, dimensions);
+    this.willRunQuery();
+  };
+
+  onTimeDimensionChange = (item: any) => {
+    const { query, onChange } = this.props;
+
+    let timeDimension = item.value;
+
+    console.log(`timeDimension`, timeDimension);
+
+    onChange({ ...query, timeDimension, selectedTimeDimensions: item });
+    this.willRunQuery();
   };
 
   onDimensionChange = (items: Array<SelectableValue<string>>) => {
-    const {
-      query,
-      query: { profileId, metrics },
-      onChange,
-    } = this.props;
+    const { query, onChange } = this.props;
     let dimensions = [] as string[];
     items.map((item) => {
       if (item.value) {
@@ -96,14 +91,15 @@ export class QueryEditor extends PureComponent<Props> {
     console.log(`dimensions`, dimensions);
 
     onChange({ ...query, selectedDimensions: items, dimensions });
-    this.willRunQuery(profileId, metrics, dimensions);
+    this.willRunQuery();
   };
 
-  willRunQuery = (profileId: string, metrics: string[], dimensions: string[]) => {
+  willRunQuery = () => {
     const { query, onRunQuery } = this.props;
+    const { profileId, metrics, timeDimension } = query;
     console.log(`willRunQuery`);
     console.log(`query`, query);
-    if (profileId && metrics && dimensions) {
+    if (profileId && metrics && timeDimension) {
       console.log(`onRunQuery`);
       onRunQuery();
     }
@@ -111,7 +107,15 @@ export class QueryEditor extends PureComponent<Props> {
 
   render() {
     const { query, datasource } = this.props;
-    const { accountId, webPropertyId, profileId, selectedMetrics, selectedDimensions, timezone } = query;
+    const {
+      accountId,
+      webPropertyId,
+      profileId,
+      selectedTimeDimensions,
+      selectedMetrics,
+      selectedDimensions,
+      timezone,
+    } = query;
     return (
       <>
         <div className="gf-form-group">
@@ -211,10 +215,34 @@ export class QueryEditor extends PureComponent<Props> {
                 </>
               }
             >
+              Time Dimension
+            </InlineFormLabel>
+            <AsyncSelect
+              loadOptions={() => datasource.getTimeDimensions()}
+              placeholder={'ga:dateHour'}
+              value={selectedTimeDimensions}
+              onChange={this.onTimeDimensionChange}
+              backspaceRemovesValue
+              cacheOptions
+              noOptionsMessage={'Search Dimension'}
+              defaultOptions
+            />
+          </div>
+
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+              width={10}
+              tooltip={
+                <>
+                  The <code>dimensions</code> At least one ga:date* is required.
+                </>
+              }
+            >
               Dimensions
             </InlineFormLabel>
             <AsyncMultiSelect
-              loadOptions={(q) => datasource.getDimensions(q)}
+              loadOptions={(q) => datasource.getDimensionsExcludeTimeDimensions(q)}
               placeholder={'ga:dateHour'}
               value={selectedDimensions}
               onChange={this.onDimensionChange}

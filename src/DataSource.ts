@@ -56,10 +56,14 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getDimensions(query: string): Promise<Array<SelectableValue<string>>> {
+  async getDimensions(query: string, exclude: any): Promise<Array<SelectableValue<string>>> {
     return this.getResource('dimensions').then(({ dimensions }) => {
       return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
+          element.id.toLowerCase().indexOf(exclude) > -1 ||
+          element.attributes.uiName.toLowerCase().indexOf(exclude) > -1
+        ) {
+        } else if (
           element.id.toLowerCase().indexOf(query) > -1 ||
           element.attributes.uiName.toLowerCase().indexOf(query) > -1
         ) {
@@ -72,5 +76,13 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         return pre;
       }, []);
     });
+  }
+
+  async getTimeDimensions(): Promise<Array<SelectableValue<string>>> {
+    return this.getDimensions('date', null);
+  }
+
+  async getDimensionsExcludeTimeDimensions(query: string): Promise<Array<SelectableValue<string>>> {
+    return await this.getDimensions(query, 'date');
   }
 }
