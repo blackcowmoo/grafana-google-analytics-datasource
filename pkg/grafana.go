@@ -78,37 +78,31 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 		Type: "TIME",
 	})
 
+  tz, err := time.LoadLocation(timezone)
+  if err != nil {
+    log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
+  }
+
 	var dimensions []string = []string{}
 	for _, row := range report.Data.Rows {
-		var rowDimensions []string = []string{}
-		for index, dimension := range row.Dimensions {
-			log.DefaultLogger.Info("lcc3108", "dimension", dimension)
-			if index == 0 {
-				timezone, err := time.LoadLocation(timezone)
-				if err != nil {
-					log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
-				}
-				parsedTime, err := ParseAndTimezoneTime(dimension, timezone)
-				if err != nil {
-					log.DefaultLogger.Info("paresdTime err", "err", err.Error())
-				}
-				sTime := parsedTime.Format(time.RFC3339)
-				row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
-			} else {
-				rowDimensions = append(rowDimensions, dimension)
-			}
-		}
-		row.Dimensions = rowDimensions
+    timeDimension := row.Dimensions[0]
+    parsedTime, err := ParseAndTimezoneTime(timeDimension, tz)
+    if err != nil {
+      log.DefaultLogger.Info("parsedTime err", "err", err.Error())
+    }
+    sTime := parsedTime.Format(time.RFC3339)
+    row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
+		row.Dimensions = row.Dimensions[1:]
 		find := false
 		for _, dimension := range dimensions {
-			if strings.Join(rowDimensions, "|") == dimension {
+			if strings.Join(row.Dimensions, "|") == dimension {
 				find = true
 				break
 			}
 		}
 
 		if !find {
-			dimensions = append(dimensions, strings.Join(rowDimensions, "|"))
+			dimensions = append(dimensions, strings.Join(row.Dimensions, "|"))
 		}
 	}
 
