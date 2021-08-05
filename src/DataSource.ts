@@ -60,12 +60,12 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     return this.getResource('dimensions').then(({ dimensions }) => {
       return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
-          element.id.toLowerCase().indexOf(exclude) > -1 ||
-          element.attributes.uiName.toLowerCase().indexOf(exclude) > -1
-        ) {
-        } else if (
-          element.id.toLowerCase().indexOf(query) > -1 ||
-          element.attributes.uiName.toLowerCase().indexOf(query) > -1
+          (element.id.toLowerCase().indexOf(query) > -1 ||
+            element.attributes.uiName.toLowerCase().indexOf(query) > -1) &&
+          !(
+            element.id.toLowerCase().indexOf(exclude) > -1 ||
+            element.attributes.uiName.toLowerCase().indexOf(exclude) > -1
+          )
         ) {
           pre.push({
             label: element.attributes.uiName,
