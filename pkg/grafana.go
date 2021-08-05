@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -73,37 +72,18 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, report 
 var timeDimensions []string = []string{"ga:dateHourMinute", "ga:dateHour", "ga:date"}
 
 func transformReportToDataFrames(report *reporting.Report, refId string, timezone string) ([]*data.Frame, error) {
-	var metricDateDimensionIndex int = -1
-	var dateDimensionsIndex []int = []int{}
-	var newDimensions []string = []string{}
-	// Find primary time dimension, classify time dimensions and other dimensions
-	for _, tDimension := range timeDimensions {
-		for index, dimension := range report.ColumnHeader.Dimensions {
-			if tDimension == dimension {
-				if metricDateDimensionIndex == -1 {
-					metricDateDimensionIndex = index
-				}
-				dateDimensionsIndex = append(dateDimensionsIndex, index)
-			} else {
-				newDimensions = append(newDimensions, dimension)
-			}
-		}
-	}
-	// add primaryDimension in MetricHeader
-	if metricDateDimensionIndex >= 0 {
-		report.ColumnHeader.MetricHeader.MetricHeaderEntries = append(report.ColumnHeader.MetricHeader.MetricHeaderEntries, &reporting.MetricHeaderEntry{
-			Name: report.ColumnHeader.Dimensions[metricDateDimensionIndex],
-			Type: "TIME",
-		})
-	}
 
-	sort.Ints(dateDimensionsIndex)
-	report.ColumnHeader.Dimensions = newDimensions
+	report.ColumnHeader.MetricHeader.MetricHeaderEntries = append(report.ColumnHeader.MetricHeader.MetricHeaderEntries, &reporting.MetricHeaderEntry{
+		Name: report.ColumnHeader.Dimensions[0],
+		Type: "TIME",
+	})
+
 	var dimensions []string = []string{}
 	for _, row := range report.Data.Rows {
 		var rowDimensions []string = []string{}
 		for index, dimension := range row.Dimensions {
-			if index == metricDateDimensionIndex {
+			log.DefaultLogger.Info("lcc3108", "dimension", dimension)
+			if index == 0 {
 				timezone, err := time.LoadLocation(timezone)
 				if err != nil {
 					log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
@@ -114,7 +94,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 				}
 				sTime := parsedTime.Format(time.RFC3339)
 				row.Metrics[0].Values = append(row.Metrics[0].Values, sTime)
-			} else if result := sort.SearchInts(dateDimensionsIndex, index); result >= len(dateDimensionsIndex) {
+			} else {
 				rowDimensions = append(rowDimensions, dimension)
 			}
 		}
