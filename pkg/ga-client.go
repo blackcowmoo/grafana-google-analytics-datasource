@@ -209,10 +209,11 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 			// Create the DateRange object.
 			{StartDate: query.StartDate, EndDate: query.EndDate},
 		},
-		Metrics:    Metrics,
-		Dimensions: Dimensions,
-		PageSize:   query.PageSize,
-		PageToken:  query.PageToken,
+		Metrics:          Metrics,
+		Dimensions:       Dimensions,
+		PageSize:         query.PageSize,
+		PageToken:        query.PageToken,
+		IncludeEmptyRows: true,
 	}
 
 	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)

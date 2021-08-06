@@ -7,8 +7,10 @@ export interface GAQuery extends DataQuery {
   startDate: string;
   endDate: string;
   metrics: string[];
+  timeDimension: string;
   dimensions: string[];
   selectedMetrics: Array<SelectableValue<string>>;
+  selectedTimeDimensions: SelectableValue<string>;
   selectedDimensions: Array<SelectableValue<string>>;
   cacheDurationSeconds?: number;
   timezone: string;
