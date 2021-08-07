@@ -68,7 +68,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, []string{"ga:dateHour"}, 1, "", false, "UTC"}
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC"}
 	res, err := client.getReport(testData)
 
 	if err != nil {
