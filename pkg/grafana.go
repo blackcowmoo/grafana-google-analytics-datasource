@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/copier"
-
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/jinzhu/copier"
 	reporting "google.golang.org/api/analyticsreporting/v4"
 )
 
@@ -44,7 +43,7 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, rows []
 		field.Name = column.Header
 		displayName := dimensions
 		if len(dimensions) > 0 {
-			displayName = displayName + ","
+			displayName = displayName + "|"
 		}
 		field.Config = &data.FieldConfig{
 			DisplayName: displayName + column.Header,
@@ -59,7 +58,7 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, rows []
 				for valueIndex, value := range metrics.Values {
 					err := inputConverter.Set(valueIndex, rowIndex, value)
 					if err != nil {
-						log.DefaultLogger.Error("lcc3108", "err", err.Error())
+						log.DefaultLogger.Error("frame convert", "err", err.Error())
 						warnings = append(warnings, err.Error())
 						continue
 					}
@@ -94,36 +93,33 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 	}
 
 	dimensions := map[string]struct{}{}
-	var parsedMap = make(map[string]map[int64]*reporting.ReportRow)
+	var parsedReportMap = make(map[string]map[int64]*reporting.ReportRow)
 
 	for _, row := range report.Data.Rows {
 		parsedRow, parsedTime := parseRow(row, tz)
-		strDimensions := strings.Join(parsedRow.Dimensions, "|")
-		if _, ok := dimensions[strDimensions]; !ok {
-			dimensions[strDimensions] = struct{}{}
+		dimension := strings.Join(parsedRow.Dimensions, "|")
+		if _, ok := dimensions[dimension]; !ok {
+			dimensions[dimension] = struct{}{}
 		}
-		if inner, ok := parsedMap[strDimensions]; !ok {
+		if inner, ok := parsedReportMap[dimension]; !ok {
 			inner = make(map[int64]*reporting.ReportRow)
-			parsedMap[strDimensions] = inner
+			parsedReportMap[dimension] = inner
 		}
-		parsedMap[strDimensions][parsedTime.Unix()] = parsedRow
+		parsedReportMap[dimension][parsedTime.Unix()] = parsedRow
 
 		beforeTime := timeSubFunction(*parsedTime)
 		afterTime := timeAddFunction(*parsedTime)
-		if _, ok := parsedMap[strDimensions][beforeTime.Unix()]; !ok {
+		if _, ok := parsedReportMap[dimension][beforeTime.Unix()]; !ok {
 			copyRow := copyRowAndInit(row)
 			copyRow.Metrics[0].Values[0] = beforeTime.Format(time.RFC3339)
-			parsedMap[strDimensions][beforeTime.Unix()] = copyRow
+			parsedReportMap[dimension][beforeTime.Unix()] = copyRow
 		}
-		if _, ok := parsedMap[strDimensions][afterTime.Unix()]; !ok {
+		if _, ok := parsedReportMap[dimension][afterTime.Unix()]; !ok {
 			copyRow := copyRowAndInit(row)
 			copyRow.Metrics[0].Values[0] = afterTime.Format(time.RFC3339)
-			parsedMap[strDimensions][afterTime.Unix()] = copyRow
+			parsedReportMap[dimension][afterTime.Unix()] = copyRow
 		}
 	}
-
-	var frames = make([]*data.Frame, 0)
-	columns := getColumnDefinitions(report.ColumnHeader)
 
 	var dimensionKeys = make([]string, len(dimensions))
 	i := 0
@@ -132,23 +128,28 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 		i++
 	}
 
+	var frames = make([]*data.Frame, 0, len(dimensionKeys))
+	columns := getColumnDefinitions(report.ColumnHeader)
+
 	for _, dimension := range dimensionKeys {
-		keys := make([]int64, 0)
-		for k := range parsedMap[dimension] {
-			keys = append(keys, k)
+		keys := make([]int64, len(parsedReportMap[dimension]))
+		i := 0
+		for k := range parsedReportMap[dimension] {
+			keys[i] = k
+			i++
 		}
 
 		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-		var parsedRows = make([]*reporting.ReportRow, len(parsedMap[dimension]))
-		i := 0
+		var parsedRows = make([]*reporting.ReportRow, len(parsedReportMap[dimension]))
+		i = 0
 		for _, t := range keys {
-			parsedRows[i] = parsedMap[dimension][t]
+			parsedRows[i] = parsedReportMap[dimension][t]
 			i++
 		}
 
 		frame, err := transformReportToDataFrameByDimensions(columns, parsedRows, refId, dimension)
 		if err != nil {
-			log.DefaultLogger.Error("lcc3108", "err", err.Error())
+			log.DefaultLogger.Error("transformReportToDataFrameByDimensions", "err", err.Error())
 			return nil, err
 		}
 
@@ -284,11 +285,11 @@ func getTimeFunction(timeDimension string) (func(time.Time) time.Time, func(time
 		sub = SubOneHour
 		break
 	case timeDimensions[2]:
-		add= AddOneDay
-		sub=SubOneDay
+		add = AddOneDay
+		sub = SubOneDay
 		break
 	default:
-		add= AddOneHour
+		add = AddOneHour
 		sub = SubOneHour
 	}
 	return add, sub

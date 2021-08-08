@@ -211,7 +211,7 @@ export class QueryEditor extends PureComponent<Props> {
               width={10}
               tooltip={
                 <>
-                  The <code>dimensions</code> At least one ga:date* is required.
+                  The <code>time dimensions</code> At least one ga:date* is required.
                 </>
               }
             >
@@ -235,7 +235,7 @@ export class QueryEditor extends PureComponent<Props> {
               width={10}
               tooltip={
                 <>
-                  The <code>dimensions</code> At least one ga:date* is required.
+                  The <code>dimensions</code> exclude time dimensions
                 </>
               }
             >
