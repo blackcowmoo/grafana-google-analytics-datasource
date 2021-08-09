@@ -34,6 +34,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
+
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v2
@@ -42,11 +43,13 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.node-version }}-nodemodules-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-nodemodules-
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile;
         if: |
           steps.cache-yarn-cache.outputs.cache-hit != 'true' ||
           steps.cache-node-modules.outputs.cache-hit != 'true'
+
       - name: Build and test frontend
         run: yarn build
 
@@ -57,6 +60,7 @@ jobs:
           then
             echo "::set-output name=has-backend::true"
           fi
+
       - name: Test backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
         uses: magefile/mage-action@v1
@@ -80,22 +84,27 @@ jobs:
         id: metadata
         run: |
           sudo apt-get install jq
+
           export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
           export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
           export GRAFANA_PLUGIN_TYPE=$(cat dist/plugin.json | jq -r .type)
           export GRAFANA_PLUGIN_ARTIFACT=${GRAFANA_PLUGIN_ID}-${GRAFANA_PLUGIN_VERSION}.zip
           export GRAFANA_PLUGIN_ARTIFACT_CHECKSUM=${GRAFANA_PLUGIN_ARTIFACT}.md5
+
           echo "::set-output name=plugin-id::${GRAFANA_PLUGIN_ID}"
           echo "::set-output name=plugin-version::${GRAFANA_PLUGIN_VERSION}"
           echo "::set-output name=plugin-type::${GRAFANA_PLUGIN_TYPE}"
           echo "::set-output name=archive::${GRAFANA_PLUGIN_ARTIFACT}"
           echo "::set-output name=archive-checksum::${GRAFANA_PLUGIN_ARTIFACT_CHECKSUM}"
+
           echo ::set-output name=github-tag::${GITHUB_REF#refs/*/}
+
       - name: Read changelog
         id: changelog
         run: |
           awk '/^## / {s++} s == 1 {print}' CHANGELOG.md > release_notes.md
           echo "::set-output name=path::release_notes.md"
+
       - name: Check package version
         run: if [ "v${{ steps.metadata.outputs.plugin-version }}" != "${{ steps.metadata.outputs.github-tag }}" ]; then printf "\033[0;31mPlugin version doesn't match tag name\033[0m\n"; exit 1; fi
 
@@ -106,13 +115,15 @@ jobs:
           zip ${{ steps.metadata.outputs.archive }} ${{ steps.metadata.outputs.plugin-id }} -r
           md5sum ${{ steps.metadata.outputs.archive }} > ${{ steps.metadata.outputs.archive-checksum }}
           echo "::set-output name=checksum::$(cat ./${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)"
+
       - name: Lint plugin
         run: |
           git clone https://github.com/grafana/plugin-validator
-          pushd ./plugin-validator/cmd/plugincheck
+          pushd ./plugin-validator/pkg/cmd/plugincheck
           go install
           popd
           plugincheck ${{ steps.metadata.outputs.archive }}
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
