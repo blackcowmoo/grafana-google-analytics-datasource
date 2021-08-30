@@ -214,6 +214,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 		PageSize:         query.PageSize,
 		PageToken:        query.PageToken,
 		IncludeEmptyRows: true,
+    FiltersExpression: query.FiltersExpression,
 	}
 
 	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)

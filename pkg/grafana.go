@@ -123,7 +123,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 
 	var dimensionKeys = make([]string, len(dimensions))
 	i := 0
-	for value, _ := range dimensions {
+	for value := range dimensions {
 		dimensionKeys[i] = value
 		i++
 	}
