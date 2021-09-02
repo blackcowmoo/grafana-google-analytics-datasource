@@ -1,6 +1,7 @@
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { AsyncMultiSelect, AsyncSelect, InlineFormLabel, InlineLabel, SegmentAsync } from '@grafana/ui';
+import { AsyncMultiSelect, AsyncSelect, InlineFormLabel, InlineLabel, Input, SegmentAsync } from '@grafana/ui';
 import { DataSource } from 'DataSource';
+import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
 
@@ -13,6 +14,7 @@ export class QueryEditor extends PureComponent<Props> {
     super(props);
     if (!this.props.query.hasOwnProperty('cacheDurationSeconds')) {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
+      this.props.query.filtersExpression = '';
     }
   }
 
@@ -94,7 +96,16 @@ export class QueryEditor extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  willRunQuery = () => {
+  onfiltersExpressionChange = (item: any, ...t: any) => {
+    const { query, onChange } = this.props;
+    let { filtersExpression } = query;
+    filtersExpression = item;
+
+    onChange({ ...query, filtersExpression });
+    this.willRunQuery();
+  };
+
+  willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
     const { profileId, metrics, timeDimension } = query;
     console.log(`willRunQuery`);
@@ -103,7 +114,7 @@ export class QueryEditor extends PureComponent<Props> {
       console.log(`onRunQuery`);
       onRunQuery();
     }
-  };
+  }, 500);
 
   render() {
     const { query, datasource } = this.props;
@@ -115,6 +126,7 @@ export class QueryEditor extends PureComponent<Props> {
       selectedMetrics,
       selectedDimensions,
       timezone,
+      filtersExpression,
     } = query;
     return (
       <>
@@ -250,6 +262,25 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
+            />
+          </div>
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+              width={10}
+              tooltip={
+                <>
+                  The <code>dimensions</code> exclude time dimensions
+                </>
+              }
+            >
+              Filters Expressions
+            </InlineFormLabel>
+            <Input
+              css="width: 100%;"
+              value={filtersExpression}
+              onChange={(e) => this.onfiltersExpressionChange(e.currentTarget.value)}
+              placeholder="ga:pagePath==/path/to/page"
             />
           </div>
         </div>
