@@ -96,7 +96,7 @@ export class QueryEditor extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  onfiltersExpressionChange = (item: any, ...t: any) => {
+  onFiltersExpressionChange = (item: any, ...t: any) => {
     const { query, onChange } = this.props;
     let { filtersExpression } = query;
     filtersExpression = item;
@@ -255,7 +255,7 @@ export class QueryEditor extends PureComponent<Props> {
             </InlineFormLabel>
             <AsyncMultiSelect
               loadOptions={(q) => datasource.getDimensionsExcludeTimeDimensions(q)}
-              placeholder={'ga:dateHour'}
+              placeholder={'ga:country'}
               value={selectedDimensions}
               onChange={this.onDimensionChange}
               backspaceRemovesValue
@@ -270,7 +270,7 @@ export class QueryEditor extends PureComponent<Props> {
               width={10}
               tooltip={
                 <>
-                  The <code>dimensions</code> exclude time dimensions
+                  The <code>filter</code> dimensions and metrics
                 </>
               }
             >
@@ -279,7 +279,7 @@ export class QueryEditor extends PureComponent<Props> {
             <Input
               css="width: 100%;"
               value={filtersExpression}
-              onChange={(e) => this.onfiltersExpressionChange(e.currentTarget.value)}
+              onChange={(e) => this.onFiltersExpressionChange(e.currentTarget.value)}
               placeholder="ga:pagePath==/path/to/page"
             />
           </div>
