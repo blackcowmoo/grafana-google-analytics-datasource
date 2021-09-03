@@ -14,6 +14,7 @@ export interface GAQuery extends DataQuery {
   selectedDimensions: Array<SelectableValue<string>>;
   cacheDurationSeconds?: number;
   timezone: string;
+  filtersExpression: string;
 }
 // mapping on google-key.json
 export interface JWT {
