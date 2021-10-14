@@ -209,7 +209,8 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Metrics'}
               defaultOptions
-              maxMenuHeight={200}
+              menuPlacement="bottom"
+              isClearable
             />
 
             <InlineFormLabel
@@ -231,7 +232,8 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
-              maxMenuHeight={200}
+              menuPlacement="bottom"
+              isClearable
             />
 
             <InlineFormLabel
@@ -253,7 +255,8 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
-              maxMenuHeight={200}
+              menuPlacement="bottom"
+              isClearable
             />
           </div>
           <div className="gf-form">
