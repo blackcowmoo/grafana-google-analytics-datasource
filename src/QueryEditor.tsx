@@ -133,7 +133,6 @@ export class QueryEditor extends PureComponent<Props> {
         <div className="gf-form-group">
           <div className="gf-form">
             <InlineFormLabel
-              width={8}
               className="query-keyword"
               tooltip={
                 <>
@@ -146,13 +145,11 @@ export class QueryEditor extends PureComponent<Props> {
             <SegmentAsync
               loadOptions={() => datasource.getAccountIds()}
               placeholder="Enter Account ID"
-              width={6}
               value={accountId}
               allowCustomValue
               onChange={this.onAccountIdChange}
             />
             <InlineFormLabel
-              width={8}
               className="query-keyword"
               tooltip={
                 <>
@@ -171,7 +168,6 @@ export class QueryEditor extends PureComponent<Props> {
             />
             <InlineFormLabel
               className="query-keyword"
-              width={8}
               tooltip={
                 <>
                   The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
@@ -196,7 +192,6 @@ export class QueryEditor extends PureComponent<Props> {
           <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>metric</code> ga:*
@@ -214,13 +209,11 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Metrics'}
               defaultOptions
+              maxMenuHeight={200}
             />
-          </div>
 
-          <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>time dimensions</code> At least one ga:date* is required.
@@ -238,13 +231,11 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
+              maxMenuHeight={200}
             />
-          </div>
 
-          <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>dimensions</code> exclude time dimensions
@@ -262,6 +253,7 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
+              maxMenuHeight={200}
             />
           </div>
           <div className="gf-form">
@@ -277,7 +269,6 @@ export class QueryEditor extends PureComponent<Props> {
               Filters Expressions
             </InlineFormLabel>
             <Input
-              css="width: 100%;"
               value={filtersExpression}
               onChange={(e) => this.onFiltersExpressionChange(e.currentTarget.value)}
               placeholder="ga:pagePath==/path/to/page"
