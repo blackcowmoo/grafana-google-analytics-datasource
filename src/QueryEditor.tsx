@@ -1,5 +1,13 @@
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { AsyncMultiSelect, AsyncSelect, InlineFormLabel, InlineLabel, Input, SegmentAsync } from '@grafana/ui';
+import {
+  AsyncMultiSelect,
+  AsyncSelect,
+  HorizontalGroup,
+  InlineFormLabel,
+  InlineLabel,
+  Input,
+  SegmentAsync,
+} from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
@@ -132,71 +140,71 @@ export class QueryEditor extends PureComponent<Props> {
       <>
         <div className="gf-form-group">
           <div className="gf-form">
-            <InlineFormLabel
-              width={8}
-              className="query-keyword"
-              tooltip={
-                <>
-                  The <code>accountId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                </>
-              }
-            >
-              Account ID
-            </InlineFormLabel>
-            <SegmentAsync
-              loadOptions={() => datasource.getAccountIds()}
-              placeholder="Enter Account ID"
-              width={6}
-              value={accountId}
-              allowCustomValue
-              onChange={this.onAccountIdChange}
-            />
-            <InlineFormLabel
-              width={8}
-              className="query-keyword"
-              tooltip={
-                <>
-                  The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                </>
-              }
-            >
-              Web Property ID
-            </InlineFormLabel>
-            <SegmentAsync
-              loadOptions={() => datasource.getWebPropertyIds(accountId)}
-              placeholder="Enter Web Property ID"
-              value={webPropertyId}
-              allowCustomValue
-              onChange={this.onWebPropertyIdChange}
-            />
-            <InlineFormLabel
-              className="query-keyword"
-              width={8}
-              tooltip={
-                <>
-                  The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                </>
-              }
-            >
-              Profile ID
-            </InlineFormLabel>
-            <SegmentAsync
-              loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
-              placeholder="Enter Profile ID"
-              value={profileId}
-              allowCustomValue
-              onChange={this.onProfileIdChange}
-            />
-            <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
-              Timezone
-            </InlineLabel>
-            <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
+            <HorizontalGroup spacing="xs">
+              <InlineFormLabel
+                className="query-keyword"
+                tooltip={
+                  <>
+                    The <code>accountId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
+                  </>
+                }
+              >
+                Account ID
+              </InlineFormLabel>
+              <SegmentAsync
+                loadOptions={() => datasource.getAccountIds()}
+                placeholder="Enter Account ID"
+                value={accountId}
+                allowCustomValue
+                onChange={this.onAccountIdChange}
+              />
+              <InlineFormLabel
+                className="query-keyword"
+                tooltip={
+                  <>
+                    The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or
+                    altered.
+                  </>
+                }
+              >
+                Web Property ID
+              </InlineFormLabel>
+              <SegmentAsync
+                loadOptions={() => datasource.getWebPropertyIds(accountId)}
+                placeholder="Enter Web Property ID"
+                value={webPropertyId}
+                allowCustomValue
+                onChange={this.onWebPropertyIdChange}
+              />
+              <InlineFormLabel
+                className="query-keyword"
+                tooltip={
+                  <>
+                    The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
+                  </>
+                }
+              >
+                Profile ID
+              </InlineFormLabel>
+              <SegmentAsync
+                loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
+                placeholder="Enter Profile ID"
+                value={profileId}
+                allowCustomValue
+                onChange={this.onProfileIdChange}
+              />
+              <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
+                Timezone
+              </InlineLabel>
+              <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
+            </HorizontalGroup>
+
             <div className="gf-form-label gf-form-label--grow" />
           </div>
+
           <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>metric</code> ga:*
@@ -214,13 +222,12 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Metrics'}
               defaultOptions
+              menuPlacement="bottom"
+              isClearable
             />
-          </div>
 
-          <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>time dimensions</code> At least one ga:date* is required.
@@ -238,13 +245,12 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
+              menuPlacement="bottom"
+              isClearable
             />
-          </div>
 
-          <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>dimensions</code> exclude time dimensions
@@ -262,12 +268,13 @@ export class QueryEditor extends PureComponent<Props> {
               cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
+              menuPlacement="bottom"
+              isClearable
             />
           </div>
           <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              width={10}
               tooltip={
                 <>
                   The <code>filter</code> dimensions and metrics
@@ -277,7 +284,6 @@ export class QueryEditor extends PureComponent<Props> {
               Filters Expressions
             </InlineFormLabel>
             <Input
-              css="width: 100%;"
               value={filtersExpression}
               onChange={(e) => this.onFiltersExpressionChange(e.currentTarget.value)}
               placeholder="ga:pagePath==/path/to/page"
