@@ -1,6 +1,9 @@
 # Changelog
+## 0.1.3
+- fix query editor ui
+- add filter expression
 ## 0.1.2
-- seperate time dimension and other dimensions
+- separate time dimension and other dimensions
 - fix bug multi dimensions breaking graphs
 
 ## 0.1.1
