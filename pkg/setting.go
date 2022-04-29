@@ -24,7 +24,6 @@ func LoadSettings(ctx backend.PluginContext) (*DatasourceSettings, error) {
 	}
 
 	model.JWT = settings.DecryptedSecureJSONData["jwt"]
-	model.ProfileId = settings.DecryptedSecureJSONData["profileId"]
 
 	return model, nil
 }

@@ -36,11 +36,7 @@ export interface GADataSourceOptions extends DataSourceJsonData {}
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend
  */
-export interface GASecureJsonData {
-  jwt?: string;
-  profileId?: string;
-  timezone?: string;
-}
+export interface GASecureJsonData {}
 
 export interface GAMetadata {
   id: string;
