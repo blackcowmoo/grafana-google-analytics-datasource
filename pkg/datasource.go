@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/patrickmn/go-cache"
@@ -14,25 +15,33 @@ import (
 
 // GoogleAnalyticsDataSource handler for google sheets
 type GoogleAnalyticsDataSource struct {
-	analytics *GoogleAnalytics
+	analytics       GoogleAnalytics
+	resourceHandler backend.CallResourceHandler
 }
 
 // NewDataSource creates the google analytics datasource and sets up all the routes
-func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
+func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	cache := cache.New(300*time.Second, 5*time.Second)
+
+	mux := http.NewServeMux()
 	ds := &GoogleAnalyticsDataSource{
-		analytics: &GoogleAnalytics{
+		analytics: GoogleAnalytics{
 			Cache: cache,
 		},
+		resourceHandler: httpadapter.New(mux),
 	}
-
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
 	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
 	mux.HandleFunc("/profiles", ds.handleResourceProfiles)
 	mux.HandleFunc("/profile/timezone", ds.handleResourceProfileTimezone)
 	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
 	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
-	return ds
+
+	return ds, nil
+}
+
+func (ds *GoogleAnalyticsDataSource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
+	return ds.resourceHandler.CallResource(ctx, req, sender)
 }
 
 // CheckHealth checks if the plugin is running properly
@@ -68,7 +77,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 		}, nil
 	}
 
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC",""}
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC", ""}
 	res, err := client.getReport(testData)
 
 	if err != nil {
