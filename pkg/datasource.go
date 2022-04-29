@@ -52,7 +52,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	config, err := LoadSettings(req.PluginContext)
 
 	if err != nil {
-		log.DefaultLogger.Error("Fail LoadSetting", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail LoadSetting", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Setting Configuration Read Fail",
@@ -61,7 +61,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
-		log.DefaultLogger.Error("Fail NewGoogleClient", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Invalid config",
@@ -70,7 +70,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 
 	profiles, err := client.getAllProfilesList()
 	if err != nil {
-		log.DefaultLogger.Error("Fail getAllProfilesList", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail getAllProfilesList", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Invalid config",
@@ -81,7 +81,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	res, err := client.getReport(testData)
 
 	if err != nil {
-		log.DefaultLogger.Error("GET request to analyticsreporting/v4 returned error", err.Error())
+		log.DefaultLogger.Error("CheckHealth: GET request to analyticsreporting/v4 returned error", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Test Request Fail",
@@ -117,7 +117,7 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 	for _, query := range req.Queries {
 		frames, err := ds.analytics.Query(client, query)
 		if err != nil {
-			log.DefaultLogger.Error(err.Error())
+			log.DefaultLogger.Error("Fail query", "error", err)
 			continue
 			// return nil, err
 		}

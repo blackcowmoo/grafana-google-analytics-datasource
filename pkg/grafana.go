@@ -58,7 +58,7 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, rows []
 				for valueIndex, value := range metrics.Values {
 					err := inputConverter.Set(valueIndex, rowIndex, value)
 					if err != nil {
-						log.DefaultLogger.Error("frame convert", "err", err.Error())
+						log.DefaultLogger.Error("frame convert", "error", err.Error())
 						warnings = append(warnings, err.Error())
 						continue
 					}
@@ -149,7 +149,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 
 		frame, err := transformReportToDataFrameByDimensions(columns, parsedRows, refId, dimension)
 		if err != nil {
-			log.DefaultLogger.Error("transformReportToDataFrameByDimensions", "err", err.Error())
+			log.DefaultLogger.Error("transformReportToDataFrameByDimensions", "error", err.Error())
 			return nil, err
 		}
 

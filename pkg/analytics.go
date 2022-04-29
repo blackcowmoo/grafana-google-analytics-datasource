@@ -19,26 +19,28 @@ type GoogleAnalytics struct {
 func (ga *GoogleAnalytics) Query(client *GoogleClient, query backend.DataQuery) (*data.Frames, error) {
 	queryModel, err := GetQueryModel(query)
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("Failed to read query: %w", "error", err)
 		return nil, fmt.Errorf("failed to read query: %w", err)
 	}
 
 	if len(queryModel.AccountID) < 1 {
-		log.DefaultLogger.Error("Query:Required AccountID")
+		log.DefaultLogger.Error("Query", "error", "Required AccountID")
 		return nil, fmt.Errorf("Required AccountID")
 	}
 
 	if len(queryModel.WebPropertyID) < 1 {
+		log.DefaultLogger.Error("Query", "error", "Required WebPropertyID")
 		return nil, fmt.Errorf("Required WebPropertyID")
 	}
 
 	if len(queryModel.ProfileID) < 1 {
+		log.DefaultLogger.Error("Query", "error", "Required ProfileID")
 		return nil, fmt.Errorf("Required ProfileID")
 	}
 
 	report, err := client.getReport(*queryModel)
 	if err != nil {
-		log.DefaultLogger.Error("Query failed", "error", err)
+		log.DefaultLogger.Error("Query", "error", err)
 		return nil, err
 	}
 

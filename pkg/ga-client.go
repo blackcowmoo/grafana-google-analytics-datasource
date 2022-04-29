@@ -57,7 +57,7 @@ func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, er
 	accountsService := analytics.NewManagementAccountsService(client.analytics)
 	accounts, err := accountsService.List().StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getAccountsList Fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, er
 func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty, error) {
 	accounts, err := client.getAccountsList(GaDefaultIdx)
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getAllWebpropertiesList fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -87,7 +87,7 @@ func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty,
 	for _, account := range accounts {
 		webproperties, err := client.getWebpropertiesList(account.Id, GaDefaultIdx)
 		if err != nil {
-			log.DefaultLogger.Error(err.Error())
+			log.DefaultLogger.Error("getAllWebpropertiesList", "error", err.Error())
 			return nil, err
 		}
 
@@ -101,7 +101,7 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([
 	webpropertiesService := analytics.NewManagementWebpropertiesService(client.analytics)
 	webproperties, err := webpropertiesService.List(accountId).StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getWebpropertiesList fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([
 func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 	webproperties, err := client.getAllWebpropertiesList()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getAllProfilesList fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -145,7 +145,7 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 						continue
 					}
 
-					log.DefaultLogger.Error(err.Error())
+					log.DefaultLogger.Error("getProfilesList 10 retries fail", "error", err.Error())
 					panic(err)
 				}
 
@@ -172,7 +172,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	profilesService := analytics.NewManagementProfilesService(client.analytics)
 	profiles, err := profilesService.List(accountId, webpropertyId).MaxResults(GaManageMaxResult).StartIndex(idx).Do()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
+		log.DefaultLogger.Error("getProfilesList fail", "error", err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
 		return nil, err
 	}
 
@@ -209,12 +209,12 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 			// Create the DateRange object.
 			{StartDate: query.StartDate, EndDate: query.EndDate},
 		},
-		Metrics:          Metrics,
-		Dimensions:       Dimensions,
-		PageSize:         query.PageSize,
-		PageToken:        query.PageToken,
-		IncludeEmptyRows: true,
-    FiltersExpression: query.FiltersExpression,
+		Metrics:           Metrics,
+		Dimensions:        Dimensions,
+		PageSize:          query.PageSize,
+		PageToken:         query.PageToken,
+		IncludeEmptyRows:  true,
+		FiltersExpression: query.FiltersExpression,
 	}
 
 	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)
