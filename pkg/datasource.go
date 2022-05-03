@@ -89,8 +89,8 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	}
 
 	if res != nil {
-		log.DefaultLogger.Info("HTTPStatusCode", "status", res.HTTPStatusCode)
-		log.DefaultLogger.Info("res", res)
+		log.DefaultLogger.Debug("HTTPStatusCode", "status", res.HTTPStatusCode)
+		log.DefaultLogger.Debug("res", res)
 	}
 
 	printResponse(res)

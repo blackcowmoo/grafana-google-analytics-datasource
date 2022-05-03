@@ -105,7 +105,7 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([
 		return nil, err
 	}
 
-	log.DefaultLogger.Info("getWebpropertiesList", "WebpropertiesList", webproperties)
+	log.DefaultLogger.Debug("getWebpropertiesList", "WebpropertiesList", webproperties)
 
 	nextLink := webproperties.NextLink
 	itemPerPage := webproperties.ItemsPerPage
@@ -193,7 +193,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 
 func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
 	defer Elapsed("Get report data at GA API")()
-	log.DefaultLogger.Info("getReport", "queries", query)
+	log.DefaultLogger.Debug("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
 	Dimensions := []*reporting.Dimension{}
 	for _, metric := range query.Metrics {
@@ -217,7 +217,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 		FiltersExpression: query.FiltersExpression,
 	}
 
-	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)
+	log.DefaultLogger.Debug("getReport", "reportRequests", reportRequest)
 
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
@@ -227,14 +227,14 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 		ReportRequests: []*reporting.ReportRequest{&reportRequest},
 	}
 
-	log.DefaultLogger.Info("Doing GET request from analytics reporting", "req", req)
+	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.reporting.Reports.BatchGet(req).Do()
 	if err != nil {
 		return nil, fmt.Errorf(err.Error())
 	}
 
-	log.DefaultLogger.Info("Do GET report", "report len", len(report.Reports), "report", report)
+	log.DefaultLogger.Debug("Do GET report", "report len", len(report.Reports), "report", report)
 
 	if query.UseNextPage && report.Reports[0].NextPageToken != "" {
 		query.PageToken = report.Reports[0].NextPageToken
@@ -250,7 +250,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 }
 
 func printResponse(res *reporting.GetReportsResponse) {
-	log.DefaultLogger.Info("Printing Response from analytics reporting", "")
+	log.DefaultLogger.Debug("Printing Response from analytics reporting", "")
 	for _, report := range res.Reports {
 		header := report.ColumnHeader
 		dimHdrs := header.Dimensions
@@ -258,14 +258,14 @@ func printResponse(res *reporting.GetReportsResponse) {
 		rows := report.Data.Rows
 
 		if rows == nil {
-			log.DefaultLogger.Info("no data", "")
+			log.DefaultLogger.Debug("no data", "")
 		}
 		for _, row := range rows {
 			dims := row.Dimensions
 			metrics := row.Metrics
 
 			for i := 0; i < len(dimHdrs) && i < len(dims); i++ {
-				log.DefaultLogger.Info("%s: %s", dimHdrs[i], dims[i])
+				log.DefaultLogger.Debug("%s: %s", dimHdrs[i], dims[i])
 			}
 
 			for _, metric := range metrics {
@@ -273,7 +273,7 @@ func printResponse(res *reporting.GetReportsResponse) {
 				// So it'll always print "Date Range (0)"
 				// log.DefaultLogger.Defaultlog.DefaultLogger.Infof("Date Range (%d)", idx)
 				for j := 0; j < len(metricHdrs) && j < len(metric.Values); j++ {
-					log.DefaultLogger.Info("%s: %s", metricHdrs[j].Name, metric.Values[j])
+					log.DefaultLogger.Debug("%s: %s", metricHdrs[j].Name, metric.Values[j])
 				}
 			}
 		}

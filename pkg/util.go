@@ -8,7 +8,7 @@ import (
 func Elapsed(what string) func() {
 	start := time.Now()
 	return func() {
-		log.DefaultLogger.Info("Elapsed", what, time.Since(start).String())
+		log.DefaultLogger.Debug("Elapsed", what, time.Since(start).String())
 	}
 }
 
@@ -16,7 +16,7 @@ func ParseAndTimezoneTime(sTime string, timezone *time.Location) (*time.Time, er
 	time, err := time.ParseInLocation("200601021504", padRightSide(sTime, "0", 12-len(sTime)), timezone)
 
 	if err != nil {
-		log.DefaultLogger.Info("timeConverter", "err", err)
+		log.DefaultLogger.Error("timeConverter", "error", err)
 		return nil, err
 	}
 	return &time, nil
