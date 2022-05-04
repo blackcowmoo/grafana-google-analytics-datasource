@@ -58,7 +58,7 @@ func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, rows []
 				for valueIndex, value := range metrics.Values {
 					err := inputConverter.Set(valueIndex, rowIndex, value)
 					if err != nil {
-						log.DefaultLogger.Error("frame convert", "err", err.Error())
+						log.DefaultLogger.Error("frame convert", "error", err.Error())
 						warnings = append(warnings, err.Error())
 						continue
 					}
@@ -89,7 +89,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 
 	tz, err := time.LoadLocation(timezone)
 	if err != nil {
-		log.DefaultLogger.Info("LoadTimezone err", "err", err.Error())
+		log.DefaultLogger.Error("Load local timezone error", "error", err.Error())
 	}
 
 	dimensions := map[string]struct{}{}
@@ -149,7 +149,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 
 		frame, err := transformReportToDataFrameByDimensions(columns, parsedRows, refId, dimension)
 		if err != nil {
-			log.DefaultLogger.Error("transformReportToDataFrameByDimensions", "err", err.Error())
+			log.DefaultLogger.Error("transformReportToDataFrameByDimensions", "error", err.Error())
 			return nil, err
 		}
 
@@ -187,7 +187,7 @@ var timeConverter = data.FieldConverter{
 		}
 		time, err := time.Parse(time.RFC3339, strTime)
 		if err != nil {
-			log.DefaultLogger.Info("timeConverter", "err", err)
+			log.DefaultLogger.Error("timeConverter failed", "error", err)
 			return nil, err
 		}
 		return &time, nil
@@ -263,7 +263,7 @@ func parseRow(row *reporting.ReportRow, timezone *time.Location) (*reporting.Rep
 	otherDimensions := row.Dimensions[1:]
 	parsedTime, err := ParseAndTimezoneTime(timeDimension, timezone)
 	if err != nil {
-		log.DefaultLogger.Info("parsedTime err", "err", err.Error())
+		log.DefaultLogger.Error("parsedTime err", "err", err.Error())
 	}
 	strTime := parsedTime.Format(time.RFC3339)
 
