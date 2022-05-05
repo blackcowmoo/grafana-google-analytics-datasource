@@ -44,7 +44,7 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": ">=7.3 <9",
+    "grafanaDependency": ">=7.3.x <9.0.0",
     "plugins": []
   }
 }
