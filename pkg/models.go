@@ -11,18 +11,20 @@ import (
 )
 
 type QueryModel struct {
-	AccountID     string   `json:"accountId"`
-	WebPropertyID string   `json:"webPropertyId"`
-	ProfileID     string   `json:"profileId"`
-	StartDate     string   `json:"startDate"`
-	EndDate       string   `json:"endDate"`
-	RefID         string   `json:"refId"`
-	Metrics       []string `json:"metrics"`
-	Dimensions    []string `json:"dimensions"`
-	PageSize      int64    `json:"pageSize,omitempty"`
-	PageToken     string   `json:"pageToken,omitempty"`
-	UseNextPage   bool     `json:"useNextpage,omitempty"`
-	Timezone      string   `json:"timezone,omitempty"`
+	AccountID         string   `json:"accountId"`
+	WebPropertyID     string   `json:"webPropertyId"`
+	ProfileID         string   `json:"profileId"`
+	StartDate         string   `json:"startDate"`
+	EndDate           string   `json:"endDate"`
+	RefID             string   `json:"refId"`
+	Metrics           []string `json:"metrics"`
+	TimeDimension     string   `json:"timeDimension"`
+	Dimensions        []string `json:"dimensions"`
+	PageSize          int64    `json:"pageSize,omitempty"`
+	PageToken         string   `json:"pageToken,omitempty"`
+	UseNextPage       bool     `json:"useNextpage,omitempty"`
+	Timezone          string   `json:"timezone,omitempty"`
+	FiltersExpression string   `json:"filtersExpression,omitempty"`
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`
@@ -35,7 +37,6 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 		PageToken:   "",
 		UseNextPage: true,
 	}
-
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {
 		return nil, fmt.Errorf("error reading query: %s", err.Error())
@@ -47,10 +48,11 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 		return nil, fmt.Errorf("error get timezone %s", err.Error())
 	}
 
-	log.DefaultLogger.Info("query timezone", "timezone", timezone.String())
+	log.DefaultLogger.Debug("query timezone", "timezone", timezone.String())
 
 	model.StartDate = query.TimeRange.From.In(timezone).Format("2006-01-02")
 	model.EndDate = query.TimeRange.To.In(timezone).Format("2006-01-02")
+	model.Dimensions = append([]string{model.TimeDimension}, model.Dimensions...)
 	// model.TimeRange = query.TimeRange
 	// model.MaxDataPoints = query.MaxDataPoints
 	return model, nil

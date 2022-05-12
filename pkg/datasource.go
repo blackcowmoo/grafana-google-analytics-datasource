@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/patrickmn/go-cache"
@@ -14,25 +15,33 @@ import (
 
 // GoogleAnalyticsDataSource handler for google sheets
 type GoogleAnalyticsDataSource struct {
-	analytics *GoogleAnalytics
+	analytics       GoogleAnalytics
+	resourceHandler backend.CallResourceHandler
 }
 
 // NewDataSource creates the google analytics datasource and sets up all the routes
-func NewDataSource(mux *http.ServeMux) *GoogleAnalyticsDataSource {
+func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	cache := cache.New(300*time.Second, 5*time.Second)
+
+	mux := http.NewServeMux()
 	ds := &GoogleAnalyticsDataSource{
-		analytics: &GoogleAnalytics{
+		analytics: GoogleAnalytics{
 			Cache: cache,
 		},
+		resourceHandler: httpadapter.New(mux),
 	}
-
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
 	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
 	mux.HandleFunc("/profiles", ds.handleResourceProfiles)
 	mux.HandleFunc("/profile/timezone", ds.handleResourceProfileTimezone)
 	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
 	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
-	return ds
+
+	return ds, nil
+}
+
+func (ds *GoogleAnalyticsDataSource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
+	return ds.resourceHandler.CallResource(ctx, req, sender)
 }
 
 // CheckHealth checks if the plugin is running properly
@@ -43,7 +52,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	config, err := LoadSettings(req.PluginContext)
 
 	if err != nil {
-		log.DefaultLogger.Error("Fail LoadSetting", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail LoadSetting", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Setting Configuration Read Fail",
@@ -52,7 +61,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 
 	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
-		log.DefaultLogger.Error("Fail NewGoogleClient", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Invalid config",
@@ -61,18 +70,18 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 
 	profiles, err := client.getAllProfilesList()
 	if err != nil {
-		log.DefaultLogger.Error("Fail getAllProfilesList", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail getAllProfilesList", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Invalid config",
 		}, nil
 	}
 
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, []string{"ga:dateHour"}, 1, "", false, "UTC"}
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC", ""}
 	res, err := client.getReport(testData)
 
 	if err != nil {
-		log.DefaultLogger.Error("GET request to analyticsreporting/v4 returned error", err.Error())
+		log.DefaultLogger.Error("CheckHealth: GET request to analyticsreporting/v4 returned error", "error", err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: "Test Request Fail",
@@ -80,8 +89,8 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	}
 
 	if res != nil {
-		log.DefaultLogger.Info("HTTPStatusCode", "status", res.HTTPStatusCode)
-		log.DefaultLogger.Info("res", res)
+		log.DefaultLogger.Debug("HTTPStatusCode", "status", res.HTTPStatusCode)
+		log.DefaultLogger.Debug("res", res)
 	}
 
 	printResponse(res)
@@ -108,7 +117,7 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 	for _, query := range req.Queries {
 		frames, err := ds.analytics.Query(client, query)
 		if err != nil {
-			log.DefaultLogger.Error(err.Error())
+			log.DefaultLogger.Error("Fail query", "error", err)
 			continue
 			// return nil, err
 		}

@@ -57,7 +57,7 @@ func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, er
 	accountsService := analytics.NewManagementAccountsService(client.analytics)
 	accounts, err := accountsService.List().StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getAccountsList Fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func (client *GoogleClient) getAccountsList(idx int64) ([]*analytics.Account, er
 func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty, error) {
 	accounts, err := client.getAccountsList(GaDefaultIdx)
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getAllWebpropertiesList fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -87,7 +87,7 @@ func (client *GoogleClient) getAllWebpropertiesList() ([]*analytics.Webproperty,
 	for _, account := range accounts {
 		webproperties, err := client.getWebpropertiesList(account.Id, GaDefaultIdx)
 		if err != nil {
-			log.DefaultLogger.Error(err.Error())
+			log.DefaultLogger.Error("getAllWebpropertiesList", "error", err.Error())
 			return nil, err
 		}
 
@@ -101,11 +101,11 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([
 	webpropertiesService := analytics.NewManagementWebpropertiesService(client.analytics)
 	webproperties, err := webpropertiesService.List(accountId).StartIndex(idx).MaxResults(GaManageMaxResult).Do()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getWebpropertiesList fail", "error", err.Error())
 		return nil, err
 	}
 
-	log.DefaultLogger.Info("getWebpropertiesList", "WebpropertiesList", webproperties)
+	log.DefaultLogger.Debug("getWebpropertiesList", "WebpropertiesList", webproperties)
 
 	nextLink := webproperties.NextLink
 	itemPerPage := webproperties.ItemsPerPage
@@ -125,7 +125,7 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, idx int64) ([
 func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 	webproperties, err := client.getAllWebpropertiesList()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error())
+		log.DefaultLogger.Error("getAllProfilesList fail", "error", err.Error())
 		return nil, err
 	}
 
@@ -145,7 +145,7 @@ func (client *GoogleClient) getAllProfilesList() ([]*analytics.Profile, error) {
 						continue
 					}
 
-					log.DefaultLogger.Error(err.Error())
+					log.DefaultLogger.Error("getProfilesList 10 retries fail", "error", err.Error())
 					panic(err)
 				}
 
@@ -172,7 +172,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	profilesService := analytics.NewManagementProfilesService(client.analytics)
 	profiles, err := profilesService.List(accountId, webpropertyId).MaxResults(GaManageMaxResult).StartIndex(idx).Do()
 	if err != nil {
-		log.DefaultLogger.Error(err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
+		log.DefaultLogger.Error("getProfilesList fail", "error", err.Error(), "accountId", accountId, "webpropertyId", webpropertyId)
 		return nil, err
 	}
 
@@ -193,7 +193,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 
 func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
 	defer Elapsed("Get report data at GA API")()
-	log.DefaultLogger.Info("getReport", "queries", query)
+	log.DefaultLogger.Debug("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
 	Dimensions := []*reporting.Dimension{}
 	for _, metric := range query.Metrics {
@@ -209,13 +209,15 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 			// Create the DateRange object.
 			{StartDate: query.StartDate, EndDate: query.EndDate},
 		},
-		Metrics:    Metrics,
-		Dimensions: Dimensions,
-		PageSize:   query.PageSize,
-		PageToken:  query.PageToken,
+		Metrics:           Metrics,
+		Dimensions:        Dimensions,
+		PageSize:          query.PageSize,
+		PageToken:         query.PageToken,
+		IncludeEmptyRows:  true,
+		FiltersExpression: query.FiltersExpression,
 	}
 
-	log.DefaultLogger.Info("getReport", "reportRequests", reportRequest)
+	log.DefaultLogger.Debug("getReport", "reportRequests", reportRequest)
 
 	// A GetReportsRequest instance is a batch request
 	// which can have a maximum of 5 requests
@@ -225,14 +227,14 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 		ReportRequests: []*reporting.ReportRequest{&reportRequest},
 	}
 
-	log.DefaultLogger.Info("Doing GET request from analytics reporting", "req", req)
+	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.reporting.Reports.BatchGet(req).Do()
 	if err != nil {
 		return nil, fmt.Errorf(err.Error())
 	}
 
-	log.DefaultLogger.Info("Do GET report", "report len", len(report.Reports), "report", report)
+	log.DefaultLogger.Debug("Do GET report", "report len", len(report.Reports), "report", report)
 
 	if query.UseNextPage && report.Reports[0].NextPageToken != "" {
 		query.PageToken = report.Reports[0].NextPageToken
@@ -248,7 +250,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 }
 
 func printResponse(res *reporting.GetReportsResponse) {
-	log.DefaultLogger.Info("Printing Response from analytics reporting", "")
+	log.DefaultLogger.Debug("Printing Response from analytics reporting", "")
 	for _, report := range res.Reports {
 		header := report.ColumnHeader
 		dimHdrs := header.Dimensions
@@ -256,14 +258,14 @@ func printResponse(res *reporting.GetReportsResponse) {
 		rows := report.Data.Rows
 
 		if rows == nil {
-			log.DefaultLogger.Info("no data", "")
+			log.DefaultLogger.Debug("no data", "")
 		}
 		for _, row := range rows {
 			dims := row.Dimensions
 			metrics := row.Metrics
 
 			for i := 0; i < len(dimHdrs) && i < len(dims); i++ {
-				log.DefaultLogger.Info("%s: %s", dimHdrs[i], dims[i])
+				log.DefaultLogger.Debug("%s: %s", dimHdrs[i], dims[i])
 			}
 
 			for _, metric := range metrics {
@@ -271,7 +273,7 @@ func printResponse(res *reporting.GetReportsResponse) {
 				// So it'll always print "Date Range (0)"
 				// log.DefaultLogger.Defaultlog.DefaultLogger.Infof("Date Range (%d)", idx)
 				for j := 0; j < len(metricHdrs) && j < len(metric.Values); j++ {
-					log.DefaultLogger.Info("%s: %s", metricHdrs[j].Name, metric.Values[j])
+					log.DefaultLogger.Debug("%s: %s", metricHdrs[j].Name, metric.Values[j])
 				}
 			}
 		}
