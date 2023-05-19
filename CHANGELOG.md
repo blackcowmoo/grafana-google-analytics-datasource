@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.5
+- support grafana 9.x.x
+- update dependencies
 ## 0.1.4
 - apply datasource intance management
 - upgrade go dependencies
