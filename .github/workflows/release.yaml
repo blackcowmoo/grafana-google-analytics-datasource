@@ -159,10 +159,10 @@ jobs:
       - name: Lint plugin
         run: |
           git clone https://github.com/grafana/plugin-validator
-          pushd ./plugin-validator/pkg/cmd/plugincheck
+          pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
-          plugincheck ${{ steps.metadata.outputs.archive }}
+          plugincheck2 ${{ steps.metadata.outputs.archive }}
       - name: Publish to Grafana.com
         run: |
           echo A draft release has been created for your plugin. Please review and publish it. Then submit your plugin to grafana.com/plugins by opening a PR to https://github.com/grafana/grafana-plugin-repository with the following entry:
