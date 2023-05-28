@@ -10,8 +10,6 @@ require (
 	github.com/jinzhu/copier v0.3.2
 	github.com/magefile/mage v1.13.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5 // indirect
-	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
-	golang.org/x/sys v0.0.0-20220429121018-84afa8d3f7b3 // indirect
-	google.golang.org/api v0.40.0
+	golang.org/x/oauth2 v0.8.0
+	google.golang.org/api v0.124.0
 )
