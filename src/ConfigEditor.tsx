@@ -2,6 +2,13 @@ import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GASecureJsonData } from 'types';
 import { JWTConfig } from './JWTConfig';
+import { RadioButtonGroup } from '@grafana/ui';
+
+const gaVersion = [
+  { label: 'gav3', value: 'v3' },
+  { label: 'gav4', value: 'v4' },
+];
+
 
 export type Props = DataSourcePluginOptionsEditorProps<GADataSourceOptions, GASecureJsonData>;
 
@@ -22,9 +29,23 @@ export class ConfigEditor extends PureComponent<Props> {
   render() {
     const { options, onOptionsChange } = this.props;
     const { secureJsonFields } = options;
-    const secureJsonData = options.secureJsonData as GASecureJsonData;
+    const secureJsonData = options.secureJsonData;
+    const jsonData = options.jsonData
+    console.log(options.jsonData)
     return (
       <div className="gf-form-group">
+                <RadioButtonGroup
+          options={gaVersion}
+          onChange={(v) => onOptionsChange({
+            ...options,
+            jsonData: {
+              ...jsonData,
+              version: v
+            }
+          })
+        }
+        value={options.jsonData.version}
+        />
         <>
           <JWTConfig
             isConfigured={(secureJsonFields && !!secureJsonFields.jwt) as boolean}
@@ -39,7 +60,6 @@ export class ConfigEditor extends PureComponent<Props> {
             }}
           ></JWTConfig>
         </>
-
         <div className="grafana-info-box" style={{ marginTop: 24 }}>
           <h3 id="generate-a-jwt-file">Generate a JWT file</h3>
           <ol style={{ listStylePosition: 'inside' }}>
@@ -101,6 +121,7 @@ export class ConfigEditor extends PureComponent<Props> {
           </ol>
         </div>
       </div>
+
     );
   }
 }

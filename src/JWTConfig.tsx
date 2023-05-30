@@ -32,7 +32,9 @@ export function JWTConfig({ onChange, isConfigured }: Props) {
     <>
       <DropZone
         baseStyle={{ marginTop: '24px' }}
-        accept="application/json"
+        accept={{
+          'json': ['application/json','json']
+        }}
         onDrop={(acceptedFiles) => {
           const reader = new FileReader();
           if (acceptedFiles.length === 1) {
