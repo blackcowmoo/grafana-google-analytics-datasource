@@ -22,7 +22,6 @@ type GoogleAnalyticsDataSource struct {
 // NewDataSource creates the google analytics datasource and sets up all the routes
 func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	cache := cache.New(300*time.Second, 5*time.Second)
-
 	mux := http.NewServeMux()
 	ds := &GoogleAnalyticsDataSource{
 		analytics: GoogleAnalytics{
