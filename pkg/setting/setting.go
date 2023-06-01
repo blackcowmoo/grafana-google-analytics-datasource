@@ -1,4 +1,4 @@
-package main
+package setting
 
 import (
 	"encoding/json"
@@ -6,16 +6,20 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
-
-// DatasourceSettings contains Google Sheets API authentication properties.
 type DatasourceSettings struct {
+	Version string `json:"version"`
+}
+
+
+// DatasourceSecretSettings contains Google Sheets API authentication properties.
+type DatasourceSecretSettings struct {
 	JWT       string `json:"jwt"`
 	ProfileId string `json:"profileId"`
 }
 
 // LoadSettings gets the relevant settings from the plugin context
-func LoadSettings(ctx backend.PluginContext) (*DatasourceSettings, error) {
-	model := &DatasourceSettings{}
+func LoadSettings(ctx backend.PluginContext) (*DatasourceSecretSettings, error) {
+	model := &DatasourceSecretSettings{}
 
 	settings := ctx.DataSourceInstanceSettings
 	err := json.Unmarshal(settings.JSONData, &model)

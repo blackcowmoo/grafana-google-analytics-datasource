@@ -1,4 +1,4 @@
-module github.com/grafana/simple-datasource-backend
+module github.com/blackcowmoo/grafana-google-analytics-dataSource
 
 go 1.16
 

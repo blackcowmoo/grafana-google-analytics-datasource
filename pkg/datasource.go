@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"gav3"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/patrickmn/go-cache"
+	"setting"
 )
 
 // GoogleAnalyticsDataSource handler for google sheets
@@ -21,12 +23,23 @@ type GoogleAnalyticsDataSource struct {
 
 // NewDataSource creates the google analytics datasource and sets up all the routes
 func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	version := &setting.DatasourceSettings{}
+	var analytics GoogleAnalytics
 	cache := cache.New(300*time.Second, 5*time.Second)
 	mux := http.NewServeMux()
-	ds := &GoogleAnalyticsDataSource{
-		analytics: GoogleAnalytics{
+	err := json.Unmarshal(dis.JSONData, &version)
+	if err != nil {
+		return nil, err
+	}
+
+	if version.Version == "v3" {
+		analytics = &gav3.GoogleAnalyticsv3{
 			Cache: cache,
-		},
+		}
+	}
+
+	ds := &GoogleAnalyticsDataSource{
+		analytics:       analytics,
 		resourceHandler: httpadapter.New(mux),
 	}
 	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
@@ -48,51 +61,16 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 	var status = backend.HealthStatusOk
 	var message = "Success"
 
-	config, err := LoadSettings(req.PluginContext)
+	// config, err := setting.LoadSettings(req.PluginContext)
 
-	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: Fail LoadSetting", "error", err.Error())
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: "Setting Configuration Read Fail",
-		}, nil
-	}
-
-	client, err := NewGoogleClient(ctx, config)
-	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: "Invalid config",
-		}, nil
-	}
-
-	profiles, err := client.getAllProfilesList()
-	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: Fail getAllProfilesList", "error", err.Error())
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: "Invalid config",
-		}, nil
-	}
-
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC", ""}
-	res, err := client.getReport(testData)
-
-	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: GET request to analyticsreporting/v4 returned error", "error", err.Error())
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: "Test Request Fail",
-		}, nil
-	}
-
-	if res != nil {
-		log.DefaultLogger.Debug("HTTPStatusCode", "status", res.HTTPStatusCode)
-		log.DefaultLogger.Debug("res", res)
-	}
-
-	printResponse(res)
+	// if err != nil {
+	// 	log.DefaultLogger.Error("CheckHealth: Fail LoadSetting", "error", err.Error())
+	// 	return &backend.CheckHealthResult{
+	// 		Status:  backend.HealthStatusError,
+	// 		Message: "Setting Configuration Read Fail",
+	// 	}, nil
+	// }
+	// GoogleAnalytics.CheckHealth(ctx,config)
 
 	return &backend.CheckHealthResult{
 		Status:  status,
@@ -103,18 +81,13 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 // QueryData queries for data.
 func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	res := backend.NewQueryDataResponse()
-	config, err := LoadSettings(req.PluginContext)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := NewGoogleClient(ctx, config)
+	config, err := setting.LoadSettings(req.PluginContext)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, query := range req.Queries {
-		frames, err := ds.analytics.Query(client, query)
+		frames, err := ds.analytics.Query(ctx, config, query)
 		if err != nil {
 			log.DefaultLogger.Error("Fail query", "error", err)
 			continue
@@ -154,7 +127,7 @@ func (ds *GoogleAnalyticsDataSource) handleResourceAccounts(rw http.ResponseWrit
 	}
 
 	ctx := req.Context()
-	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 	if err != nil {
 		writeResult(rw, "?", nil, err)
 		return
@@ -170,7 +143,7 @@ func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.Respons
 	}
 
 	ctx := req.Context()
-	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 	if err != nil {
 		writeResult(rw, "?", nil, err)
 		return
@@ -186,7 +159,7 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfiles(rw http.ResponseWrit
 	}
 
 	ctx := req.Context()
-	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 	if err != nil {
 		writeResult(rw, "?", nil, err)
 		return
@@ -220,7 +193,7 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.Respo
 	}
 
 	ctx := req.Context()
-	config, err := LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 	if err != nil {
 		writeResult(rw, "?", nil, err)
 		return

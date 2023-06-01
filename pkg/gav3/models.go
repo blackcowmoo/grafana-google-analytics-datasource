@@ -1,4 +1,4 @@
-package main
+package gav3
 
 import (
 	"encoding/json"
@@ -137,7 +137,7 @@ type MetadataItemAttribute struct {
 
 type AttributeType string
 
-func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
+func (ga *GoogleAnalyticsv3) getMetadata() (*Metadata, error) {
 	res, err := http.Get(GaMetadataURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metadata api %w", err)
@@ -153,7 +153,7 @@ func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
 	return &metadata, nil
 }
 
-func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem, error) {
+func (ga *GoogleAnalyticsv3) getFilteredMetadata() ([]MetadataItem, []MetadataItem, error) {
 	metadata, err := ga.getMetadata()
 	if err != nil {
 		return nil, nil, err
@@ -176,7 +176,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem
 	return metricItems, dimensionItems, nil
 }
 
-func (ga *GoogleAnalytics) GetDimensions() ([]MetadataItem, error) {
+func (ga *GoogleAnalyticsv3) GetDimensions() ([]MetadataItem, error) {
 	cacheKey := "ga:metadata:dimensions"
 	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return dimensions.([]MetadataItem), nil
@@ -192,7 +192,7 @@ func (ga *GoogleAnalytics) GetDimensions() ([]MetadataItem, error) {
 	return dimensions, nil
 }
 
-func (ga *GoogleAnalytics) GetMetrics() ([]MetadataItem, error) {
+func (ga *GoogleAnalyticsv3) GetMetrics() ([]MetadataItem, error) {
 	cacheKey := "ga:metadata:metrics"
 	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return metrics.([]MetadataItem), nil

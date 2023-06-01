@@ -1,14 +1,14 @@
-package main
+package gav3
 
 import (
 	"context"
 	"fmt"
-	"sync"
-	"time"
-
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
+	"sync"
+	"time"
+	"util"
 
 	analytics "google.golang.org/api/analytics/v3"
 	reporting "google.golang.org/api/analyticsreporting/v4"
@@ -19,13 +19,13 @@ type GoogleClient struct {
 	analytics *analytics.Service
 }
 
-func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*GoogleClient, error) {
-	reportingService, reportingError := createReportingService(ctx, auth)
+func NewGoogleClient(ctx context.Context, jwt string) (*GoogleClient, error) {
+	reportingService, reportingError := createReportingService(ctx, jwt)
 	if reportingError != nil {
 		return nil, reportingError
 	}
 
-	analyticsService, analyticsError := createAnalyticsService(ctx, auth)
+	analyticsService, analyticsError := createAnalyticsService(ctx, jwt)
 	if analyticsError != nil {
 		return nil, analyticsError
 	}
@@ -33,8 +33,8 @@ func NewGoogleClient(ctx context.Context, auth *DatasourceSettings) (*GoogleClie
 	return &GoogleClient{reportingService, analyticsService}, nil
 }
 
-func createReportingService(ctx context.Context, auth *DatasourceSettings) (*reporting.Service, error) {
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), reporting.AnalyticsReadonlyScope)
+func createReportingService(ctx context.Context, jwt string) (*reporting.Service, error) {
+	jwtConfig, err := google.JWTConfigFromJSON([]byte(jwt), reporting.AnalyticsReadonlyScope)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing JWT file: %w", err)
 	}
@@ -43,8 +43,8 @@ func createReportingService(ctx context.Context, auth *DatasourceSettings) (*rep
 	return reporting.NewService(ctx, option.WithHTTPClient(client))
 }
 
-func createAnalyticsService(ctx context.Context, auth *DatasourceSettings) (*analytics.Service, error) {
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(auth.JWT), analytics.AnalyticsReadonlyScope)
+func createAnalyticsService(ctx context.Context, jwt string) (*analytics.Service, error) {
+	jwtConfig, err := google.JWTConfigFromJSON([]byte(jwt), analytics.AnalyticsReadonlyScope)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing JWT file: %w", err)
 	}
@@ -192,7 +192,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 }
 
 func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
-	defer Elapsed("Get report data at GA API")()
+	defer util.Elapsed("Get report data at GA API")()
 	log.DefaultLogger.Debug("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
 	Dimensions := []*reporting.Dimension{}
