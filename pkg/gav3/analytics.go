@@ -3,7 +3,7 @@ package gav3
 import (
 	"context"
 	"fmt"
-	"setting"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"

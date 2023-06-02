@@ -10,10 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"util"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 )
 
-func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, rows []*reporting.ReportRow, refId string, dimensions string) (*data.Frame, error) {
+func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, rows []*reporting.ReportRow, refId string, dimensions string) (*data.Frame, error) {
 	warnings := []string{}
 	meta := map[string]interface{}{}
 
@@ -223,19 +224,19 @@ var numberConverter = data.FieldConverter{
 
 // converterMap is a map sheets.ColumnType to fieldConverter and
 // is used to create a data.FrameInputConverter for a returned sheet.
-var converterMap = map[ColumnType]data.FieldConverter{
+var converterMap = map[model.ColumnType]data.FieldConverter{
 	"TIME":   timeConverter,
 	"STRING": stringConverter,
 	"NUMBER": numberConverter,
 }
 
-func getColumnDefinitions(header *reporting.ColumnHeader) []*ColumnDefinition {
-	columns := []*ColumnDefinition{}
+func getColumnDefinitions(header *reporting.ColumnHeader) []*model.ColumnDefinition {
+	columns := []*model.ColumnDefinition{}
 	headerRow := header.MetricHeader.MetricHeaderEntries
 
 	for columnIndex, headerCell := range headerRow {
 		name := strings.TrimSpace(headerCell.Name)
-		columns = append(columns, NewColumnDefinition(name, columnIndex, headerCell.Type))
+		columns = append(columns, model.NewColumnDefinition(name, columnIndex, headerCell.Type))
 	}
 
 	return columns

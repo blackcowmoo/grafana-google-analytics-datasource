@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"gav3"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/gav3"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/patrickmn/go-cache"
-	"setting"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 )
 
 // GoogleAnalyticsDataSource handler for google sheets

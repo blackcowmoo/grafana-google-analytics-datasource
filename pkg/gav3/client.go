@@ -8,7 +8,7 @@ import (
 	"google.golang.org/api/option"
 	"sync"
 	"time"
-	"util"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 
 	analytics "google.golang.org/api/analytics/v3"
 	reporting "google.golang.org/api/analyticsreporting/v4"
