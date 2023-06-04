@@ -1,7 +1,7 @@
 ![](https://img.shields.io/github/v/release/blackcowmoo/Grafana-Google-Analytics-DataSource?style=plastic) [![CodeQL](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml)
 # Google Analytics data source
 
-Visualize data from GA(Google Analytics)
+Visualize data from Google Analytics UA And GA4(beta)
 
 ## Feature
 - AutoComplete AccountID & WebpropertyID & ProfileID
@@ -37,5 +37,5 @@ Visualize data from GA(Google Analytics)
 Go To Add Data source then Drag the file to the dotted zone above. Then click `Save & Test`.   
 The file contents will be encrypted and saved in the Grafana database.
 
-## How To Run
+## How To Dev
 [build directory](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/tree/master/build)

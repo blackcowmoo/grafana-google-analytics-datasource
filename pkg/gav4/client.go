@@ -54,7 +54,7 @@ func createAnalyticsadminService(ctx context.Context, jwt string) (*analyticsadm
 
 func (client *GoogleClient) getAccountsList(nextPageToekn string) ([]*analyticsadmin.GoogleAnalyticsAdminV1betaAccount, error) {
 	accountsService := analyticsadmin.NewAccountsService(client.analyticsadmin)
-	accounts, err := accountsService.List().PageSize(200).PageToken(nextPageToekn).Do()
+	accounts, err := accountsService.List().PageSize(GaAdminMaxResult).PageToken(nextPageToekn).Do()
 	if err != nil {
 		log.DefaultLogger.Error("getAccountsList Fail", "error", err.Error())
 		return nil, err
@@ -95,7 +95,7 @@ func (client *GoogleClient) getAllWebpropertiesList() ([]*analyticsadmin.GoogleA
 
 func (client *GoogleClient) getWebpropertiesList(accountId string, nextPageToekn string) ([]*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, error) {
 	webpropertiesService := analyticsadmin.NewPropertiesService(client.analyticsadmin)
-	webproperties, err := webpropertiesService.List().Filter("parent:" + accountId).PageSize(200).PageToken(nextPageToekn).Do()
+	webproperties, err := webpropertiesService.List().Filter("parent:" + accountId).PageSize(GaAdminMaxResult).PageToken(nextPageToekn).Do()
 	if err != nil {
 		log.DefaultLogger.Error("getWebpropertiesList fail", "error", err.Error())
 		return nil, err

@@ -181,3 +181,49 @@ func (ga *GoogleAnalytics) GetAllProfilesList(ctx context.Context, config *setti
 	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
 	return profileNames, nil
 }
+
+func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error) {
+	var status = backend.HealthStatusOk
+	var message = "Success"
+
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Fail NewGoogleClient" + err.Error(),
+		}, nil
+	}
+
+	profiles, err := client.getAllProfilesList()
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: Fail getAllProfilesList", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Fail getProfileList" + err.Error(),
+		}, nil
+	}
+
+	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC", ""}
+	res, err := client.getReport(testData)
+
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: GET request to analyticsreporting/v4 returned error", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Test Request Fail" + err.Error(),
+		}, nil
+	}
+
+	if res != nil {
+		log.DefaultLogger.Debug("HTTPStatusCode", "status", res.HTTPStatusCode)
+		log.DefaultLogger.Debug("res", res)
+	}
+
+	printResponse(res)
+
+	return &backend.CheckHealthResult{
+		Status:  status,
+		Message: message,
+	}, nil
+}

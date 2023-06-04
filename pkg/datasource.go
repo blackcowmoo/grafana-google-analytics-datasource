@@ -13,6 +13,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -25,7 +26,6 @@ type GoogleAnalyticsDataSource struct {
 // NewDataSource creates the google analytics datasource and sets up all the routes
 func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	version := &setting.DatasourceSettings{}
-	var analytics GoogleAnalytics
 	cache := cache.New(300*time.Second, 5*time.Second)
 	mux := http.NewServeMux()
 	err := json.Unmarshal(dis.JSONData, &version)
@@ -33,6 +33,7 @@ func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instanc
 		return nil, err
 	}
 
+	var analytics GoogleAnalytics
 	if version.Version == "v3" {
 		analytics = &gav3.GoogleAnalytics{
 			Cache: cache,
@@ -63,24 +64,16 @@ func (ds *GoogleAnalyticsDataSource) CallResource(ctx context.Context, req *back
 
 // CheckHealth checks if the plugin is running properly
 func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	var status = backend.HealthStatusOk
-	var message = "Success"
+	config, err := setting.LoadSettings(req.PluginContext)
 
-	// config, err := setting.LoadSettings(req.PluginContext)
-
-	// if err != nil {
-	// 	log.DefaultLogger.Error("CheckHealth: Fail LoadSetting", "error", err.Error())
-	// 	return &backend.CheckHealthResult{
-	// 		Status:  backend.HealthStatusError,
-	// 		Message: "Setting Configuration Read Fail",
-	// 	}, nil
-	// }
-	// GoogleAnalytics.CheckHealth(ctx,config)
-
-	return &backend.CheckHealthResult{
-		Status:  status,
-		Message: message,
-	}, nil
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: Fail LoadSetting", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Setting Configuration Read Fail",
+		}, nil
+	}
+	return ds.analytics.CheckHealth(ctx,config)
 }
 
 // QueryData queries for data.
@@ -95,8 +88,8 @@ func (ds *GoogleAnalyticsDataSource) QueryData(ctx context.Context, req *backend
 		frames, err := ds.analytics.Query(ctx, config, query)
 		if err != nil {
 			log.DefaultLogger.Error("Fail query", "error", err)
+			res.Responses[query.RefID] = backend.DataResponse{Frames: data.Frames{}, Error: err}
 			continue
-			// return nil, err
 		}
 		res.Responses[query.RefID] = backend.DataResponse{Frames: *frames, Error: err}
 	}

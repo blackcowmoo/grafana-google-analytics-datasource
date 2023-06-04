@@ -196,3 +196,47 @@ func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.Datas
 
 	return metrics, nil
 }
+
+func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error) {
+	var status = backend.HealthStatusOk
+	var message = "Success"
+
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Fail NewGoogleClient" + err.Error(),
+		}, nil
+	}
+
+	webProperties, err := client.getAllWebpropertiesList()
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: Fail getPropetyList", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Fail getPropetyList" + err.Error(),
+		}, nil
+	}
+
+	testData := QueryModel{webProperties[0].Account, webProperties[0].Name, "", "2daysAgo", "today", "a", []string{"active1DayUsers"}, "date", []string{}, 1, "", false, "UTC", ""}
+	res, err := client.getReport(testData)
+
+	if err != nil {
+		log.DefaultLogger.Error("CheckHealth: GET request to analyticsdata beta returned error", "error", err.Error())
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Test Request Fail" + err.Error(),
+		}, nil
+	}
+
+	if res != nil {
+		log.DefaultLogger.Debug("HTTPStatusCode", "status", res.HTTPStatusCode)
+		log.DefaultLogger.Debug("res", res)
+	}
+
+	return &backend.CheckHealthResult{
+		Status:  status,
+		Message: message,
+	}, nil
+}
