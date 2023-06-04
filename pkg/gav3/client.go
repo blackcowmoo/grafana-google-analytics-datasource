@@ -3,12 +3,12 @@ package gav3
 import (
 	"context"
 	"fmt"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"sync"
 	"time"
-	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 
 	analytics "google.golang.org/api/analytics/v3"
 	reporting "google.golang.org/api/analyticsreporting/v4"
@@ -24,7 +24,6 @@ func NewGoogleClient(ctx context.Context, jwt string) (*GoogleClient, error) {
 	if reportingError != nil {
 		return nil, reportingError
 	}
-
 	analyticsService, analyticsError := createAnalyticsService(ctx, jwt)
 	if analyticsError != nil {
 		return nil, analyticsError

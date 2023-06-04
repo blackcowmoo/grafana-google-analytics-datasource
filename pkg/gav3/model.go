@@ -1,17 +1,17 @@
 package gav3
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 	"net/http"
+	"time"
 
+	. "github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	. "github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
-
 )
-
 
 type QueryModel struct {
 	AccountID         string   `json:"accountId"`
@@ -61,8 +61,7 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 	return model, nil
 }
 
-
-func (ga *GoogleAnalyticsv3) getMetadata() (*Metadata, error) {
+func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
 	res, err := http.Get(GaMetadataURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metadata api %w", err)
@@ -78,7 +77,7 @@ func (ga *GoogleAnalyticsv3) getMetadata() (*Metadata, error) {
 	return &metadata, nil
 }
 
-func (ga *GoogleAnalyticsv3) getFilteredMetadata() ([]MetadataItem, []MetadataItem, error) {
+func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem, error) {
 	metadata, err := ga.getMetadata()
 	if err != nil {
 		return nil, nil, err
@@ -101,7 +100,7 @@ func (ga *GoogleAnalyticsv3) getFilteredMetadata() ([]MetadataItem, []MetadataIt
 	return metricItems, dimensionItems, nil
 }
 
-func (ga *GoogleAnalyticsv3) GetDimensions() ([]MetadataItem, error) {
+func (ga *GoogleAnalytics) GetDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]MetadataItem, error) {
 	cacheKey := "ga:metadata:dimensions"
 	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return dimensions.([]MetadataItem), nil
@@ -117,7 +116,7 @@ func (ga *GoogleAnalyticsv3) GetDimensions() ([]MetadataItem, error) {
 	return dimensions, nil
 }
 
-func (ga *GoogleAnalyticsv3) GetMetrics() ([]MetadataItem, error) {
+func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]MetadataItem, error) {
 	cacheKey := "ga:metadata:metrics"
 	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
 		return metrics.([]MetadataItem), nil

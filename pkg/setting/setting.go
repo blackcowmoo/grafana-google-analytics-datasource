@@ -6,10 +6,10 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
+
 type DatasourceSettings struct {
 	Version string `json:"version"`
 }
-
 
 // DatasourceSecretSettings contains Google Sheets API authentication properties.
 type DatasourceSecretSettings struct {

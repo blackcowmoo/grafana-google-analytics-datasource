@@ -1,10 +1,11 @@
-package gav3
+package gav4
 
 import (
 	"context"
 	"fmt"
 	"time"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -13,7 +14,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-// GoogleAnalyticsv3DataSource handler for google sheets
+// GoogleAnalyticsv4DataSource handler
 type GoogleAnalytics struct {
 	Cache *cache.Cache
 }
@@ -40,11 +41,6 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		return nil, fmt.Errorf("Required WebPropertyID")
 	}
 
-	if len(queryModel.ProfileID) < 1 {
-		log.DefaultLogger.Error("Query", "error", "Required ProfileID")
-		return nil, fmt.Errorf("Required ProfileID")
-	}
-
 	report, err := client.getReport(*queryModel)
 	if err != nil {
 		log.DefaultLogger.Error("Query", "error", err)
@@ -52,6 +48,7 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 	}
 
 	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone)
+
 }
 
 func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
@@ -65,14 +62,14 @@ func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *setting.Data
 		return item.(map[string]string), nil
 	}
 
-	accounts, err := client.getAccountsList(GaDefaultIdx)
+	accounts, err := client.getAccountsList("")
 	if err != nil {
 		return nil, err
 	}
 
 	accountNames := map[string]string{}
 	for _, i := range accounts {
-		accountNames[i.Id] = i.Name
+		accountNames[i.Name] = i.DisplayName
 	}
 
 	ga.Cache.Set(cacheKey, accountNames, 60*time.Second)
@@ -90,14 +87,14 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *setting
 		return item.(map[string]string), nil
 	}
 
-	Webproperties, err := client.getWebpropertiesList(accountId, GaDefaultIdx)
+	Webproperties, err := client.getWebpropertiesList(accountId, "")
 	if err != nil {
 		return nil, err
 	}
 
 	WebpropertyNames := map[string]string{}
 	for _, i := range Webproperties {
-		WebpropertyNames[i.Id] = i.Name
+		WebpropertyNames[i.Name] = i.DisplayName
 	}
 
 	ga.Cache.Set(cacheKey, WebpropertyNames, 60*time.Second)
@@ -105,28 +102,8 @@ func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *setting
 }
 
 func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:account:%s:webproperty:%s:profiles", accountId, webPropertyId)
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
-	if err != nil {
-		return nil, err
-	}
-
-	profileNames := map[string]string{}
-	for _, i := range profiles {
-		profileNames[i.Id] = i.Name
-	}
-
-	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
-	return profileNames, nil
+	// gav4 no profle
+	return nil, nil
 }
 
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
@@ -140,15 +117,15 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 		return item.(string), nil
 	}
 
-	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
+	webproperties, err := client.getWebpropertiesList(accountId, "")
 	if err != nil {
 		return "", err
 	}
 
 	var timezone string
-	for _, profile := range profiles {
-		if profile.Id == profileId {
-			timezone = profile.Timezone
+	for _, webproperty := range webproperties {
+		if webproperty.Name == webPropertyId {
+			timezone = webproperty.TimeZone
 			break
 		}
 	}
@@ -158,26 +135,64 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 }
 
 func (ga *GoogleAnalytics) GetAllProfilesList(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
+	return nil, nil
+}
+
+func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, []model.MetadataItem, error) {
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+		return nil, nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+	metadata, err := client.getMetadata(propertyId)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get metadata", err)
+	}
+	var dimensions = make([]model.MetadataItem, 0)
+	var metrics = make([]model.MetadataItem, 0)
+	for _, metric := range metadata.Metrics {
+		var metadataItem = &model.MetadataItem{}
+		metadataItem.ID = metric.ApiName
+		metadataItem.Attributes.Description = metric.Description
+		metadataItem.Attributes.Group = metric.Category
+		metadataItem.Attributes.UIName = metric.UiName
+		metrics = append(metrics, *metadataItem)
+	}
+	for _, dimension := range metadata.Dimensions {
+		var metadataItem = &model.MetadataItem{}
+		metadataItem.ID = dimension.ApiName
+		metadataItem.Attributes.Description = dimension.Description
+		metadataItem.Attributes.Group = dimension.Category
+		metadataItem.Attributes.UIName = dimension.UiName
+		dimensions = append(dimensions, *metadataItem)
 	}
 
-	cacheKey := fmt.Sprintf("analytics:account:*:webproperty:*:profiles")
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
+	return metrics, dimensions, nil
+}
 
-	profiles, err := client.getAllProfilesList()
+func (ga *GoogleAnalytics) GetDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":dimensions"
+	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return dimensions.([]model.MetadataItem), nil
+	}
+	_, dimensions, err := ga.getFilteredMetadata(ctx, config, propertyId)
 	if err != nil {
 		return nil, err
 	}
 
-	profileNames := map[string]string{}
-	for _, i := range profiles {
-		profileNames[i.Id] = i.Name
+	return dimensions, nil
+}
+
+func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":metrics"
+	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return metrics.([]model.MetadataItem), nil
+	}
+	metrics, _, err := ga.getFilteredMetadata(ctx, config, propertyId)
+	if err != nil {
+		return nil, err
 	}
 
-	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
-	return profileNames, nil
+	ga.Cache.Set(cacheKey, metrics, time.Hour)
+
+	return metrics, nil
 }

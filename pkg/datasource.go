@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/gav3"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/gav4"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/patrickmn/go-cache"
-	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 )
 
 // GoogleAnalyticsDataSource handler for google sheets
@@ -33,7 +34,11 @@ func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instanc
 	}
 
 	if version.Version == "v3" {
-		analytics = &gav3.GoogleAnalyticsv3{
+		analytics = &gav3.GoogleAnalytics{
+			Cache: cache,
+		}
+	} else {
+		analytics = &gav4.GoogleAnalytics{
 			Cache: cache,
 		}
 	}
@@ -173,8 +178,10 @@ func (ds *GoogleAnalyticsDataSource) handleResourceDimensions(rw http.ResponseWr
 	if req.Method != http.MethodGet {
 		return
 	}
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 
-	res, err := ds.analytics.GetDimensions()
+	res, err := ds.analytics.GetDimensions(ctx, config, req.URL.Query().Get("webproperty"))
 	writeResult(rw, "dimensions", res, err)
 }
 
@@ -182,8 +189,10 @@ func (ds *GoogleAnalyticsDataSource) handleResourceMetrics(rw http.ResponseWrite
 	if req.Method != http.MethodGet {
 		return
 	}
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 
-	res, err := ds.analytics.GetMetrics()
+	res, err := ds.analytics.GetMetrics(ctx, config, req.URL.Query().Get("webproperty"))
 	writeResult(rw, "metrics", res, err)
 }
 
@@ -199,6 +208,6 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.Respo
 		return
 	}
 
-	res, err := ds.analytics.GetProfileTimezone(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"), req.URL.Query().Get("profileId"))
+	res, err := ds.analytics.GetTimezone(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"), req.URL.Query().Get("profileId"))
 	writeResult(rw, "timezone", res, err)
 }

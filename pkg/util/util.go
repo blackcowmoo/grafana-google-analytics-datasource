@@ -2,9 +2,8 @@ package util
 
 import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"time"
 	"strings"
-
+	"time"
 )
 
 func Elapsed(what string) func() {

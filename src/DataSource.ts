@@ -3,9 +3,11 @@ import { DataSourceWithBackend } from '@grafana/runtime';
 import { GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
+  version: string;
   constructor(instanceSettings: DataSourceInstanceSettings<GADataSourceOptions>) {
     super(instanceSettings);
     console.log('instanceSettings', instanceSettings);
+    this.version = instanceSettings.jsonData.version
   }
 
   async getAccountIds(): Promise<Array<SelectableValue<string>>> {
@@ -84,5 +86,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   async getDimensionsExcludeTimeDimensions(query: string): Promise<Array<SelectableValue<string>>> {
     return await this.getDimensions(query, 'date');
+  }
+  getGaVersion(): string {
+    return this.version
   }
 }

@@ -1,6 +1,8 @@
 import { DataQuery, DataSourceJsonData, SelectableValue } from '@grafana/data';
 
 export interface GAQuery extends DataQuery {
+  displayName: Map<string,string> 
+  version: string;
   accountId: string;
   webPropertyId: string;
   profileId: string;

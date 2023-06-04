@@ -1,20 +1,21 @@
-package gav3
+package gav4
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/jinzhu/copier"
-	reporting "google.golang.org/api/analyticsreporting/v4"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
+	analyticsdata "google.golang.org/api/analyticsdata/v1beta"
 )
 
-func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, rows []*reporting.ReportRow, refId string, dimensions string) (*data.Frame, error) {
+func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, rows []*analyticsdata.Row, refId string, dimensions string) (*data.Frame, error) {
 	warnings := []string{}
 	meta := map[string]interface{}{}
 
@@ -53,18 +54,19 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 	}
 	i := 0
 	for rowIndex, row := range rows {
-		if dimensions == strings.Join(row.Dimensions, "|") {
-			for _, metrics := range row.Metrics {
-				// d := row.Dimensions[dateIndex]
-				for valueIndex, value := range metrics.Values {
-					err := inputConverter.Set(valueIndex, rowIndex, value)
-					if err != nil {
-						log.DefaultLogger.Error("frame convert", "error", err.Error())
-						warnings = append(warnings, err.Error())
-						continue
-					}
-					i++
+		var key string
+		for _, v := range row.DimensionValues {
+			key += v.Value + "|"
+		}
+		if dimensions == key {
+			for valueIndex, value := range row.MetricValues {
+				err := inputConverter.Set(valueIndex, rowIndex, value.Value)
+				if err != nil {
+					log.DefaultLogger.Error("frame convert", "error", err.Error())
+					warnings = append(warnings, err.Error())
+					continue
 				}
+				i++
 			}
 		}
 	}
@@ -75,16 +77,18 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 }
 
 //                                      <--------- primary secondary --------->
-var timeDimensions []string = []string{"ga:dateHourMinute", "ga:dateHour", "ga:date"}
+var timeDimensions []string = []string{"dateHourMinute", "gdateHour", "date", "firstSessionDate"}
 
-func transformReportToDataFrames(report *reporting.Report, refId string, timezone string) ([]*data.Frame, error) {
-	timeDimension := reporting.MetricHeaderEntry{
-		Name: report.ColumnHeader.Dimensions[0],
+func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
+	// return nil,nil
+
+	timeDimension := analyticsdata.MetricHeader{
+		Name: report.DimensionHeaders[0].Name,
 		Type: "TIME",
 	}
-	report.ColumnHeader.MetricHeader.MetricHeaderEntries = append([]*reporting.MetricHeaderEntry{
+	report.MetricHeaders = append([]*analyticsdata.MetricHeader{
 		&timeDimension,
-	}, report.ColumnHeader.MetricHeader.MetricHeaderEntries...)
+	}, report.MetricHeaders...)
 
 	timeAddFunction, timeSubFunction := getTimeFunction(timeDimension.Name)
 
@@ -94,16 +98,20 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 	}
 
 	dimensions := map[string]struct{}{}
-	var parsedReportMap = make(map[string]map[int64]*reporting.ReportRow)
+	var parsedReportMap = make(map[string]map[int64]*analyticsdata.Row)
 
-	for _, row := range report.Data.Rows {
+	for _, row := range report.Rows {
 		parsedRow, parsedTime := parseRow(row, tz)
-		dimension := strings.Join(parsedRow.Dimensions, "|")
+		dimension := ""
+		for _, v := range parsedRow.DimensionValues {
+			dimension += v.Value + "|"
+		}
+		// dimension := strings.Join(parsedRow.DimensionValues, "|")
 		if _, ok := dimensions[dimension]; !ok {
 			dimensions[dimension] = struct{}{}
 		}
-		if inner, ok := parsedReportMap[dimension]; !ok {
-			inner = make(map[int64]*reporting.ReportRow)
+		if _, ok := parsedReportMap[dimension]; !ok {
+			inner := make(map[int64]*analyticsdata.Row)
 			parsedReportMap[dimension] = inner
 		}
 		parsedReportMap[dimension][parsedTime.Unix()] = parsedRow
@@ -112,12 +120,12 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 		afterTime := timeAddFunction(*parsedTime)
 		if _, ok := parsedReportMap[dimension][beforeTime.Unix()]; !ok {
 			copyRow := copyRowAndInit(row)
-			copyRow.Metrics[0].Values[0] = beforeTime.Format(time.RFC3339)
+			copyRow.MetricValues[0].Value = beforeTime.Format(time.RFC3339)
 			parsedReportMap[dimension][beforeTime.Unix()] = copyRow
 		}
 		if _, ok := parsedReportMap[dimension][afterTime.Unix()]; !ok {
 			copyRow := copyRowAndInit(row)
-			copyRow.Metrics[0].Values[0] = afterTime.Format(time.RFC3339)
+			copyRow.MetricValues[0].Value = afterTime.Format(time.RFC3339)
 			parsedReportMap[dimension][afterTime.Unix()] = copyRow
 		}
 	}
@@ -130,7 +138,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 	}
 
 	var frames = make([]*data.Frame, 0, len(dimensionKeys))
-	columns := getColumnDefinitions(report.ColumnHeader)
+	columns := getColumnDefinitions(report.MetricHeaders)
 
 	for _, dimension := range dimensionKeys {
 		keys := make([]int64, len(parsedReportMap[dimension]))
@@ -141,7 +149,7 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 		}
 
 		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-		var parsedRows = make([]*reporting.ReportRow, len(parsedReportMap[dimension]))
+		var parsedRows = make([]*analyticsdata.Row, len(parsedReportMap[dimension]))
 		i = 0
 		for _, t := range keys {
 			parsedRows[i] = parsedReportMap[dimension][t]
@@ -160,16 +168,16 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string, timezone string) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
-	for _, report := range reportsResponse.Reports {
-		frame, err := transformReportToDataFrames(report, refId, timezone)
-		if err != nil {
-			return nil, err
-		}
-
-		frames = append(frames, frame...)
+	// for _, report := range reportsResponse.Rows {
+	frame, err := transformReportToDataFrames(reportsResponse, refId, timezone)
+	if err != nil {
+		return nil, err
 	}
+
+	frames = append(frames, frame...)
+	// }
 
 	return &frames, nil
 }
@@ -230,11 +238,10 @@ var converterMap = map[model.ColumnType]data.FieldConverter{
 	"NUMBER": numberConverter,
 }
 
-func getColumnDefinitions(header *reporting.ColumnHeader) []*model.ColumnDefinition {
+func getColumnDefinitions(header []*analyticsdata.MetricHeader) []*model.ColumnDefinition {
 	columns := []*model.ColumnDefinition{}
-	headerRow := header.MetricHeader.MetricHeaderEntries
 
-	for columnIndex, headerCell := range headerRow {
+	for columnIndex, headerCell := range header {
 		name := strings.TrimSpace(headerCell.Name)
 		columns = append(columns, model.NewColumnDefinition(name, columnIndex, headerCell.Type))
 	}
@@ -242,22 +249,30 @@ func getColumnDefinitions(header *reporting.ColumnHeader) []*model.ColumnDefinit
 	return columns
 }
 
-func copyRow(row *reporting.ReportRow) *reporting.ReportRow {
-	var copyRow reporting.ReportRow
-	copier.CopyWithOption(&copyRow.Dimensions, row.Dimensions, copier.Option{DeepCopy: true})
-	copier.CopyWithOption(&copyRow.Metrics, row.Metrics, copier.Option{DeepCopy: true})
+func copyRow(row *analyticsdata.Row) *analyticsdata.Row {
+	var copyRow analyticsdata.Row
+	copier.CopyWithOption(&copyRow.DimensionValues, row.DimensionValues, copier.Option{DeepCopy: true})
+	copier.CopyWithOption(&copyRow.MetricValues, row.MetricValues, copier.Option{DeepCopy: true})
 	return &copyRow
 }
 
-func copyRowAndInit(row *reporting.ReportRow) *reporting.ReportRow {
+func copyRowAndInit(row *analyticsdata.Row) *analyticsdata.Row {
 	copyRow := copyRow(row)
-	copyRow.Metrics[0].Values = util.FillArray(make([]string, len(row.Metrics[0].Values)), "0")
+	copyRow.MetricValues = fillRow(make([]*analyticsdata.MetricValue, len(row.MetricValues)), analyticsdata.MetricValue{Value: "0"})
 	return copyRow
 }
 
-func parseRow(row *reporting.ReportRow, timezone *time.Location) (*reporting.ReportRow, *time.Time) {
-	timeDimension := row.Dimensions[0]
-	otherDimensions := row.Dimensions[1:]
+func fillRow(array []*analyticsdata.MetricValue, v analyticsdata.MetricValue) []*analyticsdata.MetricValue {
+	for i, _ := range array {
+		tmp := v
+		array[i] = &tmp
+	}
+	return array
+}
+
+func parseRow(row *analyticsdata.Row, timezone *time.Location) (*analyticsdata.Row, *time.Time) {
+	timeDimension := row.DimensionValues[0].Value
+	otherDimensions := row.DimensionValues[1:]
 	parsedTime, err := util.ParseAndTimezoneTime(timeDimension, timezone)
 	if err != nil {
 		log.DefaultLogger.Error("parsedTime err", "err", err.Error())
@@ -265,8 +280,11 @@ func parseRow(row *reporting.ReportRow, timezone *time.Location) (*reporting.Rep
 	strTime := parsedTime.Format(time.RFC3339)
 
 	// row.Metrics[0].Values = append(row.Metrics[0].Values, strTime)
-	row.Metrics[0].Values = append([]string{strTime}, row.Metrics[0].Values...)
-	row.Dimensions = otherDimensions
+	t := &analyticsdata.MetricValue{
+		Value: strTime,
+	}
+	row.MetricValues = append([]*analyticsdata.MetricValue{t}, row.MetricValues...)
+	row.DimensionValues = otherDimensions
 	return row, parsedTime
 }
 
@@ -282,6 +300,10 @@ func getTimeFunction(timeDimension string) (func(time.Time) time.Time, func(time
 		sub = util.SubOneHour
 		break
 	case timeDimensions[2]:
+		add = util.AddOneDay
+		sub = util.SubOneDay
+		break
+	case timeDimensions[3]:
 		add = util.AddOneDay
 		sub = util.SubOneDay
 		break
