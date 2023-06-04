@@ -1,6 +1,6 @@
 # Changelog
 ## 0.1.5
-- support grafana 9.x.x
+- support grafana version < 11
 - update dependencies
 ## 0.1.4
 - apply datasource intance management
