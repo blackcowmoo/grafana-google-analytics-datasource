@@ -1,5 +1,5 @@
 ![](https://img.shields.io/github/v/release/blackcowmoo/Grafana-Google-Analytics-DataSource?style=plastic) [![CodeQL](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml)
-# Google Analytics data source
+# Google Analytics datasource
 
 Visualize data from Google Analytics UA And GA4(beta)
 
