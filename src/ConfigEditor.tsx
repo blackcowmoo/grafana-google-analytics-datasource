@@ -14,7 +14,7 @@ export type Props = DataSourcePluginOptionsEditorProps<GADataSourceOptions, GASe
 export class ConfigEditor extends PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props)
-    if(!this.props.options.jsonData.version)this.props.options.jsonData.version = 'v3'
+    if(!this.props.options.jsonData.version){this.props.options.jsonData.version = 'v3'}
   }
   onResetProfileId = () => {
     const { options } = this.props;
@@ -95,7 +95,7 @@ export class ConfigEditor extends PureComponent<Props> {
             <li>
               Open the
               {
-                jsonData.version == "v3" ?
+                jsonData.version === "v3" ?
                   <>
                     <a href="https://console.cloud.google.com/apis/library/analytics.googleapis.com">
                       Google Analytics API(UA)
@@ -113,7 +113,7 @@ export class ConfigEditor extends PureComponent<Props> {
             <li>
               Open the
               {
-                jsonData.version == "v3" ?
+                jsonData.version === "v3" ?
                   <>
                     <a href="https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com">
                       Google Analytics Reporting API(UA)

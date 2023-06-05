@@ -127,7 +127,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 	for _, dimension := range query.Dimensions {
 		Dimensions = append(Dimensions, &analyticsdata.Dimension{Name: dimension})
 	}
-
+	var offset int64 = 0
 	req := analyticsdata.RunReportRequest{
 		DateRanges: []*analyticsdata.DateRange{
 			// Create the DateRange object.
@@ -135,6 +135,14 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 		},
 		Metrics:    Metrics,
 		Dimensions: Dimensions,
+		Offset: offset,
+		OrderBys: []*analyticsdata.OrderBy{
+			{
+				Dimension: &analyticsdata.DimensionOrderBy{
+					DimensionName: query.TimeDimension,
+				},
+			},
+		},
 	}
 
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
@@ -144,18 +152,18 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 		return nil, fmt.Errorf(err.Error())
 	}
 	//  TODO 페이지 네이션
-	// log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
+	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
 
-	// if query.UseNextPage && report.Reports[0].NextPageToken != "" {
-	// 	query.PageToken = report.Reports[0].NextPageToken
-	// 	newReport, err := client.getReport(query)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf(err.Error())
-	// 	}
+	if query.UseNextPage && report.RowCount > (query.Offset + GaAdminMaxResult) {
+		query.Offset = query.Offset + GaAdminMaxResult
+		newReport, err := client.getReport(query)
+		if err != nil {
+			return nil, fmt.Errorf(err.Error())
+		}
 
-	// 	report.Reports[0].Data.Rows = append(report.Reports[0].Data.Rows, newReport.Reports[0].Data.Rows...)
-	// 	return report, nil
-	// }
+		report.Rows = append(report.Rows, newReport.Rows...)
+		return report, nil
+	}
 	return report, nil
 }
 

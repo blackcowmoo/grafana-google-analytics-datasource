@@ -38,7 +38,7 @@ export class QueryEditor extends PureComponent<Props> {
     const profileId = item.value as string;
     this.setDisplayName(profileId, item.label)
 
-    if (profileId && version == "v3") {
+    if (profileId && version === "v3") {
       datasource.getProfileTimezone(accountId, webPropertyId, profileId).then((timezone) => {
         const { query, onChange } = this.props;
         console.log(`timezone`, timezone);
@@ -61,7 +61,7 @@ export class QueryEditor extends PureComponent<Props> {
   onWebPropertyIdChange = (item: any) => {
     const { query, query: { version, accountId }, onChange, datasource } = this.props;
     let webPropertyId = item.value;
-    if (webPropertyId && version == "v4") {
+    if (webPropertyId && version === "v4") {
       datasource.getProfileTimezone(accountId, webPropertyId, "").then((timezone) => {
         const { query, onChange } = this.props;
         console.log(`timezone`, timezone);
@@ -130,15 +130,15 @@ export class QueryEditor extends PureComponent<Props> {
     console.log(`willRunQuery`);
     console.log(`query`, query);
     if (
-      (profileId && metrics && timeDimension && version == "v3") ||
-      (webPropertyId && metrics && timeDimension && version == "v4")
+      (profileId && metrics && timeDimension && version === "v3") ||
+      (webPropertyId && metrics && timeDimension && version === "v4")
     ) {
       console.log(`onRunQuery`);
       onRunQuery();
     }
   }, 500);
 
-  setDisplayName = (key: string, value: string = "") => {
+  setDisplayName = (key: string, value = "") => {
     const { query: { displayName } } = this.props
     displayName.set(key, value)
   }
@@ -202,7 +202,7 @@ export class QueryEditor extends PureComponent<Props> {
                 allowCustomValue
                 onChange={this.onWebPropertyIdChange}
               />
-              {datasource.version == "v3" &&
+              {datasource.version === "v3" &&
                 <>
                   <InlineFormLabel
                     className="query-keyword"

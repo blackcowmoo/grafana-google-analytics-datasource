@@ -135,7 +135,7 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 }
 
 func (ga *GoogleAnalytics) GetAllProfilesList(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
-	return nil, nil
+	return nil, fmt.Errorf("ga4 have not profile")
 }
 
 func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, []model.MetadataItem, error) {
@@ -145,7 +145,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *sett
 	}
 	metadata, err := client.getMetadata(propertyId)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get metadata", err)
+		return nil, nil, fmt.Errorf("failed to get metadata: %w", err)
 	}
 	var dimensions = make([]model.MetadataItem, 0)
 	var metrics = make([]model.MetadataItem, 0)
@@ -219,7 +219,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := QueryModel{webProperties[0].Account, webProperties[0].Name, "", "2daysAgo", "today", "a", []string{"active1DayUsers"}, "date", []string{}, 1, "", false, "UTC", ""}
+	testData := QueryModel{webProperties[0].Account, webProperties[0].Name, "", "2daysAgo", "today", "a", []string{"active1DayUsers"}, "date", []string{}, 1, "", false, "UTC", "", 0}
 	res, err := client.getReport(testData)
 
 	if err != nil {

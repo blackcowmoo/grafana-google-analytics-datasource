@@ -37,5 +37,8 @@ Visualize data from Google Analytics UA And GA4(beta)
 Go To Add Data source then Drag the file to the dotted zone above. Then click `Save & Test`.   
 The file contents will be encrypted and saved in the Grafana database.
 
+## FAQ
+[FAQ](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/tree/master/FAQ.md)
+
 ## How To Dev
 [build directory](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/tree/master/build)

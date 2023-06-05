@@ -24,6 +24,7 @@ type QueryModel struct {
 	UseNextPage       bool     `json:"useNextpage,omitempty"`
 	Timezone          string   `json:"timezone,omitempty"`
 	FiltersExpression string   `json:"filtersExpression,omitempty"`
+	Offset            int64    `json:"-"`
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`
@@ -35,6 +36,7 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 		PageSize:    GaReportMaxResult,
 		PageToken:   "",
 		UseNextPage: true,
+		Offset:      0,
 	}
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {

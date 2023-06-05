@@ -43,12 +43,8 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 	for i, column := range columns {
 		field := frame.Fields[i]
 		field.Name = column.Header
-		displayName := dimensions
-		if len(dimensions) > 0 {
-			displayName = displayName + "|"
-		}
 		field.Config = &data.FieldConfig{
-			DisplayName: displayName + column.Header,
+			DisplayName: dimensions + column.Header,
 			// Unit:        column.GetUnit(),
 		}
 	}
@@ -56,7 +52,9 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 	for rowIndex, row := range rows {
 		var key string
 		for _, v := range row.DimensionValues {
-			key += v.Value + "|"
+			if strings.TrimSpace(v.Value) != ""{
+				key += v.Value + "|"
+			}
 		}
 		if dimensions == key {
 			for valueIndex, value := range row.MetricValues {
@@ -102,11 +100,12 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 
 	for _, row := range report.Rows {
 		parsedRow, parsedTime := parseRow(row, tz)
-		dimension := ""
+		var dimension string = ""
 		for _, v := range parsedRow.DimensionValues {
-			dimension += v.Value + "|"
+			if strings.TrimSpace(v.Value) != ""{
+				dimension += v.Value + "|"
+			}
 		}
-		// dimension := strings.Join(parsedRow.DimensionValues, "|")
 		if _, ok := dimensions[dimension]; !ok {
 			dimensions[dimension] = struct{}{}
 		}
@@ -263,7 +262,7 @@ func copyRowAndInit(row *analyticsdata.Row) *analyticsdata.Row {
 }
 
 func fillRow(array []*analyticsdata.MetricValue, v analyticsdata.MetricValue) []*analyticsdata.MetricValue {
-	for i, _ := range array {
+	for i := range array {
 		tmp := v
 		array[i] = &tmp
 	}
