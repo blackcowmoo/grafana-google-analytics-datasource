@@ -160,7 +160,7 @@ export class QueryEditor extends PureComponent<Props> {
       selectedMetrics,
       selectedDimensions,
       timezone,
-      filtersExpression
+      filtersExpression,
     } = query;
     return (
       <>
