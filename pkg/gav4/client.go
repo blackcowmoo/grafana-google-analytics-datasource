@@ -135,7 +135,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 		},
 		Metrics:    Metrics,
 		Dimensions: Dimensions,
-		Offset: offset,
+		Offset:     offset,
 		OrderBys: []*analyticsdata.OrderBy{
 			{
 				Dimension: &analyticsdata.DimensionOrderBy{
@@ -154,7 +154,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
 
-	if query.UseNextPage && report.RowCount > (query.Offset + GaAdminMaxResult) {
+	if query.UseNextPage && report.RowCount > (query.Offset+GaAdminMaxResult) {
 		query.Offset = query.Offset + GaAdminMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {

@@ -73,7 +73,7 @@ func (ds *GoogleAnalyticsDataSource) CheckHealth(ctx context.Context, req *backe
 			Message: "Setting Configuration Read Fail",
 		}, nil
 	}
-	return ds.analytics.CheckHealth(ctx,config)
+	return ds.analytics.CheckHealth(ctx, config)
 }
 
 // QueryData queries for data.
@@ -146,8 +146,11 @@ func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.Respons
 		writeResult(rw, "?", nil, err)
 		return
 	}
-
-	res, err := ds.analytics.GetWebProperties(ctx, config, req.URL.Query().Get("accountId"))
+	query := req.URL.Query()
+	var (
+		accountId = query.Get("accountId")
+	)
+	res, err := ds.analytics.GetWebProperties(ctx, config, accountId)
 	writeResult(rw, "webProperties", res, err)
 }
 
@@ -162,8 +165,12 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfiles(rw http.ResponseWrit
 		writeResult(rw, "?", nil, err)
 		return
 	}
-
-	res, err := ds.analytics.GetProfiles(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"))
+	query := req.URL.Query()
+	var (
+		accountId     = query.Get("accountId")
+		webPropertyId = query.Get("webPropertyId")
+	)
+	res, err := ds.analytics.GetProfiles(ctx, config, accountId, webPropertyId)
 	writeResult(rw, "profiles", res, err)
 }
 
@@ -174,7 +181,11 @@ func (ds *GoogleAnalyticsDataSource) handleResourceDimensions(rw http.ResponseWr
 	ctx := req.Context()
 	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 
-	res, err := ds.analytics.GetDimensions(ctx, config, req.URL.Query().Get("webproperty"))
+	query := req.URL.Query()
+	var (
+		webPropertyId = query.Get("webPropertyId")
+	)
+	res, err := ds.analytics.GetDimensions(ctx, config, webPropertyId)
 	writeResult(rw, "dimensions", res, err)
 }
 
@@ -185,7 +196,11 @@ func (ds *GoogleAnalyticsDataSource) handleResourceMetrics(rw http.ResponseWrite
 	ctx := req.Context()
 	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
 
-	res, err := ds.analytics.GetMetrics(ctx, config, req.URL.Query().Get("webproperty"))
+	query := req.URL.Query()
+	var (
+		webPropertyId = query.Get("webPropertyId")
+	)
+	res, err := ds.analytics.GetMetrics(ctx, config, webPropertyId)
 	writeResult(rw, "metrics", res, err)
 }
 
@@ -200,7 +215,12 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.Respo
 		writeResult(rw, "?", nil, err)
 		return
 	}
-
-	res, err := ds.analytics.GetTimezone(ctx, config, req.URL.Query().Get("accountId"), req.URL.Query().Get("webPropertyId"), req.URL.Query().Get("profileId"))
+	query := req.URL.Query()
+	var (
+		accountId     = query.Get("accountId")
+		webPropertyId = query.Get("webPropertyId")
+		profileId     = query.Get("profileId")
+	)
+	res, err := ds.analytics.GetTimezone(ctx, config, accountId, webPropertyId, profileId)
 	writeResult(rw, "timezone", res, err)
 }

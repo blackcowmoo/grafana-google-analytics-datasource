@@ -52,7 +52,7 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 	for rowIndex, row := range rows {
 		var key string
 		for _, v := range row.DimensionValues {
-			if strings.TrimSpace(v.Value) != ""{
+			if strings.TrimSpace(v.Value) != "" {
 				key += v.Value + "|"
 			}
 		}
@@ -102,7 +102,7 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 		parsedRow, parsedTime := parseRow(row, tz)
 		var dimension string = ""
 		for _, v := range parsedRow.DimensionValues {
-			if strings.TrimSpace(v.Value) != ""{
+			if strings.TrimSpace(v.Value) != "" {
 				dimension += v.Value + "|"
 			}
 		}
