@@ -1,11 +1,21 @@
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+import { RadioButtonGroup } from '@grafana/ui';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GASecureJsonData } from 'types';
 import { JWTConfig } from './JWTConfig';
 
+const gaVersion = [
+  { label: 'UA(GA3)', value: 'v3' },
+  { label: 'GA4(beta)', value: 'v4' },
+];
+
 export type Props = DataSourcePluginOptionsEditorProps<GADataSourceOptions, GASecureJsonData>;
 
 export class ConfigEditor extends PureComponent<Props> {
+  constructor(props: Readonly<Props>) {
+    super(props)
+    if(!this.props.options.jsonData.version){this.props.options.jsonData.version = 'v3'}
+  }
   onResetProfileId = () => {
     const { options } = this.props;
     this.props.onOptionsChange({
@@ -22,9 +32,22 @@ export class ConfigEditor extends PureComponent<Props> {
   render() {
     const { options, onOptionsChange } = this.props;
     const { secureJsonFields } = options;
-    const secureJsonData = options.secureJsonData as GASecureJsonData;
+    const secureJsonData = options.secureJsonData;
+    const jsonData = options.jsonData
     return (
       <div className="gf-form-group">
+        <RadioButtonGroup
+          options={gaVersion}
+          onChange={(v) => onOptionsChange({
+            ...options,
+            jsonData: {
+              ...jsonData,
+              version: v
+            }
+          })
+          }
+          value={options.jsonData.version}
+        />
         <>
           <JWTConfig
             isConfigured={(secureJsonFields && !!secureJsonFields.jwt) as boolean}
@@ -39,7 +62,6 @@ export class ConfigEditor extends PureComponent<Props> {
             }}
           ></JWTConfig>
         </>
-
         <div className="grafana-info-box" style={{ marginTop: 24 }}>
           <h3 id="generate-a-jwt-file">Generate a JWT file</h3>
           <ol style={{ listStylePosition: 'inside' }}>
@@ -72,15 +94,47 @@ export class ConfigEditor extends PureComponent<Props> {
             </li>
             <li>
               Open the
-              <a href="https://console.cloud.google.com/apis/library/analytics.googleapis.com">Google Analytics API</a>
+              {
+                jsonData.version === "v3" ?
+                  <>
+                    <a href="https://console.cloud.google.com/apis/library/analytics.googleapis.com">
+                      Google Analytics API(UA)
+                    </a>
+                  </>
+                  :
+                  <>
+                    <a href="https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com">
+                      Google Analytics Admin API(GA4)
+                    </a>
+                  </>
+              }
               in API Library and enable access for your account
             </li>
             <li>
               Open the
-              <a href="https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com">
-                Google Analytics Reporting API
+              {
+                jsonData.version === "v3" ?
+                  <>
+                    <a href="https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com">
+                      Google Analytics Reporting API(UA)
+                    </a>
+                  </>
+                  :
+                  <>
+                    <a href="https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com">
+                      Google Analytics Data API(GA4)
+                    </a>
+                  </>
+              }
+
+
+              in API Library and enable access for your Analytics Data
+            </li>
+            <li>
+              <a href="https://console.cloud.google.com/apis/dashboard">
+                Check your api setting
               </a>
-              in API Library and enable access for your GA Data
+
             </li>
           </ol>
 
@@ -101,6 +155,7 @@ export class ConfigEditor extends PureComponent<Props> {
           </ol>
         </div>
       </div>
+
     );
   }
 }

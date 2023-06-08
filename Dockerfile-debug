@@ -1,0 +1,25 @@
+FROM grafana/grafana:9.5.2-ubuntu
+
+USER root
+WORKDIR /root
+
+ENV GOFLAGS -buildvcs=false
+
+RUN apt-get -y update
+RUN apt-get -y install git build-essential
+
+RUN curl -L https://golang.org/dl/go1.18.linux-amd64.tar.gz > go1.18.linux-amd64.tar.gz
+
+RUN rm -rf /usr/local/go && \
+    tar -C /usr/local -xzf go1.18.linux-amd64.tar.gz
+
+RUN touch README; printf "~~~~~~ START THE DLV SERVER WITH THIS COMMAND BEFORE RUNNING IDE DEBUGGER ~~~~~~ \r\ndlv attach --headless --listen=:2345 PID\r\n\r\n" >> README
+
+RUN echo "export PATH=$PATH:/usr/local/go/bin:~/go/bin" >> ~/.bashrc
+RUN echo "cat ~/README" >> ~/.bashrc
+
+RUN /usr/local/go/bin/go install github.com/go-delve/delve/cmd/dlv@latest
+RUN git clone https://github.com/magefile/mage; \
+    cd mage; \
+    export PATH=$PATH:/usr/local/go/bin; \
+    go run bootstrap.go

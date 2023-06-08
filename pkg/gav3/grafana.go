@@ -1,19 +1,20 @@
-package main
+package gav3
 
 import (
 	"fmt"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
-
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/jinzhu/copier"
 	reporting "google.golang.org/api/analyticsreporting/v4"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 )
 
-func transformReportToDataFrameByDimensions(columns []*ColumnDefinition, rows []*reporting.ReportRow, refId string, dimensions string) (*data.Frame, error) {
+func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, rows []*reporting.ReportRow, refId string, dimensions string) (*data.Frame, error) {
 	warnings := []string{}
 	meta := map[string]interface{}{}
 
@@ -173,10 +174,6 @@ func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsR
 	return &frames, nil
 }
 
-func padRightSide(str string, item string, count int) string {
-	return str + strings.Repeat(item, count)
-}
-
 // timeConverter handles sheets TIME column types.
 var timeConverter = data.FieldConverter{
 	OutputFieldType: data.FieldTypeNullableTime,
@@ -227,19 +224,19 @@ var numberConverter = data.FieldConverter{
 
 // converterMap is a map sheets.ColumnType to fieldConverter and
 // is used to create a data.FrameInputConverter for a returned sheet.
-var converterMap = map[ColumnType]data.FieldConverter{
+var converterMap = map[model.ColumnType]data.FieldConverter{
 	"TIME":   timeConverter,
 	"STRING": stringConverter,
 	"NUMBER": numberConverter,
 }
 
-func getColumnDefinitions(header *reporting.ColumnHeader) []*ColumnDefinition {
-	columns := []*ColumnDefinition{}
+func getColumnDefinitions(header *reporting.ColumnHeader) []*model.ColumnDefinition {
+	columns := []*model.ColumnDefinition{}
 	headerRow := header.MetricHeader.MetricHeaderEntries
 
 	for columnIndex, headerCell := range headerRow {
 		name := strings.TrimSpace(headerCell.Name)
-		columns = append(columns, NewColumnDefinition(name, columnIndex, headerCell.Type))
+		columns = append(columns, model.NewColumnDefinition(name, columnIndex, headerCell.Type))
 	}
 
 	return columns
@@ -254,14 +251,14 @@ func copyRow(row *reporting.ReportRow) *reporting.ReportRow {
 
 func copyRowAndInit(row *reporting.ReportRow) *reporting.ReportRow {
 	copyRow := copyRow(row)
-	copyRow.Metrics[0].Values = FillArray(make([]string, len(row.Metrics[0].Values)), "0")
+	copyRow.Metrics[0].Values = util.FillArray(make([]string, len(row.Metrics[0].Values)), "0")
 	return copyRow
 }
 
 func parseRow(row *reporting.ReportRow, timezone *time.Location) (*reporting.ReportRow, *time.Time) {
 	timeDimension := row.Dimensions[0]
 	otherDimensions := row.Dimensions[1:]
-	parsedTime, err := ParseAndTimezoneTime(timeDimension, timezone)
+	parsedTime, err := util.ParseAndTimezoneTime(timeDimension, timezone)
 	if err != nil {
 		log.DefaultLogger.Error("parsedTime err", "err", err.Error())
 	}
@@ -277,20 +274,20 @@ func getTimeFunction(timeDimension string) (func(time.Time) time.Time, func(time
 	var add, sub func(time.Time) time.Time
 	switch timeDimension {
 	case timeDimensions[0]:
-		add = AddOneMinute
-		sub = SubOneMinute
+		add = util.AddOneMinute
+		sub = util.SubOneMinute
 		break
 	case timeDimensions[1]:
-		add = AddOneHour
-		sub = SubOneHour
+		add = util.AddOneHour
+		sub = util.SubOneHour
 		break
 	case timeDimensions[2]:
-		add = AddOneDay
-		sub = SubOneDay
+		add = util.AddOneDay
+		sub = util.SubOneDay
 		break
 	default:
-		add = AddOneHour
-		sub = SubOneHour
+		add = util.AddOneHour
+		sub = util.SubOneHour
 	}
 	return add, sub
 }

@@ -1,7 +1,8 @@
-package main
+package util
 
 import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"strings"
 	"time"
 )
 
@@ -10,6 +11,10 @@ func Elapsed(what string) func() {
 	return func() {
 		log.DefaultLogger.Debug("Elapsed", what, time.Since(start).String())
 	}
+}
+
+func padRightSide(str string, item string, count int) string {
+	return str + strings.Repeat(item, count)
 }
 
 func ParseAndTimezoneTime(sTime string, timezone *time.Location) (*time.Time, error) {

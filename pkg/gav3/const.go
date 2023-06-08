@@ -1,4 +1,4 @@
-package main
+package gav3
 
 const (
 	GaDefaultIdx      = 1

@@ -24,18 +24,21 @@ export class QueryEditor extends PureComponent<Props> {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
       this.props.query.filtersExpression = '';
     }
+    this.props.query.version = props.datasource.getGaVersion()
+    this.props.query.displayName = new Map<string, string>()
   }
 
-  onProfileIdChange = (item: any) => {
+  onProfileIdChange = (item: SelectableValue<string>) => {
     const {
       query,
-      query: { accountId, webPropertyId },
+      query: { version, accountId, webPropertyId },
       onChange,
       datasource,
     } = this.props;
     const profileId = item.value as string;
+    this.setDisplayName(profileId, item.label)
 
-    if (profileId) {
+    if (profileId && version === "v3") {
       datasource.getProfileTimezone(accountId, webPropertyId, profileId).then((timezone) => {
         const { query, onChange } = this.props;
         console.log(`timezone`, timezone);
@@ -47,19 +50,27 @@ export class QueryEditor extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  onAccountIdChange = (item: any) => {
-    const { query, onChange } = this.props;
-    let accountId = item.value;
-
-    onChange({ ...query, accountId });
+  onAccountIdChange = (item: SelectableValue<string>) => {
+    const { query, query: { displayName }, onChange } = this.props;
+    let accountId = item.value ?? "";
+    this.setDisplayName(accountId, item.label)
+    onChange({ ...query, accountId, displayName });
     this.willRunQuery();
   };
 
   onWebPropertyIdChange = (item: any) => {
-    const { query, onChange } = this.props;
+    const { query, query: { version, accountId }, onChange, datasource } = this.props;
     let webPropertyId = item.value;
-
+    if (webPropertyId && version === "v4") {
+      datasource.getProfileTimezone(accountId, webPropertyId, "").then((timezone) => {
+        const { query, onChange } = this.props;
+        console.log(`timezone`, timezone);
+        onChange({ ...query, timezone });
+        this.willRunQuery();
+      });
+    }
     onChange({ ...query, webPropertyId });
+    this.setDisplayName(webPropertyId, item.label)
     this.willRunQuery();
   };
 
@@ -115,17 +126,32 @@ export class QueryEditor extends PureComponent<Props> {
 
   willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
-    const { profileId, metrics, timeDimension } = query;
+    const { version, webPropertyId, profileId, metrics, timeDimension } = query;
     console.log(`willRunQuery`);
     console.log(`query`, query);
-    if (profileId && metrics && timeDimension) {
+    if (
+      (profileId && metrics && timeDimension && version === "v3") ||
+      (webPropertyId && metrics && timeDimension && version === "v4")
+    ) {
       console.log(`onRunQuery`);
       onRunQuery();
     }
   }, 500);
 
+  setDisplayName = (key: string, value = "") => {
+    const { query: { displayName } } = this.props
+    displayName.set(key, value)
+  }
+  getDisplayName = (key: string) => {
+    const { query: { displayName } } = this.props
+    if (displayName.has(key)) {
+      return displayName.get(key)
+    }
+    return ""
+  }
   render() {
     const { query, datasource } = this.props;
+    console.log('props', datasource.getGaVersion())
     const {
       accountId,
       webPropertyId,
@@ -154,7 +180,7 @@ export class QueryEditor extends PureComponent<Props> {
               <SegmentAsync
                 loadOptions={() => datasource.getAccountIds()}
                 placeholder="Enter Account ID"
-                value={accountId}
+                value={this.getDisplayName(accountId)}
                 allowCustomValue
                 onChange={this.onAccountIdChange}
               />
@@ -172,27 +198,32 @@ export class QueryEditor extends PureComponent<Props> {
               <SegmentAsync
                 loadOptions={() => datasource.getWebPropertyIds(accountId)}
                 placeholder="Enter Web Property ID"
-                value={webPropertyId}
+                value={this.getDisplayName(webPropertyId)}
                 allowCustomValue
                 onChange={this.onWebPropertyIdChange}
               />
-              <InlineFormLabel
-                className="query-keyword"
-                tooltip={
-                  <>
-                    The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                  </>
-                }
-              >
-                Profile ID
-              </InlineFormLabel>
-              <SegmentAsync
-                loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
-                placeholder="Enter Profile ID"
-                value={profileId}
-                allowCustomValue
-                onChange={this.onProfileIdChange}
-              />
+              {datasource.version === "v3" &&
+                <>
+                  <InlineFormLabel
+                    className="query-keyword"
+                    tooltip={
+                      <>
+                        The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
+                      </>
+                    }
+                  >
+                    Profile ID
+                  </InlineFormLabel>
+                  <SegmentAsync
+                    loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
+                    placeholder="Enter Profile ID"
+                    value={this.getDisplayName(profileId)}
+                    allowCustomValue
+                    onChange={this.onProfileIdChange}
+                  // disabled={datasource.version == "v4"}
+                  />
+                </>
+              }
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
               </InlineLabel>
