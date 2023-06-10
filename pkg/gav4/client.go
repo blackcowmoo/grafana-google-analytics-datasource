@@ -143,6 +143,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 				},
 			},
 		},
+		KeepEmptyRows: true,
 	}
 
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)

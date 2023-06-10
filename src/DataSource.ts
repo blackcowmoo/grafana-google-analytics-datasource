@@ -1,5 +1,6 @@
 import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend } from '@grafana/runtime';
+import { CascaderOption } from '@grafana/ui';
 import { GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
@@ -89,5 +90,41 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
   getGaVersion(): string {
     return this.version
+  }
+
+  async getCascader(): Promise<CascaderOption[]>{
+    let cascaderOption: CascaderOption[] = []
+    let accounts = await this.getAccountIds()
+    let properties
+    let profiles
+    accounts.map(async(account, _)=>{
+      let accountId = account.value || ""
+      let accountOption: CascaderOption = {
+        label: account.label || "",
+        value: account.value
+      }
+      properties = await this.getWebPropertyIds(accountId)
+      properties.map(async(property,_)=>{
+        let propertyId = property.value || ""
+        let propertyOption: CascaderOption = {
+          label: property.label || "",
+          value: property.value
+        }
+        profiles = await this.getProfileIds(accountId,propertyId)
+        profiles.map((profile)=>{
+          let profleOption: CascaderOption = {
+            label: profile.label || "",
+            value: profile.value
+          }
+          propertyOption.items = []
+          propertyOption.items.push(profleOption)
+        })
+        accountOption.items = []
+        accountOption.items.push(propertyOption)
+      })
+      cascaderOption.push(accountOption)
+    })
+    console.log('cascaderOption', cascaderOption)
+    return cascaderOption
   }
 }

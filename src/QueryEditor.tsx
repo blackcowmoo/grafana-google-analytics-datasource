@@ -2,12 +2,14 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
   AsyncMultiSelect,
   AsyncSelect,
+  Badge,
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
   Input,
-  SegmentAsync,
+  SegmentAsync
 } from '@grafana/ui';
+import { GACascader } from 'Cascader';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
@@ -16,7 +18,16 @@ import { GADataSourceOptions, GAQuery } from 'types';
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
-
+const badgeMap = {
+  "v3": {
+    "text": "UA",
+    "tootip": "2023/07/01 no more data collect"
+  },
+  "v4": {
+    "text": "GA(alpha)",
+    "tootip": "experimental support"
+  },
+} as const
 export class QueryEditor extends PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
@@ -150,8 +161,8 @@ export class QueryEditor extends PureComponent<Props> {
     return ""
   }
   render() {
-    const { query, datasource } = this.props;
-    console.log('props', datasource.getGaVersion())
+    const { query, datasource, onRunQuery, onChange } = this.props;
+    console.log('query.version', query.version)
     const {
       accountId,
       webPropertyId,
@@ -161,12 +172,14 @@ export class QueryEditor extends PureComponent<Props> {
       selectedDimensions,
       timezone,
       filtersExpression,
+      version
     } = query;
     return (
       <>
         <div className="gf-form-group">
           <div className="gf-form">
-            <HorizontalGroup spacing="xs">
+            <GACascader datasource={datasource} query={query} onRunQuery={onRunQuery} onChange={onChange} ></GACascader>
+            <HorizontalGroup spacing="none">
               <InlineFormLabel
                 className="query-keyword"
                 tooltip={
@@ -202,7 +215,7 @@ export class QueryEditor extends PureComponent<Props> {
                 allowCustomValue
                 onChange={this.onWebPropertyIdChange}
               />
-              {datasource.version === "v3" &&
+              {version === "v3" &&
                 <>
                   <InlineFormLabel
                     className="query-keyword"
@@ -220,7 +233,6 @@ export class QueryEditor extends PureComponent<Props> {
                     value={this.getDisplayName(profileId)}
                     allowCustomValue
                     onChange={this.onProfileIdChange}
-                  // disabled={datasource.version == "v4"}
                   />
                 </>
               }
@@ -228,6 +240,16 @@ export class QueryEditor extends PureComponent<Props> {
                 Timezone
               </InlineLabel>
               <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
+              {
+                version === "v3"
+                &&
+                <Badge color='red' text={badgeMap.v3.text} tooltip={badgeMap.v3.tootip} icon='google'></Badge>
+              }
+              {
+                version === "v4"
+                &&
+                <Badge color='orange' text={badgeMap.v4.text} tooltip={badgeMap.v4.tootip} icon='google'></Badge>
+              }
             </HorizontalGroup>
 
             <div className="gf-form-label gf-form-label--grow" />
