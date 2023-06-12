@@ -24,7 +24,7 @@ const badgeMap = {
     "tootip": "2023/07/01 no more data collect"
   },
   "v4": {
-    "text": "GA(alpha)",
+    "text": "GA4(alpha)",
     "tootip": "experimental support"
   },
 } as const

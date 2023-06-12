@@ -154,7 +154,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: "", StartDate: "2daysAgo", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: "", StartDate: "2daysAgo", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{"date"}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
 	res, err := client.getReport(testData)
 
 	if err != nil {

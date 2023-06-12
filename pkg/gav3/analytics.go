@@ -99,7 +99,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: accountSummaries[0].PropertySummaries[0].ProfileSummaries[0].Profile, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:dateHour", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: accountSummaries[0].PropertySummaries[0].ProfileSummaries[0].Profile, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:dateHour", Dimensions: []string{"ga:dateHour"}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
 	res, err := client.getReport(testData)
 
 	if err != nil {
