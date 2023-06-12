@@ -117,18 +117,12 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 		return item.(string), nil
 	}
 
-	webproperties, err := client.getWebpropertiesList(accountId, "")
+	webproperty, err := client.GetWebProperty(webPropertyId)
 	if err != nil {
 		return "", err
 	}
 
-	var timezone string
-	for _, webproperty := range webproperties {
-		if webproperty.Name == webPropertyId {
-			timezone = webproperty.TimeZone
-			break
-		}
-	}
+	timezone := webproperty.TimeZone
 
 	ga.Cache.Set(cacheKey, timezone, 60*time.Second)
 	return timezone, nil
@@ -239,4 +233,42 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		Status:  status,
 		Message: message,
 	}, nil
+}
+
+func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error) {
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:accountsummaries:%s", config.JWT)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.([]*model.AccountSummary), nil
+	}
+
+	rawAccountSummaries, err := client.getAccountSummaries("")
+	if err != nil {
+		return nil, err
+	}
+
+	var accounts []*model.AccountSummary
+	for _, rawAccountSummary := range rawAccountSummaries {
+		var account = &model.AccountSummary{
+			Account:     rawAccountSummary.Account,
+			DisplayName: rawAccountSummary.DisplayName,
+		}
+		var propertySummaries = make([]*model.PropertySummary, 0)
+		for _, rawPpropertySummary := range rawAccountSummary.PropertySummaries {
+			var propertySummary = &model.PropertySummary{
+				Property:     rawPpropertySummary.Property,
+				DisplayName: rawPpropertySummary.DisplayName,
+				Parent:      rawPpropertySummary.DisplayName,
+			}
+			propertySummaries = append(propertySummaries, propertySummary)
+		}
+		account.PropertySummaries = propertySummaries
+		accounts = append(accounts, account)
+	}
+	ga.Cache.Set(cacheKey, accounts, 60*time.Second)
+	return accounts, nil
 }

@@ -279,3 +279,23 @@ func printResponse(res *reporting.GetReportsResponse) {
 	}
 	log.DefaultLogger.Info("Completed printing response", "", "")
 }
+
+func (client *GoogleClient) getAccountSummaries(start int64) ([]*analytics.AccountSummary, error) {
+	accountSummaries, err := client.analytics.Management.AccountSummaries.List().MaxResults(GaManageMaxResult).StartIndex(start).Do()
+	if err != nil {
+		log.DefaultLogger.Error("getAccountSummary fail", "error", err.Error())
+		return nil, err
+	}
+
+
+	if accountSummaries.TotalResults > (start+GaManageMaxResult -1) {
+		start += GaManageMaxResult
+		nextAccountSummaries, err := client.getAccountSummaries(start)
+		if err != nil {
+			return nil, err
+		}
+		accountSummaries.Items = append(accountSummaries.Items, nextAccountSummaries...)
+	}
+
+	return accountSummaries.Items, nil
+}

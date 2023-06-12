@@ -12,6 +12,7 @@ import (
 type GoogleAnalytics interface {
 	Query(context.Context, *setting.DatasourceSecretSettings, backend.DataQuery) (*data.Frames, error)
 	GetAccounts(context.Context, *setting.DatasourceSecretSettings) (map[string]string, error)
+	GetAccountSummaries(context.Context, *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error)
 	GetWebProperties(context.Context, *setting.DatasourceSecretSettings, string) (map[string]string, error)
 	GetProfiles(context.Context, *setting.DatasourceSecretSettings, string, string) (map[string]string, error)
 	GetTimezone(context.Context, *setting.DatasourceSecretSettings, string, string, string) (string, error)

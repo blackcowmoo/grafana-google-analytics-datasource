@@ -1,7 +1,7 @@
 import { DataQuery, DataSourceJsonData, SelectableValue } from '@grafana/data';
 
 export interface GAQuery extends DataQuery {
-  displayName: Map<string,string> 
+  displayName: Map<string, string>
   version: string;
   accountId: string;
   webPropertyId: string;
@@ -40,7 +40,7 @@ export interface GADataSourceOptions extends DataSourceJsonData {
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend
  */
-export interface GASecureJsonData {}
+export interface GASecureJsonData { }
 
 export interface GAMetadata {
   id: string;
@@ -57,4 +57,24 @@ export interface GAMetadataAttribute {
   description: string;
   allowedInSegments?: string;
   addedInAPIVersion?: string;
+}
+
+export interface AccountSummary {
+  Account: string
+  DisplayName: string
+  PropertySummaries: PropertySummary[]
+}
+
+export interface PropertySummary {
+  Property: string
+  DisplayName: string
+  Parent: string
+  ProfileSummaries: ProfileSummary[]
+}
+
+export interface ProfileSummary {
+  Profile: string
+  DisplayName: string
+  Parent: string
+  Type: string
 }

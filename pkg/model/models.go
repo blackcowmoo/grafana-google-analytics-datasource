@@ -78,3 +78,18 @@ type MetadataItemAttribute struct {
 }
 
 type AttributeType string
+
+type AccountSummary struct {
+	Account, DisplayName string
+	PropertySummaries []*PropertySummary
+
+}
+
+type PropertySummary struct {
+	Property, DisplayName, Parent string
+	ProfileSummaries []*ProfileSummary
+}
+
+type ProfileSummary struct{
+	Profile, DisplayName, Parent, Type string
+}

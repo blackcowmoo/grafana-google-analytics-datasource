@@ -116,6 +116,16 @@ func (client *GoogleClient) getWebpropertiesList(accountId string, nextPageToekn
 	return webproperties.Properties, nil
 }
 
+func (client *GoogleClient) GetWebProperty(webpropertyID string) (*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, error) {
+	webproperty, err := client.analyticsadmin.Properties.Get(webpropertyID).Do()
+	if err != nil {
+		log.DefaultLogger.Error("GetWebProperty fail", "error", err.Error())
+		return nil, err
+	}
+
+	return webproperty, nil
+}
+
 func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunReportResponse, error) {
 	defer util.Elapsed("Get report data at GA API")()
 	log.DefaultLogger.Debug("getReport", "queries", query)
@@ -210,4 +220,26 @@ func (client *GoogleClient) getMetadata(propertyID string) (*analyticsdata.Metad
 		return nil, err
 	}
 	return metadata, nil
+}
+
+
+func (client *GoogleClient) getAccountSummaries(nextPageToekn string) ([]*analyticsadmin.GoogleAnalyticsAdminV1betaAccountSummary, error) {
+	accountSummaries, err := client.analyticsadmin.AccountSummaries.List().PageSize(GaAdminMaxResult).PageToken(nextPageToekn).Do()
+	if err != nil {
+		log.DefaultLogger.Error("getAccountSummary fail", "error", err.Error())
+		return nil, err
+	}
+
+
+	nextPageToken := accountSummaries.NextPageToken
+
+	if nextPageToken != "" {
+		nextAccountSummaries, err := client.getAccountSummaries(nextPageToken)
+		if err != nil {
+			return nil, err
+		}
+		accountSummaries.AccountSummaries = append(accountSummaries.AccountSummaries, nextAccountSummaries...)
+	}
+
+	return accountSummaries.AccountSummaries, nil
 }

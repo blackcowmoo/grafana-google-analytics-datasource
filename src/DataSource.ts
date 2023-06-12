@@ -1,7 +1,7 @@
 import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend } from '@grafana/runtime';
 import { CascaderOption } from '@grafana/ui';
-import { GADataSourceOptions, GAMetadata, GAQuery } from './types';
+import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
   version: string;
@@ -33,6 +33,42 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         ? Object.entries(profiles).map(([value, label]) => ({ label, value } as SelectableValue<string>))
         : [];
     });
+  }
+
+  async getAccountSummaries(): Promise<CascaderOption[]> {
+    var accountSummaries = (await this.getResource('account-summaries')).accountSummaries  as AccountSummary[]
+    var accounts: CascaderOption[] = [];
+    for (const accountSummary of accountSummaries) {
+      var accountCascader: CascaderOption = {
+        label: accountSummary.DisplayName,
+        value: accountSummary.Account,
+      }
+      var properties: CascaderOption[] = [];
+      for (const propertySummary of accountSummary.PropertySummaries) {
+        var propertyCascader: CascaderOption = {
+          label: propertySummary.DisplayName,
+          value: propertySummary.Property,
+        }
+        properties.push(propertyCascader);
+        var profiles: CascaderOption[] = [];
+        
+        if(!propertySummary.ProfileSummaries){
+          continue
+        }
+        for (const profileSummary of propertySummary.ProfileSummaries) {
+          var profileCascader: CascaderOption = {
+            label: profileSummary.DisplayName,
+            value: profileSummary.Profile,
+          }
+          profiles.push(profileCascader);
+        }
+        propertyCascader.items = profiles;
+      }
+      accountCascader.items = properties
+      accounts.push(accountCascader);
+    }
+    console.log('accounts', accounts)
+    return accounts;
   }
 
   async getProfileTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
@@ -90,41 +126,5 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
   getGaVersion(): string {
     return this.version
-  }
-
-  async getCascader(): Promise<CascaderOption[]>{
-    let cascaderOption: CascaderOption[] = []
-    let accounts = await this.getAccountIds()
-    let properties
-    let profiles
-    accounts.map(async(account, _)=>{
-      let accountId = account.value || ""
-      let accountOption: CascaderOption = {
-        label: account.label || "",
-        value: account.value
-      }
-      properties = await this.getWebPropertyIds(accountId)
-      properties.map(async(property,_)=>{
-        let propertyId = property.value || ""
-        let propertyOption: CascaderOption = {
-          label: property.label || "",
-          value: property.value
-        }
-        profiles = await this.getProfileIds(accountId,propertyId)
-        profiles.map((profile)=>{
-          let profleOption: CascaderOption = {
-            label: profile.label || "",
-            value: profile.value
-          }
-          propertyOption.items = []
-          propertyOption.items.push(profleOption)
-        })
-        accountOption.items = []
-        accountOption.items.push(propertyOption)
-      })
-      cascaderOption.push(accountOption)
-    })
-    console.log('cascaderOption', cascaderOption)
-    return cascaderOption
   }
 }

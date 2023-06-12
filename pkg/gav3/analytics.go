@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -226,4 +227,55 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		Status:  status,
 		Message: message,
 	}, nil
+}
+
+func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error) {
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:accountsummaries:%s", config.JWT)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.([]*model.AccountSummary), nil
+	}
+
+	rawAccountSummaries, err := client.getAccountSummaries(GaDefaultIdx)
+	if err != nil {
+		return nil, err
+	}
+
+	var accounts []*model.AccountSummary
+	for _, rawAccountSummary := range rawAccountSummaries {
+		var account = &model.AccountSummary{
+			Account:     rawAccountSummary.Id,
+			DisplayName: rawAccountSummary.Name,
+		}
+		var propertySummaries = make([]*model.PropertySummary, 0)
+		for _, rawPropertySummary := range rawAccountSummary.WebProperties {
+			var propertySummary = &model.PropertySummary{
+				Property:     rawPropertySummary.Id,
+				DisplayName: rawPropertySummary.Name,
+				Parent:      rawAccountSummary.Id,
+			}
+			propertySummaries = append(propertySummaries, propertySummary)
+
+			var profileSummaries = make([]*model.ProfileSummary, 0)
+
+			for _, rawProfileSummaries := range rawPropertySummary.Profiles {
+				var profileSummary = &model.ProfileSummary{
+					Profile:     rawProfileSummaries.Id,
+					DisplayName: rawProfileSummaries.Name,
+					Parent:      rawPropertySummary.Id,
+					Type:        rawProfileSummaries.Type,
+				}
+				profileSummaries = append(profileSummaries, profileSummary)
+			}
+			propertySummary.ProfileSummaries = profileSummaries
+		}
+		account.PropertySummaries = propertySummaries
+		accounts = append(accounts, account)
+	}
+	ga.Cache.Set(cacheKey, accounts, 60*time.Second)
+	return accounts, nil
 }

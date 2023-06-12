@@ -54,6 +54,7 @@ func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instanc
 	mux.HandleFunc("/profile/timezone", ds.handleResourceProfileTimezone)
 	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
 	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
+	mux.HandleFunc("/account-summaries", ds.handleResourceAccountSummaries)
 
 	return ds, nil
 }
@@ -223,4 +224,20 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.Respo
 	)
 	res, err := ds.analytics.GetTimezone(ctx, config, accountId, webPropertyId, profileId)
 	writeResult(rw, "timezone", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceAccountSummaries(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	if err != nil {
+		writeResult(rw, "?", nil, err)
+		return
+	}
+
+	res, err := ds.analytics.GetAccountSummaries(ctx, config)
+	writeResult(rw, "accountSummaries", res, err)
 }

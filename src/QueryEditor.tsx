@@ -3,13 +3,14 @@ import {
   AsyncMultiSelect,
   AsyncSelect,
   Badge,
+  Cascader,
+  CascaderOption,
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
   Input,
   SegmentAsync
 } from '@grafana/ui';
-import { GACascader } from 'Cascader';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
@@ -28,7 +29,9 @@ const badgeMap = {
     "tootip": "experimental support"
   },
 } as const
+
 export class QueryEditor extends PureComponent<Props> {
+  options: CascaderOption[] = []
   constructor(props: Readonly<Props>) {
     super(props);
     if (!this.props.query.hasOwnProperty('cacheDurationSeconds')) {
@@ -37,6 +40,10 @@ export class QueryEditor extends PureComponent<Props> {
     }
     this.props.query.version = props.datasource.getGaVersion()
     this.props.query.displayName = new Map<string, string>()
+    this.props.datasource.getAccountSummaries().then((accountSummaries) => {
+      this.options = accountSummaries
+      this.props.onChange(this.props.query)
+    })
   }
 
   onProfileIdChange = (item: SelectableValue<string>) => {
@@ -72,7 +79,9 @@ export class QueryEditor extends PureComponent<Props> {
   onWebPropertyIdChange = (item: any) => {
     const { query, query: { version, accountId }, onChange, datasource } = this.props;
     let webPropertyId = item.value;
+    console.log('onWebPropertyIdChange', webPropertyId)
     if (webPropertyId && version === "v4") {
+      console.log('gettimezone')
       datasource.getProfileTimezone(accountId, webPropertyId, "").then((timezone) => {
         const { query, onChange } = this.props;
         console.log(`timezone`, timezone);
@@ -110,7 +119,23 @@ export class QueryEditor extends PureComponent<Props> {
     onChange({ ...query, timeDimension, selectedTimeDimensions: item });
     this.willRunQuery();
   };
-
+  onSelect = (item: string) => {
+    const { query, query: { version, accountId }, onChange, datasource } = this.props;
+    let webPropertyId = item
+    console.log('onWebPropertyIdChange', webPropertyId)
+    if (webPropertyId && version === "v4") {
+      console.log('gettimezone')
+      datasource.getProfileTimezone(accountId, webPropertyId, "").then((timezone) => {
+        const { query, onChange } = this.props;
+        console.log(`timezone`, timezone);
+        onChange({ ...query, timezone });
+        this.willRunQuery();
+      });
+    }
+    onChange({ ...query, webPropertyId });
+    this.setDisplayName(webPropertyId, item)
+    this.willRunQuery();
+  };
   onDimensionChange = (items: Array<SelectableValue<string>>) => {
     const { query, onChange } = this.props;
     let dimensions = [] as string[];
@@ -161,7 +186,7 @@ export class QueryEditor extends PureComponent<Props> {
     return ""
   }
   render() {
-    const { query, datasource, onRunQuery, onChange } = this.props;
+    const { query, datasource } = this.props;
     console.log('query.version', query.version)
     const {
       accountId,
@@ -174,11 +199,12 @@ export class QueryEditor extends PureComponent<Props> {
       filtersExpression,
       version
     } = query;
+    console.log('webPropertyId', webPropertyId)
     return (
       <>
+        <Cascader options={this.options} onSelect={this.onSelect}></Cascader>
         <div className="gf-form-group">
           <div className="gf-form">
-            <GACascader datasource={datasource} query={query} onRunQuery={onRunQuery} onChange={onChange} ></GACascader>
             <HorizontalGroup spacing="none">
               <InlineFormLabel
                 className="query-keyword"
