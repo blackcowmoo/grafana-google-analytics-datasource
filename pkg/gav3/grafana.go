@@ -74,7 +74,7 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 	return frame, nil
 }
 
-//                                      <--------- primary secondary --------->
+// <--------- primary secondary --------->
 var timeDimensions []string = []string{"ga:dateHourMinute", "ga:dateHour", "ga:date"}
 
 func transformReportToDataFrames(report *reporting.Report, refId string, timezone string) ([]*data.Frame, error) {

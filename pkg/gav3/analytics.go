@@ -66,46 +66,15 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 		return item.(string), nil
 	}
 
-	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
+	profile, err := client.getProfile(accountId, webPropertyId, profileId)
 	if err != nil {
 		return "", err
 	}
 
-	var timezone string
-	for _, profile := range profiles {
-		if profile.Id == profileId {
-			timezone = profile.Timezone
-			break
-		}
-	}
+	timezone := profile.Timezone
 
 	ga.Cache.Set(cacheKey, timezone, 60*time.Second)
 	return timezone, nil
-}
-
-func (ga *GoogleAnalytics) GetAllProfilesList(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:account:*:webproperty:*:profiles")
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	profiles, err := client.getAllProfilesList()
-	if err != nil {
-		return nil, err
-	}
-
-	profileNames := map[string]string{}
-	for _, i := range profiles {
-		profileNames[i.Id] = i.Name
-	}
-
-	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
-	return profileNames, nil
 }
 
 func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error) {
@@ -121,7 +90,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	profiles, err := client.getAllProfilesList()
+	accountSummaries, err := ga.GetAccountSummaries(ctx, config)
 	if err != nil {
 		log.DefaultLogger.Error("CheckHealth: Fail getAllProfilesList", "error", err.Error())
 		return &backend.CheckHealthResult{
@@ -130,7 +99,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := model.QueryModel{AccountID: profiles[0].AccountId, WebPropertyID: profiles[0].WebPropertyId, ProfileID: profiles[0].Id, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:dateHour", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: accountSummaries[0].PropertySummaries[0].ProfileSummaries[0].Profile, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:dateHour", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
 	res, err := client.getReport(testData)
 
 	if err != nil {

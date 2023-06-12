@@ -13,9 +13,9 @@ import (
 // GetQueryModel returns the well typed query model
 func GetQueryModel(query backend.DataQuery) (*model.QueryModel, error) {
 	model := &model.QueryModel{
-		PageSize:    GaReportMaxResult,
-		PageToken:   "",
-		Offset:      0,
+		PageSize:  GaReportMaxResult,
+		PageToken: "",
+		Offset:    0,
 	}
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {

@@ -12,27 +12,27 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
 
   async getAccountSummaries(): Promise<CascaderOption[]> {
-    var accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[]
-    var accounts: CascaderOption[] = [];
+    let accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[]
+    let accounts: CascaderOption[] = [];
     for (const accountSummary of accountSummaries) {
-      var accountCascader: CascaderOption = {
+      let accountCascader: CascaderOption = {
         label: accountSummary.DisplayName,
         value: accountSummary.Account,
       }
-      var properties: CascaderOption[] = [];
+      let properties: CascaderOption[] = [];
       for (const propertySummary of accountSummary.PropertySummaries) {
-        var propertyCascader: CascaderOption = {
+        let propertyCascader: CascaderOption = {
           label: propertySummary.DisplayName,
           value: propertySummary.Property,
         }
         properties.push(propertyCascader);
-        var profiles: CascaderOption[] = [];
+        let profiles: CascaderOption[] = [];
 
         if (!propertySummary.ProfileSummaries) {
           continue
         }
         for (const profileSummary of propertySummary.ProfileSummaries) {
-          var profileCascader: CascaderOption = {
+          let profileCascader: CascaderOption = {
             label: profileSummary.DisplayName,
             value: profileSummary.Profile,
           }

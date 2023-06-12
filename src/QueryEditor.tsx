@@ -152,7 +152,7 @@ export class QueryEditor extends PureComponent<Props> {
           <div className="gf-form">
             <HorizontalGroup spacing="sm" justify='flex-start' >
               <ButtonCascader options={this.options} onChange={this.onIdSelect} />
-              <InlineLabel>{`Account: ${accountId || ""},Property: ${webPropertyId||""},Profile ${profileId||""}`}</InlineLabel>
+              <InlineLabel>{`Account: ${accountId || ""},Property: ${webPropertyId || ""},Profile ${profileId || ""}`}</InlineLabel>
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
               </InlineLabel>

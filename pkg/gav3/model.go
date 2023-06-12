@@ -13,12 +13,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
-
 // GetQueryModel returns the well typed query model
 func GetQueryModel(query backend.DataQuery) (*model.QueryModel, error) {
 	model := &model.QueryModel{
-		PageSize:    GaReportMaxResult,
-		PageToken:   "",
+		PageSize:  GaReportMaxResult,
+		PageToken: "",
 	}
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {

@@ -73,10 +73,6 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 	return timezone, nil
 }
 
-func (ga *GoogleAnalytics) GetAllProfilesList(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
-	return nil, fmt.Errorf("ga4 have not profile")
-}
-
 func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, []model.MetadataItem, error) {
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
@@ -149,7 +145,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	webProperties, err := client.getAllWebpropertiesList()
+	accountSummaries, err := ga.GetAccountSummaries(ctx, config)
 	if err != nil {
 		log.DefaultLogger.Error("CheckHealth: Fail getPropetyList", "error", err.Error())
 		return &backend.CheckHealthResult{
@@ -158,7 +154,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := model.QueryModel{AccountID: webProperties[0].Account, WebPropertyID: webProperties[0].Name, ProfileID: "", StartDate: "2daysAgo", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: "", StartDate: "2daysAgo", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
 	res, err := client.getReport(testData)
 
 	if err != nil {
