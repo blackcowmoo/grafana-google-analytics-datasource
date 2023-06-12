@@ -11,32 +11,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     this.version = instanceSettings.jsonData.version
   }
 
-  async getAccountIds(): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('accounts').then(({ accounts }) => {
-      return accounts
-        ? Object.entries(accounts).map(([value, label]) => ({ label, value } as SelectableValue<string>))
-        : [];
-    });
-  }
-
-  async getWebPropertyIds(accountId: string): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('web-properties', { accountId }).then(({ webProperties }) =>
-      webProperties
-        ? Object.entries(webProperties).map(([value, label]) => ({ label, value } as SelectableValue<string>))
-        : []
-    );
-  }
-
-  async getProfileIds(accountId: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('profiles', { accountId, webPropertyId }).then(({ profiles }) => {
-      return profiles
-        ? Object.entries(profiles).map(([value, label]) => ({ label, value } as SelectableValue<string>))
-        : [];
-    });
-  }
-
   async getAccountSummaries(): Promise<CascaderOption[]> {
-    var accountSummaries = (await this.getResource('account-summaries')).accountSummaries  as AccountSummary[]
+    var accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[]
     var accounts: CascaderOption[] = [];
     for (const accountSummary of accountSummaries) {
       var accountCascader: CascaderOption = {
@@ -51,8 +27,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         }
         properties.push(propertyCascader);
         var profiles: CascaderOption[] = [];
-        
-        if(!propertySummary.ProfileSummaries){
+
+        if (!propertySummary.ProfileSummaries) {
           continue
         }
         for (const profileSummary of propertySummary.ProfileSummaries) {
@@ -62,16 +38,17 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
           }
           profiles.push(profileCascader);
         }
+        propertyCascader.children = profiles;
         propertyCascader.items = profiles;
       }
+      accountCascader.children = properties
       accountCascader.items = properties
       accounts.push(accountCascader);
     }
-    console.log('accounts', accounts)
     return accounts;
   }
 
-  async getProfileTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
+  async getTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
     return this.getResource('profile/timezone', { accountId, webPropertyId, profileId }).then(({ timezone }) => {
       return timezone;
     });

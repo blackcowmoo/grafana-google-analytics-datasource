@@ -5,37 +5,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
-type QueryModel struct {
-	AccountID         string   `json:"accountId"`
-	WebPropertyID     string   `json:"webPropertyId"`
-	ProfileID         string   `json:"profileId"`
-	StartDate         string   `json:"startDate"`
-	EndDate           string   `json:"endDate"`
-	RefID             string   `json:"refId"`
-	Metrics           []string `json:"metrics"`
-	TimeDimension     string   `json:"timeDimension"`
-	Dimensions        []string `json:"dimensions"`
-	PageSize          int64    `json:"pageSize,omitempty"`
-	PageToken         string   `json:"pageToken,omitempty"`
-	UseNextPage       bool     `json:"useNextpage,omitempty"`
-	Timezone          string   `json:"timezone,omitempty"`
-	FiltersExpression string   `json:"filtersExpression,omitempty"`
-	Offset            int64    `json:"-"`
-	// Not from JSON
-	// TimeRange     backend.TimeRange `json:"-"`
-	// MaxDataPoints int64             `json:"-"`
-}
-
 // GetQueryModel returns the well typed query model
-func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
-	model := &QueryModel{
+func GetQueryModel(query backend.DataQuery) (*model.QueryModel, error) {
+	model := &model.QueryModel{
 		PageSize:    GaReportMaxResult,
 		PageToken:   "",
-		UseNextPage: true,
 		Offset:      0,
 	}
 	err := json.Unmarshal(query.JSON, &model)

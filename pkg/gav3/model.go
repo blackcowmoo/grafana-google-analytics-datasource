@@ -7,38 +7,18 @@ import (
 	"net/http"
 	"time"
 
-	. "github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
-type QueryModel struct {
-	AccountID         string   `json:"accountId"`
-	WebPropertyID     string   `json:"webPropertyId"`
-	ProfileID         string   `json:"profileId"`
-	StartDate         string   `json:"startDate"`
-	EndDate           string   `json:"endDate"`
-	RefID             string   `json:"refId"`
-	Metrics           []string `json:"metrics"`
-	TimeDimension     string   `json:"timeDimension"`
-	Dimensions        []string `json:"dimensions"`
-	PageSize          int64    `json:"pageSize,omitempty"`
-	PageToken         string   `json:"pageToken,omitempty"`
-	UseNextPage       bool     `json:"useNextpage,omitempty"`
-	Timezone          string   `json:"timezone,omitempty"`
-	FiltersExpression string   `json:"filtersExpression,omitempty"`
-	// Not from JSON
-	// TimeRange     backend.TimeRange `json:"-"`
-	// MaxDataPoints int64             `json:"-"`
-}
 
 // GetQueryModel returns the well typed query model
-func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
-	model := &QueryModel{
+func GetQueryModel(query backend.DataQuery) (*model.QueryModel, error) {
+	model := &model.QueryModel{
 		PageSize:    GaReportMaxResult,
 		PageToken:   "",
-		UseNextPage: true,
 	}
 	err := json.Unmarshal(query.JSON, &model)
 	if err != nil {
@@ -61,14 +41,14 @@ func GetQueryModel(query backend.DataQuery) (*QueryModel, error) {
 	return model, nil
 }
 
-func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
+func (ga *GoogleAnalytics) getMetadata() (*model.Metadata, error) {
 	res, err := http.Get(GaMetadataURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metadata api %w", err)
 	}
 	defer res.Body.Close()
 
-	metadata := Metadata{}
+	metadata := model.Metadata{}
 
 	err = json.NewDecoder(res.Body).Decode(&metadata)
 	if err != nil {
@@ -77,22 +57,22 @@ func (ga *GoogleAnalytics) getMetadata() (*Metadata, error) {
 	return &metadata, nil
 }
 
-func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem, error) {
+func (ga *GoogleAnalytics) getFilteredMetadata() ([]model.MetadataItem, []model.MetadataItem, error) {
 	metadata, err := ga.getMetadata()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// length := int(metadata.TotalResults)
-	var dimensionItems = make([]MetadataItem, 0)
-	var metricItems = make([]MetadataItem, 0)
+	var dimensionItems = make([]model.MetadataItem, 0)
+	var metricItems = make([]model.MetadataItem, 0)
 	for _, item := range metadata.Items {
 		if item.Attributes.Status == "DEPRECATED" || item.Attributes.ReplacedBy != "" {
 			continue
 		}
-		if item.Attributes.Type == AttributeTypeDimension {
+		if item.Attributes.Type == model.AttributeTypeDimension {
 			dimensionItems = append(dimensionItems, item)
-		} else if item.Attributes.Type == AttributeTypeMetric {
+		} else if item.Attributes.Type == model.AttributeTypeMetric {
 			metricItems = append(metricItems, item)
 		}
 	}
@@ -100,10 +80,10 @@ func (ga *GoogleAnalytics) getFilteredMetadata() ([]MetadataItem, []MetadataItem
 	return metricItems, dimensionItems, nil
 }
 
-func (ga *GoogleAnalytics) GetDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]MetadataItem, error) {
+func (ga *GoogleAnalytics) GetDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
 	cacheKey := "ga:metadata:dimensions"
 	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return dimensions.([]MetadataItem), nil
+		return dimensions.([]model.MetadataItem), nil
 	}
 
 	_, dimensions, err := ga.getFilteredMetadata()
@@ -116,10 +96,10 @@ func (ga *GoogleAnalytics) GetDimensions(ctx context.Context, config *setting.Da
 	return dimensions, nil
 }
 
-func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]MetadataItem, error) {
+func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
 	cacheKey := "ga:metadata:metrics"
 	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return metrics.([]MetadataItem), nil
+		return metrics.([]model.MetadataItem), nil
 	}
 	metrics, _, err := ga.getFilteredMetadata()
 	if err != nil {

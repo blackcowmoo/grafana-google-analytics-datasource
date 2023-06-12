@@ -3,12 +3,14 @@ package gav3
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	"sync"
-	"time"
 
 	analytics "google.golang.org/api/analytics/v3"
 	reporting "google.golang.org/api/analyticsreporting/v4"
@@ -190,7 +192,7 @@ func (client *GoogleClient) getProfilesList(accountId string, webpropertyId stri
 	return profiles.Items, nil
 }
 
-func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsResponse, error) {
+func (client *GoogleClient) getReport(query model.QueryModel) (*reporting.GetReportsResponse, error) {
 	defer util.Elapsed("Get report data at GA API")()
 	log.DefaultLogger.Debug("getReport", "queries", query)
 	Metrics := []*reporting.Metric{}
@@ -235,7 +237,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*reporting.GetReportsRe
 
 	log.DefaultLogger.Debug("Do GET report", "report len", len(report.Reports), "report", report)
 
-	if query.UseNextPage && report.Reports[0].NextPageToken != "" {
+	if  report.Reports[0].NextPageToken != "" {
 		query.PageToken = report.Reports[0].NextPageToken
 		newReport, err := client.getReport(query)
 		if err != nil {

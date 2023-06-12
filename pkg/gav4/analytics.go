@@ -51,61 +51,6 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 
 }
 
-func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:accounts:%s", config.JWT)
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	accounts, err := client.getAccountsList("")
-	if err != nil {
-		return nil, err
-	}
-
-	accountNames := map[string]string{}
-	for _, i := range accounts {
-		accountNames[i.Name] = i.DisplayName
-	}
-
-	ga.Cache.Set(cacheKey, accountNames, 60*time.Second)
-	return accountNames, nil
-}
-
-func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:account:%s:webproperties", accountId)
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	Webproperties, err := client.getWebpropertiesList(accountId, "")
-	if err != nil {
-		return nil, err
-	}
-
-	WebpropertyNames := map[string]string{}
-	for _, i := range Webproperties {
-		WebpropertyNames[i.Name] = i.DisplayName
-	}
-
-	ga.Cache.Set(cacheKey, WebpropertyNames, 60*time.Second)
-	return WebpropertyNames, nil
-}
-
-func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (map[string]string, error) {
-	// gav4 no profle
-	return nil, nil
-}
-
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
@@ -213,7 +158,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := QueryModel{webProperties[0].Account, webProperties[0].Name, "", "2daysAgo", "today", "a", []string{"active1DayUsers"}, "date", []string{}, 1, "", false, "UTC", "", 0}
+	testData := model.QueryModel{AccountID: webProperties[0].Account, WebPropertyID: webProperties[0].Name, ProfileID: "", StartDate: "2daysAgo", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
 	res, err := client.getReport(testData)
 
 	if err != nil {
@@ -260,7 +205,7 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 		var propertySummaries = make([]*model.PropertySummary, 0)
 		for _, rawPpropertySummary := range rawAccountSummary.PropertySummaries {
 			var propertySummary = &model.PropertySummary{
-				Property:     rawPpropertySummary.Property,
+				Property:    rawPpropertySummary.Property,
 				DisplayName: rawPpropertySummary.DisplayName,
 				Parent:      rawPpropertySummary.DisplayName,
 			}

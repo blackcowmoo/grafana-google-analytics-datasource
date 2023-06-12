@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
@@ -126,7 +127,7 @@ func (client *GoogleClient) GetWebProperty(webpropertyID string) (*analyticsadmi
 	return webproperty, nil
 }
 
-func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunReportResponse, error) {
+func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.RunReportResponse, error) {
 	defer util.Elapsed("Get report data at GA API")()
 	log.DefaultLogger.Debug("getReport", "queries", query)
 	Metrics := []*analyticsdata.Metric{}
@@ -165,7 +166,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
 
-	if query.UseNextPage && report.RowCount > (query.Offset+GaAdminMaxResult) {
+	if report.RowCount > (query.Offset+GaAdminMaxResult) {
 		query.Offset = query.Offset + GaAdminMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {

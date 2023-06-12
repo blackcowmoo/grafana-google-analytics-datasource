@@ -3,13 +3,12 @@ import {
   AsyncMultiSelect,
   AsyncSelect,
   Badge,
-  Cascader,
+  ButtonCascader,
   CascaderOption,
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
   Input,
-  SegmentAsync
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
@@ -46,54 +45,6 @@ export class QueryEditor extends PureComponent<Props> {
     })
   }
 
-  onProfileIdChange = (item: SelectableValue<string>) => {
-    const {
-      query,
-      query: { version, accountId, webPropertyId },
-      onChange,
-      datasource,
-    } = this.props;
-    const profileId = item.value as string;
-    this.setDisplayName(profileId, item.label)
-
-    if (profileId && version === "v3") {
-      datasource.getProfileTimezone(accountId, webPropertyId, profileId).then((timezone) => {
-        const { query, onChange } = this.props;
-        console.log(`timezone`, timezone);
-        onChange({ ...query, timezone });
-        this.willRunQuery();
-      });
-    }
-    onChange({ ...query, profileId });
-    this.willRunQuery();
-  };
-
-  onAccountIdChange = (item: SelectableValue<string>) => {
-    const { query, query: { displayName }, onChange } = this.props;
-    let accountId = item.value ?? "";
-    this.setDisplayName(accountId, item.label)
-    onChange({ ...query, accountId, displayName });
-    this.willRunQuery();
-  };
-
-  onWebPropertyIdChange = (item: any) => {
-    const { query, query: { version, accountId }, onChange, datasource } = this.props;
-    let webPropertyId = item.value;
-    console.log('onWebPropertyIdChange', webPropertyId)
-    if (webPropertyId && version === "v4") {
-      console.log('gettimezone')
-      datasource.getProfileTimezone(accountId, webPropertyId, "").then((timezone) => {
-        const { query, onChange } = this.props;
-        console.log(`timezone`, timezone);
-        onChange({ ...query, timezone });
-        this.willRunQuery();
-      });
-    }
-    onChange({ ...query, webPropertyId });
-    this.setDisplayName(webPropertyId, item.label)
-    this.willRunQuery();
-  };
-
   onMetricChange = (items: Array<SelectableValue<string>>) => {
     const { query, onChange } = this.props;
 
@@ -119,23 +70,20 @@ export class QueryEditor extends PureComponent<Props> {
     onChange({ ...query, timeDimension, selectedTimeDimensions: item });
     this.willRunQuery();
   };
-  onSelect = (item: string) => {
-    const { query, query: { version, accountId }, onChange, datasource } = this.props;
-    let webPropertyId = item
-    console.log('onWebPropertyIdChange', webPropertyId)
-    if (webPropertyId && version === "v4") {
-      console.log('gettimezone')
-      datasource.getProfileTimezone(accountId, webPropertyId, "").then((timezone) => {
-        const { query, onChange } = this.props;
-        console.log(`timezone`, timezone);
-        onChange({ ...query, timezone });
-        this.willRunQuery();
-      });
-    }
-    onChange({ ...query, webPropertyId });
-    this.setDisplayName(webPropertyId, item)
+
+  onIdSelect = (value: string[], selectedOptions: CascaderOption[]) => {
+    const [account, proerty, profile] = value
+    const { query, onChange, datasource } = this.props;
+    datasource.getTimezone(account, proerty, profile).then((timezone) => {
+      const { query, onChange } = this.props;
+      console.log(`timezone`, timezone);
+      onChange({ ...query, timezone });
+      this.willRunQuery();
+    });
+    onChange({ ...query, accountId: account, webPropertyId: proerty, profileId: profile });
     this.willRunQuery();
   };
+
   onDimensionChange = (items: Array<SelectableValue<string>>) => {
     const { query, onChange } = this.props;
     let dimensions = [] as string[];
@@ -187,7 +135,6 @@ export class QueryEditor extends PureComponent<Props> {
   }
   render() {
     const { query, datasource } = this.props;
-    console.log('query.version', query.version)
     const {
       accountId,
       webPropertyId,
@@ -199,69 +146,13 @@ export class QueryEditor extends PureComponent<Props> {
       filtersExpression,
       version
     } = query;
-    console.log('webPropertyId', webPropertyId)
     return (
       <>
-        <Cascader options={this.options} onSelect={this.onSelect}></Cascader>
         <div className="gf-form-group">
           <div className="gf-form">
-            <HorizontalGroup spacing="none">
-              <InlineFormLabel
-                className="query-keyword"
-                tooltip={
-                  <>
-                    The <code>accountId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                  </>
-                }
-              >
-                Account ID
-              </InlineFormLabel>
-              <SegmentAsync
-                loadOptions={() => datasource.getAccountIds()}
-                placeholder="Enter Account ID"
-                value={this.getDisplayName(accountId)}
-                allowCustomValue
-                onChange={this.onAccountIdChange}
-              />
-              <InlineFormLabel
-                className="query-keyword"
-                tooltip={
-                  <>
-                    The <code>webPropertyId</code> is used to identify which GoogleAnalytics is to be accessed or
-                    altered.
-                  </>
-                }
-              >
-                Web Property ID
-              </InlineFormLabel>
-              <SegmentAsync
-                loadOptions={() => datasource.getWebPropertyIds(accountId)}
-                placeholder="Enter Web Property ID"
-                value={this.getDisplayName(webPropertyId)}
-                allowCustomValue
-                onChange={this.onWebPropertyIdChange}
-              />
-              {version === "v3" &&
-                <>
-                  <InlineFormLabel
-                    className="query-keyword"
-                    tooltip={
-                      <>
-                        The <code>profileId</code> is used to identify which GoogleAnalytics is to be accessed or altered.
-                      </>
-                    }
-                  >
-                    Profile ID
-                  </InlineFormLabel>
-                  <SegmentAsync
-                    loadOptions={() => datasource.getProfileIds(accountId, webPropertyId)}
-                    placeholder="Enter Profile ID"
-                    value={this.getDisplayName(profileId)}
-                    allowCustomValue
-                    onChange={this.onProfileIdChange}
-                  />
-                </>
-              }
+            <HorizontalGroup spacing="sm" justify='flex-start' >
+              <ButtonCascader options={this.options} onChange={this.onIdSelect} />
+              <InlineLabel>{`Account: ${accountId || ""},Property: ${webPropertyId||""},Profile ${profileId||""}`}</InlineLabel>
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
               </InlineLabel>
@@ -277,8 +168,6 @@ export class QueryEditor extends PureComponent<Props> {
                 <Badge color='orange' text={badgeMap.v4.text} tooltip={badgeMap.v4.tootip} icon='google'></Badge>
               }
             </HorizontalGroup>
-
-            <div className="gf-form-label gf-form-label--grow" />
           </div>
 
           <div className="gf-form">
