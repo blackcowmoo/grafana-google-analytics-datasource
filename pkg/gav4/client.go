@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/oauth2/google"
@@ -52,71 +53,17 @@ func createAnalyticsadminService(ctx context.Context, jwt string) (*analyticsadm
 	return analyticsadmin.NewService(ctx, option.WithHTTPClient(client))
 }
 
-func (client *GoogleClient) getAccountsList(nextPageToekn string) ([]*analyticsadmin.GoogleAnalyticsAdminV1betaAccount, error) {
-	accountsService := analyticsadmin.NewAccountsService(client.analyticsadmin)
-	accounts, err := accountsService.List().PageSize(GaAdminMaxResult).PageToken(nextPageToekn).Do()
+func (client *GoogleClient) GetWebProperty(webpropertyID string) (*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, error) {
+	webproperty, err := client.analyticsadmin.Properties.Get(webpropertyID).Do()
 	if err != nil {
-		log.DefaultLogger.Error("getAccountsList Fail", "error", err.Error())
-		return nil, err
-	}
-	nextLink := accounts.NextPageToken
-
-	if nextLink != "" {
-		newAccounts, err := client.getAccountsList(nextLink)
-		if err != nil {
-			return nil, err
-		}
-		accounts.Accounts = append(accounts.Accounts, newAccounts...)
-	}
-
-	return accounts.Accounts, nil
-}
-
-func (client *GoogleClient) getAllWebpropertiesList() ([]*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, error) {
-	accounts, err := client.getAccountsList("")
-	if err != nil {
-		log.DefaultLogger.Error("getAllWebpropertiesList fail", "error", err.Error())
+		log.DefaultLogger.Error("GetWebProperty fail", "error", err.Error())
 		return nil, err
 	}
 
-	var webpropertiesList = make([]*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, 0)
-	for _, account := range accounts {
-		webproperties, err := client.getWebpropertiesList(account.Name, "")
-		if err != nil {
-			log.DefaultLogger.Error("getAllWebpropertiesList", "error", err.Error())
-			return nil, err
-		}
-
-		webpropertiesList = append(webpropertiesList, webproperties...)
-	}
-
-	return webpropertiesList, nil
+	return webproperty, nil
 }
 
-func (client *GoogleClient) getWebpropertiesList(accountId string, nextPageToekn string) ([]*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, error) {
-	webpropertiesService := analyticsadmin.NewPropertiesService(client.analyticsadmin)
-	webproperties, err := webpropertiesService.List().Filter("parent:" + accountId).PageSize(GaAdminMaxResult).PageToken(nextPageToekn).Do()
-	if err != nil {
-		log.DefaultLogger.Error("getWebpropertiesList fail", "error", err.Error())
-		return nil, err
-	}
-
-	log.DefaultLogger.Debug("getWebpropertiesList", "WebpropertiesList", webproperties)
-
-	nextLink := webproperties.NextPageToken
-
-	if nextLink != "" {
-		nextWebproperties, err := client.getWebpropertiesList(accountId, nextLink)
-		if err != nil {
-			return nil, err
-		}
-		webproperties.Properties = append(webproperties.Properties, nextWebproperties...)
-	}
-
-	return webproperties.Properties, nil
-}
-
-func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunReportResponse, error) {
+func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.RunReportResponse, error) {
 	defer util.Elapsed("Get report data at GA API")()
 	log.DefaultLogger.Debug("getReport", "queries", query)
 	Metrics := []*analyticsdata.Metric{}
@@ -143,6 +90,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 				},
 			},
 		},
+		KeepEmptyRows: true,
 	}
 
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
@@ -154,7 +102,7 @@ func (client *GoogleClient) getReport(query QueryModel) (*analyticsdata.RunRepor
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
 
-	if query.UseNextPage && report.RowCount > (query.Offset+GaAdminMaxResult) {
+	if report.RowCount > (query.Offset + GaAdminMaxResult) {
 		query.Offset = query.Offset + GaAdminMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {
@@ -209,4 +157,24 @@ func (client *GoogleClient) getMetadata(propertyID string) (*analyticsdata.Metad
 		return nil, err
 	}
 	return metadata, nil
+}
+
+func (client *GoogleClient) getAccountSummaries(nextPageToekn string) ([]*analyticsadmin.GoogleAnalyticsAdminV1betaAccountSummary, error) {
+	accountSummaries, err := client.analyticsadmin.AccountSummaries.List().PageSize(GaAdminMaxResult).PageToken(nextPageToekn).Do()
+	if err != nil {
+		log.DefaultLogger.Error("getAccountSummary fail", "error", err.Error())
+		return nil, err
+	}
+
+	nextPageToken := accountSummaries.NextPageToken
+
+	if nextPageToken != "" {
+		nextAccountSummaries, err := client.getAccountSummaries(nextPageToken)
+		if err != nil {
+			return nil, err
+		}
+		accountSummaries.AccountSummaries = append(accountSummaries.AccountSummaries, nextAccountSummaries...)
+	}
+
+	return accountSummaries.AccountSummaries, nil
 }

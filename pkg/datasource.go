@@ -48,12 +48,10 @@ func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instanc
 		analytics:       analytics,
 		resourceHandler: httpadapter.New(mux),
 	}
-	mux.HandleFunc("/accounts", ds.handleResourceAccounts)
-	mux.HandleFunc("/web-properties", ds.handleResourceWebProperties)
-	mux.HandleFunc("/profiles", ds.handleResourceProfiles)
 	mux.HandleFunc("/profile/timezone", ds.handleResourceProfileTimezone)
 	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
 	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
+	mux.HandleFunc("/account-summaries", ds.handleResourceAccountSummaries)
 
 	return ds, nil
 }
@@ -119,60 +117,7 @@ func writeResult(rw http.ResponseWriter, path string, val interface{}, err error
 	rw.WriteHeader(code)
 }
 
-func (ds *GoogleAnalyticsDataSource) handleResourceAccounts(rw http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		return
-	}
 
-	ctx := req.Context()
-	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
-	if err != nil {
-		writeResult(rw, "?", nil, err)
-		return
-	}
-
-	res, err := ds.analytics.GetAccounts(ctx, config)
-	writeResult(rw, "accounts", res, err)
-}
-
-func (ds *GoogleAnalyticsDataSource) handleResourceWebProperties(rw http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		return
-	}
-
-	ctx := req.Context()
-	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
-	if err != nil {
-		writeResult(rw, "?", nil, err)
-		return
-	}
-	query := req.URL.Query()
-	var (
-		accountId = query.Get("accountId")
-	)
-	res, err := ds.analytics.GetWebProperties(ctx, config, accountId)
-	writeResult(rw, "webProperties", res, err)
-}
-
-func (ds *GoogleAnalyticsDataSource) handleResourceProfiles(rw http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		return
-	}
-
-	ctx := req.Context()
-	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
-	if err != nil {
-		writeResult(rw, "?", nil, err)
-		return
-	}
-	query := req.URL.Query()
-	var (
-		accountId     = query.Get("accountId")
-		webPropertyId = query.Get("webPropertyId")
-	)
-	res, err := ds.analytics.GetProfiles(ctx, config, accountId, webPropertyId)
-	writeResult(rw, "profiles", res, err)
-}
 
 func (ds *GoogleAnalyticsDataSource) handleResourceDimensions(rw http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
@@ -223,4 +168,20 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.Respo
 	)
 	res, err := ds.analytics.GetTimezone(ctx, config, accountId, webPropertyId, profileId)
 	writeResult(rw, "timezone", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceAccountSummaries(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	if err != nil {
+		writeResult(rw, "?", nil, err)
+		return
+	}
+
+	res, err := ds.analytics.GetAccountSummaries(ctx, config)
+	writeResult(rw, "accountSummaries", res, err)
 }

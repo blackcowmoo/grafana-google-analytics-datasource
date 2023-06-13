@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -54,81 +55,6 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone)
 }
 
-func (ga *GoogleAnalytics) GetAccounts(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:accounts:%s", config.JWT)
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	accounts, err := client.getAccountsList(GaDefaultIdx)
-	if err != nil {
-		return nil, err
-	}
-
-	accountNames := map[string]string{}
-	for _, i := range accounts {
-		accountNames[i.Id] = i.Name
-	}
-
-	ga.Cache.Set(cacheKey, accountNames, 60*time.Second)
-	return accountNames, nil
-}
-
-func (ga *GoogleAnalytics) GetWebProperties(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:account:%s:webproperties", accountId)
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	Webproperties, err := client.getWebpropertiesList(accountId, GaDefaultIdx)
-	if err != nil {
-		return nil, err
-	}
-
-	WebpropertyNames := map[string]string{}
-	for _, i := range Webproperties {
-		WebpropertyNames[i.Id] = i.Name
-	}
-
-	ga.Cache.Set(cacheKey, WebpropertyNames, 60*time.Second)
-	return WebpropertyNames, nil
-}
-
-func (ga *GoogleAnalytics) GetProfiles(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:account:%s:webproperty:%s:profiles", accountId, webPropertyId)
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
-	if err != nil {
-		return nil, err
-	}
-
-	profileNames := map[string]string{}
-	for _, i := range profiles {
-		profileNames[i.Id] = i.Name
-	}
-
-	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
-	return profileNames, nil
-}
-
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
@@ -140,46 +66,15 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 		return item.(string), nil
 	}
 
-	profiles, err := client.getProfilesList(accountId, webPropertyId, GaDefaultIdx)
+	profile, err := client.getProfile(accountId, webPropertyId, profileId)
 	if err != nil {
 		return "", err
 	}
 
-	var timezone string
-	for _, profile := range profiles {
-		if profile.Id == profileId {
-			timezone = profile.Timezone
-			break
-		}
-	}
+	timezone := profile.Timezone
 
 	ga.Cache.Set(cacheKey, timezone, 60*time.Second)
 	return timezone, nil
-}
-
-func (ga *GoogleAnalytics) GetAllProfilesList(ctx context.Context, config *setting.DatasourceSecretSettings) (map[string]string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Google API client: %w", err)
-	}
-
-	cacheKey := fmt.Sprintf("analytics:account:*:webproperty:*:profiles")
-	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
-		return item.(map[string]string), nil
-	}
-
-	profiles, err := client.getAllProfilesList()
-	if err != nil {
-		return nil, err
-	}
-
-	profileNames := map[string]string{}
-	for _, i := range profiles {
-		profileNames[i.Id] = i.Name
-	}
-
-	ga.Cache.Set(cacheKey, profileNames, 60*time.Second)
-	return profileNames, nil
 }
 
 func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error) {
@@ -195,7 +90,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	profiles, err := client.getAllProfilesList()
+	accountSummaries, err := ga.GetAccountSummaries(ctx, config)
 	if err != nil {
 		log.DefaultLogger.Error("CheckHealth: Fail getAllProfilesList", "error", err.Error())
 		return &backend.CheckHealthResult{
@@ -204,7 +99,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 
-	testData := QueryModel{profiles[0].AccountId, profiles[0].WebPropertyId, profiles[0].Id, "yesterday", "today", "a", []string{"ga:sessions"}, "ga:dateHour", []string{}, 1, "", false, "UTC", ""}
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: accountSummaries[0].PropertySummaries[0].ProfileSummaries[0].Profile, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:dateHour", Dimensions: []string{"ga:dateHour"}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
 	res, err := client.getReport(testData)
 
 	if err != nil {
@@ -226,4 +121,55 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		Status:  status,
 		Message: message,
 	}, nil
+}
+
+func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error) {
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:accountsummaries:%s", config.JWT)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.([]*model.AccountSummary), nil
+	}
+
+	rawAccountSummaries, err := client.getAccountSummaries(GaDefaultIdx)
+	if err != nil {
+		return nil, err
+	}
+
+	var accounts []*model.AccountSummary
+	for _, rawAccountSummary := range rawAccountSummaries {
+		var account = &model.AccountSummary{
+			Account:     rawAccountSummary.Id,
+			DisplayName: rawAccountSummary.Name,
+		}
+		var propertySummaries = make([]*model.PropertySummary, 0)
+		for _, rawPropertySummary := range rawAccountSummary.WebProperties {
+			var propertySummary = &model.PropertySummary{
+				Property:    rawPropertySummary.Id,
+				DisplayName: rawPropertySummary.Name,
+				Parent:      rawAccountSummary.Id,
+			}
+			propertySummaries = append(propertySummaries, propertySummary)
+
+			var profileSummaries = make([]*model.ProfileSummary, 0)
+
+			for _, rawProfileSummaries := range rawPropertySummary.Profiles {
+				var profileSummary = &model.ProfileSummary{
+					Profile:     rawProfileSummaries.Id,
+					DisplayName: rawProfileSummaries.Name,
+					Parent:      rawPropertySummary.Id,
+					Type:        rawProfileSummaries.Type,
+				}
+				profileSummaries = append(profileSummaries, profileSummary)
+			}
+			propertySummary.ProfileSummaries = profileSummaries
+		}
+		account.PropertySummaries = propertySummaries
+		accounts = append(accounts, account)
+	}
+	ga.Cache.Set(cacheKey, accounts, 60*time.Second)
+	return accounts, nil
 }

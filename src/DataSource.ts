@@ -1,6 +1,7 @@
 import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend } from '@grafana/runtime';
-import { GADataSourceOptions, GAMetadata, GAQuery } from './types';
+import { CascaderOption } from '@grafana/ui';
+import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
   version: string;
@@ -10,31 +11,44 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     this.version = instanceSettings.jsonData.version
   }
 
-  async getAccountIds(): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('accounts').then(({ accounts }) => {
-      return accounts
-        ? Object.entries(accounts).map(([value, label]) => ({ label, value } as SelectableValue<string>))
-        : [];
-    });
+  async getAccountSummaries(): Promise<CascaderOption[]> {
+    let accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[]
+    let accounts: CascaderOption[] = [];
+    for (const accountSummary of accountSummaries) {
+      let accountCascader: CascaderOption = {
+        label: accountSummary.DisplayName,
+        value: accountSummary.Account,
+      }
+      let properties: CascaderOption[] = [];
+      for (const propertySummary of accountSummary.PropertySummaries) {
+        let propertyCascader: CascaderOption = {
+          label: propertySummary.DisplayName,
+          value: propertySummary.Property,
+        }
+        properties.push(propertyCascader);
+        let profiles: CascaderOption[] = [];
+
+        if (!propertySummary.ProfileSummaries) {
+          continue
+        }
+        for (const profileSummary of propertySummary.ProfileSummaries) {
+          let profileCascader: CascaderOption = {
+            label: profileSummary.DisplayName,
+            value: profileSummary.Profile,
+          }
+          profiles.push(profileCascader);
+        }
+        propertyCascader.children = profiles;
+        propertyCascader.items = profiles;
+      }
+      accountCascader.children = properties
+      accountCascader.items = properties
+      accounts.push(accountCascader);
+    }
+    return accounts;
   }
 
-  async getWebPropertyIds(accountId: string): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('web-properties', { accountId }).then(({ webProperties }) =>
-      webProperties
-        ? Object.entries(webProperties).map(([value, label]) => ({ label, value } as SelectableValue<string>))
-        : []
-    );
-  }
-
-  async getProfileIds(accountId: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('profiles', { accountId, webPropertyId }).then(({ profiles }) => {
-      return profiles
-        ? Object.entries(profiles).map(([value, label]) => ({ label, value } as SelectableValue<string>))
-        : [];
-    });
-  }
-
-  async getProfileTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
+  async getTimezone(accountId: string, webPropertyId: string, profileId: string): Promise<string> {
     return this.getResource('profile/timezone', { accountId, webPropertyId, profileId }).then(({ timezone }) => {
       return timezone;
     });

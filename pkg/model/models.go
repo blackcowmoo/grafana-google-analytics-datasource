@@ -78,3 +78,38 @@ type MetadataItemAttribute struct {
 }
 
 type AttributeType string
+
+type AccountSummary struct {
+	Account, DisplayName string
+	PropertySummaries    []*PropertySummary
+}
+
+type PropertySummary struct {
+	Property, DisplayName, Parent string
+	ProfileSummaries              []*ProfileSummary
+}
+
+type ProfileSummary struct {
+	Profile, DisplayName, Parent, Type string
+}
+
+type QueryModel struct {
+	AccountID         string   `json:"accountId"`
+	WebPropertyID     string   `json:"webPropertyId"`
+	ProfileID         string   `json:"profileId"`
+	StartDate         string   `json:"startDate"`
+	EndDate           string   `json:"endDate"`
+	RefID             string   `json:"refId"`
+	Metrics           []string `json:"metrics"`
+	TimeDimension     string   `json:"timeDimension"`
+	Dimensions        []string `json:"dimensions"`
+	PageSize          int64    `json:"pageSize,omitempty"`
+	PageToken         string   `json:"pageToken,omitempty"`
+	UseNextPage       bool     `json:"useNextpage,omitempty"`
+	Timezone          string   `json:"timezone,omitempty"`
+	FiltersExpression string   `json:"filtersExpression,omitempty"`
+	Offset            int64    `json:"offset,omitempty"`
+	// Not from JSON
+	// TimeRange     backend.TimeRange `json:"-"`
+	// MaxDataPoints int64             `json:"-"`
+}

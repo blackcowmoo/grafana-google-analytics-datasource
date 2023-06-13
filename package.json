@@ -20,6 +20,6 @@
     "@types/react-dropzone": "^5.1.0"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   }
 }
