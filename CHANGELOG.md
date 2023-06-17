@@ -1,4 +1,10 @@
 # Changelog
+
+## 0.2.0
+- support GA4
+- change query editor UI
+- go version 1.18 -> 1.20
+- update dependencies
 ## 0.1.5
 - support grafana version < 11
 - update dependencies
