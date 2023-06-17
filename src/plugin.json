@@ -4,14 +4,14 @@
   "id": "blackcowmoo-googleanalytics-datasource",
   "metrics": true,
   "backend": true,
-  "executable": "gpx_ blackcowmoo-googleanalytics-datasource",
+  "executable": "gpx_blackcowmoo-googleanalytics-datasource",
   "info": {
     "description": " GoogleAnalytics Visualize & datasource",
     "author": {
       "name": "blackcowmoo",
       "url": "https://github.com/blackcowmoo"
     },
-    "keywords": ["GA", "ga", "GoogleAnalytics", "Google"],
+    "keywords": ["GA", "ga", "GoogleAnalytics", "Google", "googleanalytics", "google", "analytics"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
@@ -19,11 +19,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource"
+        "url": "https://github.com/blackcowmoo/grafana-google-analytics-datasource"
       },
       {
         "name": "License",
-        "url": "https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/master/LICENSE"
+        "url": "https://github.com/blackcowmoo/grafana-google-analytics-datasource/blob/master/LICENSE"
       }
     ],
     "screenshots": [
