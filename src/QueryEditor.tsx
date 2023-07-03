@@ -8,7 +8,7 @@ import {
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
-  Input,
+  Input
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
@@ -146,6 +146,7 @@ export class QueryEditor extends PureComponent<Props> {
       filtersExpression,
       version
     } = query;
+    const parsedWebPropertyId = webPropertyId.split('/')[1]
     return (
       <>
         <div className="gf-form-group">
@@ -170,7 +171,7 @@ export class QueryEditor extends PureComponent<Props> {
             </HorizontalGroup>
           </div>
 
-          <div className="gf-form">
+          <div className="gf-form" key={parsedWebPropertyId}>
             <InlineFormLabel
               className="query-keyword"
               tooltip={
@@ -182,7 +183,7 @@ export class QueryEditor extends PureComponent<Props> {
               Metrics
             </InlineFormLabel>
             <AsyncMultiSelect
-              loadOptions={(q) => datasource.getMetrics(q)}
+              loadOptions={(q) => datasource.getMetrics(q, parsedWebPropertyId)}
               placeholder={'ga:sessions'}
               value={selectedMetrics}
               onChange={this.onMetricChange}
@@ -228,7 +229,7 @@ export class QueryEditor extends PureComponent<Props> {
               Dimensions
             </InlineFormLabel>
             <AsyncMultiSelect
-              loadOptions={(q) => datasource.getDimensionsExcludeTimeDimensions(q)}
+              loadOptions={(q) => datasource.getDimensionsExcludeTimeDimensions(q, parsedWebPropertyId)}
               placeholder={'ga:country'}
               value={selectedDimensions}
               onChange={this.onDimensionChange}
