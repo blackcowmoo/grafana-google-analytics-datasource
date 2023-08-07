@@ -91,6 +91,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 			},
 		},
 		KeepEmptyRows: true,
+		DimensionFilter: query.FiltersExpression
 	}
 
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
