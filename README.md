@@ -23,7 +23,7 @@ Visualize data from Google Analytics UA And GA4(beta)
 7.  In the next step, click `Create Key`. Choose key type `JSON` and click `Create`. A JSON key file will be created and downloaded to your computer
 8.  Note your `service account email` ex) *@*.iam.gserviceaccount.com
 9.  Open the [Google Analytics API](https://console.cloud.google.com/apis/library/analytics.googleapis.com)  in API Library and enable access for your account
-10. Open the [Google Analytics Reporting API](https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com?q=search&referrer=search&project=composed-apogee-307906)  in API Library and enable access for your GA Data
+10. Open the [Google Analytics Reporting API](https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com)  in API Library and enable access for your GA Data
 
 ### Google Analytics Setting
 
