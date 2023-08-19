@@ -54,8 +54,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getMetrics(query: string): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('metrics').then(({ metrics }) => {
+  async getMetrics(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('metrics', { webPropertyId }).then(({ metrics }) => {
       return metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
           element.id.toLowerCase().indexOf(query) > -1 ||
@@ -72,8 +72,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
-  async getDimensions(query: string, exclude: any): Promise<Array<SelectableValue<string>>> {
-    return this.getResource('dimensions').then(({ dimensions }) => {
+  async getDimensions(query: string, exclude: any, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('dimensions', { webPropertyId }).then(({ dimensions }) => {
       return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
           (element.id.toLowerCase().indexOf(query) > -1 ||
@@ -95,11 +95,11 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   }
 
   async getTimeDimensions(): Promise<Array<SelectableValue<string>>> {
-    return this.getDimensions('date', null);
+    return this.getDimensions('date', null, '');
   }
 
-  async getDimensionsExcludeTimeDimensions(query: string): Promise<Array<SelectableValue<string>>> {
-    return await this.getDimensions(query, 'date');
+  async getDimensionsExcludeTimeDimensions(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+    return await this.getDimensions(query, 'date', webPropertyId);
   }
   getGaVersion(): string {
     return this.version
