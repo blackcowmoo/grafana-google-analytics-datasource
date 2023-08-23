@@ -154,13 +154,13 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 	if len(accountSummaries) == 0 {
-		log.DefaultLogger.Error("CheckHealth: Not Exist ProfilesList")
+		log.DefaultLogger.Error("CheckHealth: Not Exist Valid Proerty")
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: "CheckHealth: Not Exist ProfilesList",
+			Message: "CheckHealth: Not Exist Valid Proerty",
 		}, nil
 	}
-	
+
 	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: "", StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{"date"}, PageSize: GaReportMaxResult, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
 	res, err := client.getReport(testData)
 
