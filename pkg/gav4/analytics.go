@@ -153,8 +153,15 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 			Message: "CheckHealth: Fail getPropetyList" + err.Error(),
 		}, nil
 	}
-
-	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: "", StartDate: "2daysAgo", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{"date"}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
+	if len(accountSummaries) == 0 {
+		log.DefaultLogger.Error("CheckHealth: Not Exist ProfilesList")
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Not Exist ProfilesList",
+		}, nil
+	}
+	
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: "", StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"active1DayUsers"}, TimeDimension: "date", Dimensions: []string{"date"}, PageSize: GaReportMaxResult, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: 0}
 	res, err := client.getReport(testData)
 
 	if err != nil {
@@ -191,9 +198,13 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 	if err != nil {
 		return nil, err
 	}
+	log.DefaultLogger.Debug("GA4 GetAccountSummaries raw accounts", "debug", rawAccountSummaries)
 
 	var accounts []*model.AccountSummary
 	for _, rawAccountSummary := range rawAccountSummaries {
+		if len(rawAccountSummary.PropertySummaries) == 0 {
+			continue
+		}
 		var account = &model.AccountSummary{
 			Account:     rawAccountSummary.Account,
 			DisplayName: rawAccountSummary.DisplayName,
@@ -207,9 +218,12 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 			}
 			propertySummaries = append(propertySummaries, propertySummary)
 		}
-		account.PropertySummaries = propertySummaries
-		accounts = append(accounts, account)
+		if len(propertySummaries) > 0 {
+			account.PropertySummaries = propertySummaries
+			accounts = append(accounts, account)
+		}
 	}
+	log.DefaultLogger.Debug("GA4 GetAccountSummaries parsed accounts", "debug", accounts)
 	ga.Cache.Set(cacheKey, accounts, 60*time.Second)
 	return accounts, nil
 }
