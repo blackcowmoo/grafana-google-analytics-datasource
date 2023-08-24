@@ -98,8 +98,15 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 			Message: "CheckHealth: Fail getProfileList" + err.Error(),
 		}, nil
 	}
+	if len(accountSummaries) == 0 {
+		log.DefaultLogger.Error("CheckHealth: Not Exist Valid Profile")
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "CheckHealth: Not Exist Valid Profile",
+		}, nil
+	}
 
-	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: accountSummaries[0].PropertySummaries[0].ProfileSummaries[0].Profile, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:dateHour", Dimensions: []string{"ga:dateHour"}, PageSize: 1, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
+	testData := model.QueryModel{AccountID: accountSummaries[0].Account, WebPropertyID: accountSummaries[0].PropertySummaries[0].Property, ProfileID: accountSummaries[0].PropertySummaries[0].ProfileSummaries[0].Profile, StartDate: "yesterday", EndDate: "today", RefID: "a", Metrics: []string{"ga:sessions"}, TimeDimension: "ga:date", Dimensions: []string{"ga:date"}, PageSize: GaReportMaxResult, PageToken: "", UseNextPage: false, Timezone: "UTC", FiltersExpression: "", Offset: GaDefaultIdx}
 	res, err := client.getReport(testData)
 
 	if err != nil {
@@ -123,6 +130,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 	}, nil
 }
 
+// remove no profile account
 func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error) {
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
@@ -138,15 +146,22 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 	if err != nil {
 		return nil, err
 	}
+	log.DefaultLogger.Debug("UA GetAccountSummaries raw accounts", "debug", rawAccountSummaries)
 
 	var accounts []*model.AccountSummary
 	for _, rawAccountSummary := range rawAccountSummaries {
+		if len(rawAccountSummary.WebProperties) == 0 {
+			continue
+		}
 		var account = &model.AccountSummary{
 			Account:     rawAccountSummary.Id,
 			DisplayName: rawAccountSummary.Name,
 		}
 		var propertySummaries = make([]*model.PropertySummary, 0)
 		for _, rawPropertySummary := range rawAccountSummary.WebProperties {
+			if len(rawPropertySummary.Profiles) == 0 {
+				continue
+			}
 			var propertySummary = &model.PropertySummary{
 				Property:    rawPropertySummary.Id,
 				DisplayName: rawPropertySummary.Name,
@@ -167,9 +182,12 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 			}
 			propertySummary.ProfileSummaries = profileSummaries
 		}
-		account.PropertySummaries = propertySummaries
-		accounts = append(accounts, account)
+		if len(propertySummaries) > 0 {
+			account.PropertySummaries = propertySummaries
+			accounts = append(accounts, account)
+		}
 	}
+	log.DefaultLogger.Debug("UA GetAccountSummaries accounts", "debug", accounts)
 	ga.Cache.Set(cacheKey, accounts, 60*time.Second)
 	return accounts, nil
 }
