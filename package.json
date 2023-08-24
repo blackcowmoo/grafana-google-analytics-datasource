@@ -1,6 +1,6 @@
 {
   "name": "blackcowmoo-googleanalytics-datasource",
-  "version": "0.1.5",
+  "version": "0.2.1",
   "description": " Google-Analytics to Grafana",
   "scripts": {
     "build": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:build",

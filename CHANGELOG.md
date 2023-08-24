@@ -1,4 +1,14 @@
 # Changelog
+## 0.2.1
+- Fix healthcheck fail when no profile or no property([#80](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/80))
+- Update README to remove hardcoded GCP Project ID([#79](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/79))
+- Support custom metrics and dimensions([#69](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/69/files))
+
+## 0.2.0
+- support GA4
+- change query editor UI
+- go version 1.18 -> 1.20
+- update dependencies
 ## 0.1.5
 - support grafana version < 11
 - update dependencies
