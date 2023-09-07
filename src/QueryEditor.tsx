@@ -146,7 +146,7 @@ export class QueryEditor extends PureComponent<Props> {
       filtersExpression,
       version
     } = query;
-    const parsedWebPropertyId = webPropertyId.split('/')[1]
+    const parsedWebPropertyId = webPropertyId?.split('/')[1]
     return (
       <>
         <div className="gf-form-group">
