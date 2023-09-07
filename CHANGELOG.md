@@ -1,4 +1,8 @@
 # Changelog
+
+## 0.2.2
+- Hotfix 0.2.1 query editor frontend bug
+
 ## 0.2.1
 - Fix healthcheck fail when no profile or no property([#80](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/80))
 - Update README to remove hardcoded GCP Project ID([#79](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/79))
