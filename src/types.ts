@@ -17,6 +17,7 @@ export interface GAQuery extends DataQuery {
   cacheDurationSeconds?: number;
   timezone: string;
   filtersExpression: string;
+  mode: string;
 }
 // mapping on google-key.json
 export interface JWT {
