@@ -28,7 +28,7 @@ const badgeMap = {
 const queryMode = [
   { label: 'Time Series', value: 'time series' },
   { label: 'Table', value: 'table' },
-] as SelectableValue<string>[];
+] as Array<SelectableValue<string>>;
 
 
 export class QueryEditorGA4 extends PureComponent<Props> {
