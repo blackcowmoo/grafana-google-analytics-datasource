@@ -31,11 +31,6 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		return nil, fmt.Errorf("failed to read query: %w", err)
 	}
 
-	if len(queryModel.AccountID) == 0 {
-		log.DefaultLogger.Error("Query", "error", "Required AccountID")
-		return nil, fmt.Errorf("Required AccountID")
-	}
-
 	if len(queryModel.WebPropertyID) == 0 {
 		log.DefaultLogger.Error("Query", "error", "Required WebPropertyID")
 		return nil, fmt.Errorf("Required WebPropertyID")
@@ -44,6 +39,11 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 	if len(queryModel.Dimensions) == 0 && len(queryModel.Metrics) == 0 {
 		log.DefaultLogger.Error("Query", "error", "Required Dimensions or Metrics")
 		return nil, fmt.Errorf("Required Dimensions or Metrics")
+	}
+
+	if queryModel.Mode == "time series" && len(queryModel.TimeDimension) == 0 {
+		log.DefaultLogger.Error("Query", "error", "TimeSeries query need TimeDimension")
+		return nil, fmt.Errorf("TimeSeries query need TimeDimensions")
 	}
 
 	report, err := client.getReport(*queryModel)

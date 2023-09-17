@@ -117,15 +117,15 @@ export class QueryEditorGA4 extends PureComponent<Props> {
   onModeChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, mode: value });
-
+    this.willRunQuery()
   }
 
   willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
-    const { webPropertyId, metrics, timeDimension } = query;
+    const { webPropertyId, metrics, timeDimension, mode } = query;
     console.log(`willRunQuery`);
     console.log(`query`, query);
-    if (webPropertyId && metrics && timeDimension) {
+    if (webPropertyId && metrics && (mode === 'table' || timeDimension)) {
       console.log(`onRunQuery`);
       onRunQuery();
     }
