@@ -29,7 +29,7 @@ const badgeMap = {
   },
 } as const
 
-export class QueryEditor extends PureComponent<Props> {
+export class QueryEditorUA extends PureComponent<Props> {
   options: CascaderOption[] = []
   constructor(props: Readonly<Props>) {
     super(props);
@@ -146,6 +146,7 @@ export class QueryEditor extends PureComponent<Props> {
       filtersExpression,
       version
     } = query;
+    console.log('UA')
     const parsedWebPropertyId = webPropertyId?.split('/')[1]
     return (
       <>

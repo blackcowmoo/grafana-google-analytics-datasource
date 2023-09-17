@@ -86,7 +86,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 		OrderBys: []*analyticsdata.OrderBy{
 			{
 				Dimension: &analyticsdata.DimensionOrderBy{
-					DimensionName: query.TimeDimension,
+					DimensionName: query.Dimensions[0],
 				},
 			},
 		},

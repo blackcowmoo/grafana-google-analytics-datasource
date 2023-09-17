@@ -75,7 +75,44 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 }
 
 // <--------- primary secondary --------->
-var timeDimensions []string = []string{"dateHourMinute", "gdateHour", "date", "firstSessionDate"}
+var timeDimensions []string = []string{"dateHourMinute", "dateHour", "date", "firstSessionDate"}
+
+func transformReportToDataFramesTableMode(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
+	// return nil,nil
+	otherDimensions := make([]*analyticsdata.MetricHeader, 0)
+	for _, dimension := range report.DimensionHeaders {
+		otherDimensions = append([]*analyticsdata.MetricHeader{
+			{
+				Name: dimension.Name,
+				Type: "STRING",
+			},
+		}, otherDimensions...)
+	}
+	report.MetricHeaders = append(otherDimensions, report.MetricHeaders...)
+
+	for _, row := range report.Rows {
+		for _, dimensionValue := range row.DimensionValues {
+			row.MetricValues = append([]*analyticsdata.MetricValue{
+				{
+					Value: dimensionValue.Value,
+				},
+			}, row.MetricValues...)
+			row.DimensionValues = nil
+		}
+	}
+
+	var frames = make([]*data.Frame, 0)
+	columns := getColumnDefinitions(report.MetricHeaders)
+	frame, err := transformReportToDataFrameByDimensions(columns, report.Rows, refId, "")
+	if err != nil {
+		log.DefaultLogger.Error("transformReportToDataFrameByDimensions", "error", err.Error())
+		return nil, err
+	}
+
+	frames = append(frames, frame)
+
+	return frames, nil
+}
 
 func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
 	// return nil,nil
@@ -167,10 +204,19 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode string) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
 	// for _, report := range reportsResponse.Rows {
-	frame, err := transformReportToDataFrames(reportsResponse, refId, timezone)
+	var transformReportToDataFramesFn func(*analyticsdata.RunReportResponse, string, string) ([]*data.Frame, error)
+	switch mode {
+	case "time series":
+		transformReportToDataFramesFn = transformReportToDataFrames
+	case "table":
+		transformReportToDataFramesFn = transformReportToDataFramesTableMode
+	default:
+		transformReportToDataFramesFn = transformReportToDataFramesTableMode
+	}
+	frame, err := transformReportToDataFramesFn(reportsResponse, refId, timezone)
 	if err != nil {
 		return nil, err
 	}
