@@ -94,6 +94,9 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 			},
 		}
 	}
+	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
+		req.DimensionFilter =  &query.DimensionFilter
+	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunReport(query.WebPropertyID, &req).Do()

@@ -18,6 +18,8 @@ export interface GAQuery extends DataQuery {
   timezone: string;
   filtersExpression: string;
   mode: string;
+  dimensionFilter: GAFilterExpression;
+  // metricFilter: Array<GAFilter>;
 }
 // mapping on google-key.json
 export interface JWT {
@@ -78,4 +80,83 @@ export interface ProfileSummary {
   DisplayName: string
   Parent: string
   Type: string
+}
+
+// https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/FilterExpression?hl=ko#Filter
+
+export interface GAFilterExpression {
+  andGroup?: GAFilterExpressionList
+  orGroup?: GAFilterExpressionList
+  notExpression?: GAFilterExpression
+  filter?: GAFilter
+}
+
+export interface GAFilterExpressionList {
+  expressions: GAFilterExpression[]
+}
+
+export interface GAFilter {
+  fieldName: string;
+  filterType: GAMetricFilterType | GADimensionFilterType | undefined;
+  stringFilter?: GAStringFilter;
+  inListFilter?: GAInListFilter;
+  numberFilter?: GANumbericFilter;
+  betweenFilter?: GABetweenFilter;
+}
+
+export interface GAStringFilter {
+  matchType: GAStringFilterMatchType;
+  value: string;
+  caseSensitive: boolean;
+}
+
+export interface GAInListFilter {
+  values: string[];
+  caseSensitive: boolean;
+}
+
+export interface GANumbericFilter {
+  operation: GANumbericFilterOperation;
+  value: GANumbericValue;
+  caseSensitive: boolean;
+}
+
+export interface GABetweenFilter {
+  fromValue: GANumbericValue;
+  toValue: GANumbericValue;
+}
+
+export interface GANumbericValue {
+  int64Value: string;
+  doubleValue: number;
+}
+
+export enum GADimensionFilterType {
+  STRING = "STRING",
+  IN_LIST = "IN_LIST"
+}
+
+export enum GAMetricFilterType {
+  NUMBERIC,
+  BETWEEN
+}
+
+
+export enum GAStringFilterMatchType {
+  MATCH_TYPE_UNSPECIFIED = "MATCH_TYPE_UNSPECIFIED",
+  EXACT = "EXACT",
+  BEGINS_WITH = "BEGINS_WITH",
+  ENDS_WITH = "ENDS_WITH",
+  CONTAINS = "CONTAINS",
+  FULL_REGEXP = "FULL_REGEXP",
+  PARTIAL_REGEXP = "PARTIAL_REGEXP"
+}
+
+export enum GANumbericFilterOperation {
+  OPERATION_UNSPECIFIED,
+  EQUAL,
+  LESS_THAN,
+  LESS_THAN_OR_EQUAL,
+  GREATER_THAN,
+  GREATER_THAN_OR_EQUAL,
 }
