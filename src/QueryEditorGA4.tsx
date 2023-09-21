@@ -8,7 +8,8 @@ import {
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
-  Input
+  Input,
+  RadioButtonGroup
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
@@ -19,23 +20,25 @@ type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
 const badgeMap = {
-  "v3": {
-    "text": "UA",
-    "tootip": "2023/07/01 no more data collect"
-  },
   "v4": {
     "text": "GA4(alpha)",
     "tootip": "experimental support"
   },
 } as const
+const queryMode = [
+  { label: 'Time Series', value: 'time series' },
+  { label: 'Table', value: 'table' },
+] as Array<SelectableValue<string>>;
 
-export class QueryEditor extends PureComponent<Props> {
+
+export class QueryEditorGA4 extends PureComponent<Props> {
   options: CascaderOption[] = []
   constructor(props: Readonly<Props>) {
     super(props);
-    if (!this.props.query.hasOwnProperty('cacheDurationSeconds')) {
+    const { query } = this.props
+    console.log('query.mode', query.mode)
+    if (!query.hasOwnProperty('cacheDurationSeconds')) {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
-      this.props.query.filtersExpression = '';
     }
     this.props.query.version = props.datasource.getGaVersion()
     this.props.query.displayName = new Map<string, string>()
@@ -43,6 +46,9 @@ export class QueryEditor extends PureComponent<Props> {
       this.options = accountSummaries
       this.props.onChange(this.props.query)
     })
+    if(query.mode === undefined || query.mode === ''){
+      query.mode = 'time series'
+    }
   }
 
   onMetricChange = (items: Array<SelectableValue<string>>) => {
@@ -108,15 +114,18 @@ export class QueryEditor extends PureComponent<Props> {
     this.willRunQuery();
   };
 
+  onModeChange = (value: string) => {
+    const { query, onChange } = this.props;
+    onChange({ ...query, mode: value });
+    this.willRunQuery()
+  }
+
   willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
-    const { version, webPropertyId, profileId, metrics, timeDimension } = query;
+    const { webPropertyId, metrics, timeDimension, mode } = query;
     console.log(`willRunQuery`);
     console.log(`query`, query);
-    if (
-      (profileId && metrics && timeDimension && version === "v3") ||
-      (webPropertyId && metrics && timeDimension && version === "v4")
-    ) {
+    if (webPropertyId && metrics && (mode === 'table' || timeDimension)) {
       console.log(`onRunQuery`);
       onRunQuery();
     }
@@ -138,36 +147,28 @@ export class QueryEditor extends PureComponent<Props> {
     const {
       accountId,
       webPropertyId,
-      profileId,
       selectedTimeDimensions,
       selectedMetrics,
       selectedDimensions,
       timezone,
       filtersExpression,
-      version
+      mode
     } = query;
+    console.log('GA4')
+    console.log('mode', mode)
     const parsedWebPropertyId = webPropertyId?.split('/')[1]
     return (
       <>
         <div className="gf-form-group">
           <div className="gf-form">
             <HorizontalGroup spacing="sm" justify='flex-start' >
-              <ButtonCascader options={this.options} onChange={this.onIdSelect} />
-              <InlineLabel>{`Account: ${accountId || ""},Property: ${webPropertyId || ""},Profile ${profileId || ""}`}</InlineLabel>
+              <ButtonCascader options={this.options} onChange={this.onIdSelect} >Account Select</ButtonCascader>
+              <InlineLabel>{`Account: ${accountId || ""},Property: ${webPropertyId || ""}`}</InlineLabel>
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
               </InlineLabel>
               <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
-              {
-                version === "v3"
-                &&
-                <Badge color='red' text={badgeMap.v3.text} tooltip={badgeMap.v3.tootip} icon='google'></Badge>
-              }
-              {
-                version === "v4"
-                &&
-                <Badge color='orange' text={badgeMap.v4.text} tooltip={badgeMap.v4.tootip} icon='google'></Badge>
-              }
+              <Badge color='orange' text={badgeMap.v4.text} tooltip={badgeMap.v4.tootip} icon='google'></Badge>
             </HorizontalGroup>
           </div>
 
@@ -258,8 +259,21 @@ export class QueryEditor extends PureComponent<Props> {
               placeholder="ga:pagePath==/path/to/page"
             />
           </div>
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+            >
+              Query Mode
+            </InlineFormLabel>
+            <RadioButtonGroup
+              options={queryMode}
+              onChange={this.onModeChange}
+              value={mode}
+            />
+          </div>
         </div>
       </>
     );
   }
 }
+

@@ -80,19 +80,20 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 			// Create the DateRange object.
 			{StartDate: query.StartDate, EndDate: query.EndDate},
 		},
-		Metrics:    Metrics,
-		Dimensions: Dimensions,
-		Offset:     offset,
-		OrderBys: []*analyticsdata.OrderBy{
-			{
-				Dimension: &analyticsdata.DimensionOrderBy{
-					DimensionName: query.TimeDimension,
-				},
-			},
-		},
+		Metrics:       Metrics,
+		Dimensions:    Dimensions,
+		Offset:        offset,
 		KeepEmptyRows: true,
 	}
-
+	if len(query.Dimensions) > 0 {
+		req.OrderBys = []*analyticsdata.OrderBy{
+			{
+				Dimension: &analyticsdata.DimensionOrderBy{
+					DimensionName: query.Dimensions[0],
+				},
+			},
+		}
+	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunReport(query.WebPropertyID, &req).Do()

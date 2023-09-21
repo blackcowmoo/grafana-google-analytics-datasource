@@ -109,6 +109,7 @@ type QueryModel struct {
 	Timezone          string   `json:"timezone,omitempty"`
 	FiltersExpression string   `json:"filtersExpression,omitempty"`
 	Offset            int64    `json:"offset,omitempty"`
+	Mode              string   `json:"mode,omitempty"`
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`
