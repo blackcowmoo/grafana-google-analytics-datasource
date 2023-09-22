@@ -2,20 +2,16 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
   AsyncMultiSelect,
   AsyncSelect,
-  Badge,
-  ButtonCascader,
+  Badge, ButtonCascader,
   CascaderOption,
-  HorizontalGroup,
-  InlineFormLabel,
-  InlineLabel,
-  Input,
-  RadioButtonGroup
+  HorizontalGroup, InlineFormLabel,
+  InlineLabel, RadioButtonGroup
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
+import { DimensionFilter } from 'Filter';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
-
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
@@ -46,8 +42,11 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       this.options = accountSummaries
       this.props.onChange(this.props.query)
     })
-    if(query.mode === undefined || query.mode === ''){
+    if (query.mode === undefined || query.mode === '') {
       query.mode = 'time series'
+    }
+    if (query.dimensionFilter === undefined) {
+      query.dimensionFilter = {}
     }
   }
 
@@ -66,14 +65,15 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  onTimeDimensionChange = (item: any) => {
+  onTimeDimensionChange = (value: SelectableValue<string>) => {
+    console.log('value', value)
     const { query, onChange } = this.props;
 
-    let timeDimension = item.value;
+    let timeDimension = value?.value || '';
 
     console.log(`timeDimension`, timeDimension);
 
-    onChange({ ...query, timeDimension, selectedTimeDimensions: item });
+    onChange({ ...query, timeDimension, selectedTimeDimensions: value });
     this.willRunQuery();
   };
 
@@ -151,11 +151,8 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       selectedMetrics,
       selectedDimensions,
       timezone,
-      filtersExpression,
       mode
     } = query;
-    console.log('GA4')
-    console.log('mode', mode)
     const parsedWebPropertyId = webPropertyId?.split('/')[1]
     return (
       <>
@@ -247,17 +244,13 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               className="query-keyword"
               tooltip={
                 <>
-                  The <code>filter</code> dimensions and metrics
+                  The <code>filter</code> dimensions
                 </>
               }
             >
-              Filters Expressions
+              DimensionFilter
             </InlineFormLabel>
-            <Input
-              value={filtersExpression}
-              onChange={(e) => this.onFiltersExpressionChange(e.currentTarget.value)}
-              placeholder="ga:pagePath==/path/to/page"
-            />
+            <DimensionFilter props={this.props} ></DimensionFilter>
           </div>
           <div className="gf-form">
             <InlineFormLabel

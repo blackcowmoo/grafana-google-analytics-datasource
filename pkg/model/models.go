@@ -1,5 +1,9 @@
 package model
 
+import (
+	analyticsdata "google.golang.org/api/analyticsdata/v1beta"
+)
+
 // ColumnType is the set of possible column types
 type ColumnType string
 
@@ -110,6 +114,8 @@ type QueryModel struct {
 	FiltersExpression string   `json:"filtersExpression,omitempty"`
 	Offset            int64    `json:"offset,omitempty"`
 	Mode              string   `json:"mode,omitempty"`
+	// TODO type convert
+	DimensionFilter  analyticsdata.FilterExpression `json:"dimensionFilter,omitempty"`
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`
