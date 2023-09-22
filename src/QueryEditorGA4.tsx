@@ -151,10 +151,8 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       selectedMetrics,
       selectedDimensions,
       timezone,
-      dimensionFilter,
       mode
     } = query;
-    console.log('dimensionFilter', dimensionFilter)
     const parsedWebPropertyId = webPropertyId?.split('/')[1]
     return (
       <>

@@ -33,7 +33,7 @@ export const DimensionFilter = ({ props }: { props: Props }) => {
   const addFields = () => {
     const { query, onChange } = props;
 
-    let filed = {
+    let filter = {
       filter: {
         fieldName: '',
         filterType: undefined
@@ -48,7 +48,7 @@ export const DimensionFilter = ({ props }: { props: Props }) => {
     }
 
     dimensionFilter.orGroup.expressions.push(
-      filed
+      filter
     )
     setDimensionFilter(dimensionFilter)
     onChange({ ...query, dimensionFilter })
