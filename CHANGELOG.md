@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3
+- Support DimensionFilter([#90](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/90))
+- Fix metric type bug([#88](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/88))
+- Add time series and table query mode([#87](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/87)) 
+
 ## 0.2.2
 - Hotfix 0.2.1 query editor frontend bug
 
