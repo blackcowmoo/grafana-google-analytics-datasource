@@ -244,7 +244,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               className="query-keyword"
               tooltip={
                 <>
-                  The <code>filter</code> dimensions
+                  Currently, only <code>or groups</code> are supported.
                 </>
               }
             >
