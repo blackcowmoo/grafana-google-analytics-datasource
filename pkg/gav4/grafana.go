@@ -214,7 +214,7 @@ func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunRepo
 	case "table":
 		transformReportToDataFramesFn = transformReportToDataFramesTableMode
 	default:
-		transformReportToDataFramesFn = transformReportToDataFramesTableMode
+		transformReportToDataFramesFn = transformReportToDataFrames
 	}
 	frame, err := transformReportToDataFramesFn(reportsResponse, refId, timezone)
 	if err != nil {
