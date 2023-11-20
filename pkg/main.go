@@ -5,6 +5,9 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+
+	// window timezone issue #101
+	_ "time/tzdata"
 )
 
 func main() {
