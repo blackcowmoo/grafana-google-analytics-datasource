@@ -1,5 +1,5 @@
-import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data';
-import { DataSourceWithBackend } from '@grafana/runtime';
+import { DataSourceInstanceSettings, ScopedVars, SelectableValue } from '@grafana/data';
+import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
 import { CascaderOption } from '@grafana/ui';
 import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
@@ -11,6 +11,28 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     this.version = instanceSettings.jsonData.version
   }
 
+  applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
+    const templateSrv = getTemplateSrv();
+    let dimensionFilter = query.dimensionFilter
+    if (dimensionFilter.orGroup) {
+      dimensionFilter.orGroup.expressions.map(expression => {
+        if (expression.filter?.stringFilter) {
+          expression.filter.stringFilter.value = templateSrv.replace(expression.filter.stringFilter.value, scopedVars)
+        }
+        if (expression.filter?.inListFilter) {
+          expression.filter.inListFilter.values = expression.filter.inListFilter.values.map(value => {
+            value = templateSrv.replace(value, scopedVars)
+            return value
+          })
+        }
+        return expression
+      })
+    }
+    return {
+      ...query,
+      dimensionFilter
+    };
+  }
   async getAccountSummaries(): Promise<CascaderOption[]> {
     let accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[]
     let accounts: CascaderOption[] = [];
