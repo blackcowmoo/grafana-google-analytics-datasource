@@ -7,6 +7,8 @@ import (
 
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
+	analyticsdata "google.golang.org/api/analyticsdata/v1beta"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -33,19 +35,36 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 
 	if len(queryModel.WebPropertyID) == 0 {
 		log.DefaultLogger.Error("Query", "error", "Required WebPropertyID")
-		return nil, fmt.Errorf("Required WebPropertyID")
+		return nil, fmt.Errorf("required webpropertyid")
 	}
 
 	if len(queryModel.Dimensions) == 0 && len(queryModel.Metrics) == 0 {
 		log.DefaultLogger.Error("Query", "error", "Required Dimensions or Metrics")
-		return nil, fmt.Errorf("Required Dimensions or Metrics")
+		return nil, fmt.Errorf("required dimensions or metrics")
 	}
 
 	if queryModel.Mode == "time series" && len(queryModel.TimeDimension) == 0 {
 		log.DefaultLogger.Error("Query", "error", "TimeSeries query need TimeDimension")
-		return nil, fmt.Errorf("TimeSeries query need TimeDimensions")
+		return nil, fmt.Errorf("time series query need time dimensions")
 	}
+	if queryModel.Mode == model.REALTIME {
+		log.DefaultLogger.Info("Query", "realtime")
 
+		report, err := client.getRealtimeReport(*queryModel)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+		log.DefaultLogger.Info("Query", "realtime end")
+
+		convert, err := util.TypeConverter[analyticsdata.RunReportResponse](report)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+		log.DefaultLogger.Info("Query", "convert end")
+		return transformReportsResponseToDataFrames(convert, queryModel.RefID, queryModel.Timezone, queryModel.Mode)
+	}
 	report, err := client.getReport(*queryModel)
 	if err != nil {
 		log.DefaultLogger.Error("Query", "error", err)
@@ -143,10 +162,10 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", config.JWT)
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: "CheckHealth: Fail NewGoogleClient" + err.Error(),
+			Message: "CheckHealth: Fail NewGoogleClient" + err.Error() + "json:" + config.JWT,
 		}, nil
 	}
 

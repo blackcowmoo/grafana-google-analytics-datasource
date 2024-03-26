@@ -1,0 +1,180 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 2,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": {
+                "type": "blackcowmoo-googleanalytics-datasource"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 14,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "accountId": "accounts/145710468",
+                    "cacheDurationSeconds": 300,
+                    "datasource": {
+                        "type": "blackcowmoo-googleanalytics-datasource"
+                    },
+                    "dimensionFilter": {
+                        "orGroup": {
+                            "expressions": [
+                                {
+                                    "filter": {
+                                        "fieldName": "country",
+                                        "filterType": "STRING",
+                                        "stringFilter": {
+                                            "caseSensitive": true,
+                                            "matchType": "FULL_REGEXP",
+                                            "value": ".*"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "dimensions": [
+                        "country"
+                    ],
+                    "displayName": {},
+                    "metrics": [
+                        "totalUsers"
+                    ],
+                    "mode": "time series",
+                    "refId": "A",
+                    "selectedDimensions": [
+                        {
+                            "description": "The country from which the user activity originated.",
+                            "label": "Country",
+                            "value": "country"
+                        }
+                    ],
+                    "selectedMetrics": [
+                        {
+                            "description": "The number of distinct users who have logged at least one event, regardless of whether the site or app was in use when that event was logged.",
+                            "label": "Total users",
+                            "value": "totalUsers"
+                        }
+                    ],
+                    "selectedTimeDimensions": {
+                        "description": "The date of the event, formatted as YYYYMMDD.",
+                        "label": "Date",
+                        "value": "date"
+                    },
+                    "timeDimension": "date",
+                    "timezone": "Asia/Seoul",
+                    "version": "v4",
+                    "webPropertyId": "properties/323466308"
+                }
+            ],
+            "title": "Panel Title",
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "2023-09-30T15:00:00.000Z",
+        "to": "2023-10-31T14:59:59.000Z"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "timeseries",
+    "uid": "cc0c9d8a-05c9-474c-bf57-da6cd4c77d86",
+    "version": 1,
+    "weekStart": ""
+}

@@ -26,6 +26,9 @@ work/
 ci/
 e2e-results/
 
+test/credentials
+cypress/videos
+cypress/report.json
 # Editor
 .idea
 .vscode

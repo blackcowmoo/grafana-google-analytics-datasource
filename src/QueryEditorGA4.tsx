@@ -22,8 +22,9 @@ const badgeMap = {
   },
 } as const
 const queryMode = [
-  { label: 'Time Series', value: 'time series' },
+  { label: 'Time Series', value: 'timeSeries' },
   { label: 'Table', value: 'table' },
+  { label: 'Realtime', value: 'realtime' },
 ] as Array<SelectableValue<string>>;
 
 
@@ -43,7 +44,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       this.props.onChange(this.props.query)
     })
     if (query.mode === undefined || query.mode === '') {
-      query.mode = 'time series'
+      query.mode = 'timeSeries'
     }
     if (query.dimensionFilter === undefined) {
       query.dimensionFilter = {}
@@ -116,6 +117,11 @@ export class QueryEditorGA4 extends PureComponent<Props> {
 
   onModeChange = (value: string) => {
     const { query, onChange } = this.props;
+    switch (value) {
+      case "realtime":
+        query.timeDimension = ''
+        query.selectedTimeDimensions = {}
+    }
     onChange({ ...query, mode: value });
     this.willRunQuery()
   }
@@ -214,6 +220,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               defaultOptions
               menuPlacement="bottom"
               isClearable
+              disabled={mode === "realtime"}
             />
 
             <InlineFormLabel

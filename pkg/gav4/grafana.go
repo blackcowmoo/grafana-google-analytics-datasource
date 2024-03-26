@@ -204,14 +204,14 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode string) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode model.QueryMode) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
 	// for _, report := range reportsResponse.Rows {
 	var transformReportToDataFramesFn func(*analyticsdata.RunReportResponse, string, string) ([]*data.Frame, error)
 	switch mode {
-	case "time series":
+	case model.TIME_SERIES:
 		transformReportToDataFramesFn = transformReportToDataFrames
-	case "table":
+	case model.TABLE, model.REALTIME:
 		transformReportToDataFramesFn = transformReportToDataFramesTableMode
 	default:
 		transformReportToDataFramesFn = transformReportToDataFramesTableMode
