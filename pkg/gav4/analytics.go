@@ -232,10 +232,10 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 	if len(accountSummaries) == 0 {
-		log.DefaultLogger.Error("CheckHealth: Not Exist Valid Proerty")
+		log.DefaultLogger.Error("CheckHealth: Not Exist Valid Property")
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: "CheckHealth: Not Exist Valid Proerty",
+			Message: "CheckHealth: Not Exist Valid Property",
 		}, nil
 	}
 
