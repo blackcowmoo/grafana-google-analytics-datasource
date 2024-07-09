@@ -1,7 +1,18 @@
 package model
 
 import (
+	"time"
+
 	analyticsdata "google.golang.org/api/analyticsdata/v1beta"
+)
+
+// GA service level
+type ServiceLevel string
+
+const (
+  ServiceLevelStandard = "GOOGLE_ANALYTICS_STANDARD"
+  ServiceLevelPremium = "GOOGLE_ANALYTICS_360"
+  ServiceLevelUnspecified = "SERVICE_LEVEL_UNSPECIFIED"
 )
 
 // ColumnType is the set of possible column types
@@ -122,8 +133,12 @@ type QueryModel struct {
 	FiltersExpression string    `json:"filtersExpression,omitempty"`
 	Offset            int64     `json:"offset,omitempty"`
 	Mode              QueryMode `json:"mode,omitempty"`
+  ServiceLevel      ServiceLevel `json:"serviceLevel,omitempty"`
 	// TODO type convert
 	DimensionFilter analyticsdata.FilterExpression `json:"dimensionFilter,omitempty"`
+
+  From time.Time
+  To time.Time
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`

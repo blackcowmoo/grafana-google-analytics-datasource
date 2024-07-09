@@ -191,3 +191,27 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 	ga.Cache.Set(cacheKey, accounts, 60*time.Second)
 	return accounts, nil
 }
+
+
+func (ga *GoogleAnalytics) GetServiceLevel(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (string, error) {
+	return "", nil
+}
+
+
+func (ga *GoogleAnalytics) GetRealtimeDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":realtime-dimensions"
+	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return dimensions.([]model.MetadataItem), nil
+	}
+
+	return nil, nil
+}
+
+func (ga *GoogleAnalytics) GetRealTimeMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":realtime-metrics"
+	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return metrics.([]model.MetadataItem), nil
+	}
+
+	return nil, nil
+}

@@ -3,6 +3,7 @@ package gav4
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
@@ -131,13 +132,42 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	for _, dimension := range query.Dimensions {
 		Dimensions = append(Dimensions, &analyticsdata.Dimension{Name: dimension})
 	}
+
+	end := time.Since(query.To)
+	start := time.Since(query.From)
+
+	log.DefaultLogger.Info("getRealtimeReport", "start", start.Minutes())
+	log.DefaultLogger.Info("getRealtimeReport", "end", end.Minutes())
+
+  var (
+    min = GaRealTimeMinMinute
+    max = GaRealTimeMaxMinute
+  )
+
+  if query.ServiceLevel == model.ServiceLevelPremium {
+    max = Ga360RealTimeMaxMinute
+  }
+
+	if end < min {
+		end = min
+	}
+
+	if start > max {
+		start = max
+	}
+
+	log.DefaultLogger.Info("getRealtimeReport", "after start", start.Minutes())
+	log.DefaultLogger.Info("getRealtimeReport", "after end", end.Minutes())
+
+	log.DefaultLogger.Info("getRealtimeReport", "real start", int64(start.Minutes()))
+	log.DefaultLogger.Info("getRealtimeReport", "real end", int64(end.Minutes()))
 	req := analyticsdata.RunRealtimeReportRequest{
 		Metrics:    Metrics,
 		Dimensions: Dimensions,
 		MinuteRanges: []*analyticsdata.MinuteRange{
 			{
-				EndMinutesAgo:   0,
-				StartMinutesAgo: 29,
+				EndMinutesAgo:   int64(end.Minutes()),
+				StartMinutesAgo: int64(start.Minutes()),
 			},
 		},
 	}
@@ -162,8 +192,8 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
 
-	if report.RowCount > (query.Offset + GaAdminMaxResult) {
-		query.Offset = query.Offset + GaAdminMaxResult
+	if report.RowCount > (query.Offset + GaReportMaxResult) {
+		query.Offset = query.Offset + GaReportMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {
 			return nil, fmt.Errorf(err.Error())

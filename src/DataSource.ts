@@ -76,6 +76,12 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     });
   }
 
+  async getServiceLevel(accountId: string, webPropertyId: string): Promise<string> {
+    return this.getResource('property/service-level', { accountId, webPropertyId }).then(({ serviceLevel }) => {
+      return serviceLevel;
+    });
+  }
+
   async getMetrics(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('metrics', { webPropertyId }).then(({ metrics }) => {
       return metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
@@ -96,6 +102,48 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   async getDimensions(query: string, exclude: any, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('dimensions', { webPropertyId }).then(({ dimensions }) => {
+      return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
+        if (
+          (element.id.toLowerCase().indexOf(query) > -1 ||
+            element.attributes.uiName.toLowerCase().indexOf(query) > -1) &&
+          !(
+            element.id.toLowerCase().indexOf(exclude) > -1 ||
+            element.attributes.uiName.toLowerCase().indexOf(exclude) > -1
+          )
+        ) {
+          pre.push({
+            label: element.attributes.uiName,
+            value: element.id,
+            description: element.attributes.description,
+          } as SelectableValue<string>);
+        }
+        return pre;
+      }, []);
+    });
+  }
+
+  async getRealtimeMetrics(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('realtime-metrics', { webPropertyId }).then(({ metrics }) => {
+      console.log('metrics', metrics)
+      let test = metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
+        if (
+          element.id.toLowerCase().indexOf(query) > -1 ||
+          element.attributes.uiName.toLowerCase().indexOf(query) > -1
+        ) {
+          pre.push({
+            label: element.attributes.uiName,
+            value: element.id,
+            description: element.attributes.description,
+          } as SelectableValue<string>);
+        }
+        return pre;
+      }, []);
+      return test
+    });
+  }
+
+  async getRealtimeDimensions(query: string, exclude: any, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+    return this.getResource('realtime-dimensions', { webPropertyId }).then(({ dimensions }) => {
       return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
           (element.id.toLowerCase().indexOf(query) > -1 ||

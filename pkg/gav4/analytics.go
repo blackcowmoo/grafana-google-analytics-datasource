@@ -47,25 +47,8 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		log.DefaultLogger.Error("Query", "error", "TimeSeries query need TimeDimension")
 		return nil, fmt.Errorf("time series query need time dimensions")
 	}
-	if queryModel.Mode == model.REALTIME {
-		log.DefaultLogger.Info("Query", "realtime")
 
-		report, err := client.getRealtimeReport(*queryModel)
-		if err != nil {
-			log.DefaultLogger.Error("Query", "error", err)
-			return nil, err
-		}
-		log.DefaultLogger.Info("Query", "realtime end")
-
-		convert, err := util.TypeConverter[analyticsdata.RunReportResponse](report)
-		if err != nil {
-			log.DefaultLogger.Error("Query", "error", err)
-			return nil, err
-		}
-		log.DefaultLogger.Info("Query", "convert end")
-		return transformReportsResponseToDataFrames(convert, queryModel.RefID, queryModel.Timezone, queryModel.Mode)
-	}
-	report, err := client.getReport(*queryModel)
+	report, err := ga.getReport(ctx, client, queryModel)
 	if err != nil {
 		log.DefaultLogger.Error("Query", "error", err)
 		return nil, err
@@ -73,6 +56,37 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 
 	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone, queryModel.Mode)
 
+}
+
+func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, queryModel *model.QueryModel) (*analyticsdata.RunReportResponse, error) {
+	var report *analyticsdata.RunReportResponse
+	var err error
+	switch queryModel.Mode {
+	case model.REALTIME:
+		log.DefaultLogger.Info("Query", "realtime")
+		r, err := client.getRealtimeReport(*queryModel)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+		cvt, err := util.TypeConverter[analyticsdata.RunReportResponse](r)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+		log.DefaultLogger.Info("Query", "convert end")
+		report = cvt
+		log.DefaultLogger.Info("Query", "realtime end")
+	case model.TIME_SERIES, model.TABLE:
+		report, err = client.getReport(*queryModel)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("unknown query mode")
+	}
+	return report, nil
 }
 
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
@@ -95,6 +109,28 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 
 	ga.Cache.Set(cacheKey, timezone, 60*time.Second)
 	return timezone, nil
+}
+
+func (ga *GoogleAnalytics) GetServiceLevel(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (string, error) {
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:account:%s:webproperty:%s:service_level", accountId, webPropertyId)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.(string), nil
+	}
+
+	webproperty, err := client.GetWebProperty(webPropertyId)
+	if err != nil {
+		return "", err
+	}
+
+	serviceLevel := webproperty.ServiceLevel
+
+	ga.Cache.Set(cacheKey, serviceLevel, 60*time.Second)
+	return serviceLevel, nil
 }
 
 func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, []model.MetadataItem, error) {
@@ -154,6 +190,24 @@ func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.Datas
 	ga.Cache.Set(cacheKey, metrics, time.Hour)
 
 	return metrics, nil
+}
+
+func (ga *GoogleAnalytics) GetRealtimeDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":realtime-dimensions"
+	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return dimensions.([]model.MetadataItem), nil
+	}
+
+	return GaRealTimeDimensions, nil
+}
+
+func (ga *GoogleAnalytics) GetRealTimeMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":realtime-metrics"
+	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return metrics.([]model.MetadataItem), nil
+	}
+
+	return GaRealTimeMetrics, nil
 }
 
 func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error) {
