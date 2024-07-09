@@ -78,7 +78,6 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 var timeDimensions []string = []string{"dateHourMinute", "dateHour", "date", "firstSessionDate"}
 
 func transformReportToDataFramesTableMode(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
-	// return nil,nil
 	otherDimensions := make([]*analyticsdata.MetricHeader, 0)
 	for _, dimension := range report.DimensionHeaders {
 		otherDimensions = append([]*analyticsdata.MetricHeader{
@@ -115,7 +114,6 @@ func transformReportToDataFramesTableMode(report *analyticsdata.RunReportRespons
 }
 
 func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
-	// return nil,nil
 
 	timeDimension := analyticsdata.MetricHeader{
 		Name: report.DimensionHeaders[0].Name,
@@ -320,7 +318,7 @@ func parseRow(row *analyticsdata.Row, timezone *time.Location) (*analyticsdata.R
 	otherDimensions := row.DimensionValues[1:]
 	parsedTime, err := util.ParseAndTimezoneTime(timeDimension, timezone)
 	if err != nil {
-		log.DefaultLogger.Error("parsedTime err", "err", err.Error())
+		log.DefaultLogger.Error("parseRow: Failed to parse time dimension", "error", err.Error())
 	}
 	strTime := parsedTime.Format(time.RFC3339)
 

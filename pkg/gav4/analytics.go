@@ -8,7 +8,7 @@ import (
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
-	analyticsdata "google.golang.org/api/analyticsdata/v1beta"
+	"google.golang.org/api/analyticsdata/v1beta"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -63,7 +63,7 @@ func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, 
 	var err error
 	switch queryModel.Mode {
 	case model.REALTIME:
-		log.DefaultLogger.Info("Query", "realtime")
+		log.DefaultLogger.Debug("Query", "realtime")
 		r, err := client.getRealtimeReport(*queryModel)
 		if err != nil {
 			log.DefaultLogger.Error("Query", "error", err)
@@ -74,9 +74,9 @@ func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, 
 			log.DefaultLogger.Error("Query", "error", err)
 			return nil, err
 		}
-		log.DefaultLogger.Info("Query", "convert end")
+		log.DefaultLogger.Debug("Query", "convert end")
 		report = cvt
-		log.DefaultLogger.Info("Query", "realtime end")
+		log.DefaultLogger.Debug("Query", "realtime end")
 	case model.TIME_SERIES, model.TABLE:
 		report, err = client.getReport(*queryModel)
 		if err != nil {
@@ -142,8 +142,8 @@ func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *sett
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get metadata: %w", err)
 	}
-	var dimensions = make([]model.MetadataItem, 0)
-	var metrics = make([]model.MetadataItem, 0)
+	var dimensions = make([]model.MetadataItem, len(metadata.Dimensions))
+	var metrics = make([]model.MetadataItem, len(metadata.Metrics))
 	for _, metric := range metadata.Metrics {
 		var metadataItem = &model.MetadataItem{}
 		metadataItem.ID = metric.ApiName
