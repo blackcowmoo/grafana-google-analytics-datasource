@@ -1,3 +1,4 @@
 module.exports = {
-  ...require("@grafana/toolkit/src/config/prettier.plugin.config"),
+  // Prettier configuration provided by Grafana scaffolding
+  ...require('./.config/.prettierrc.js'),
 };
