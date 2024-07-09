@@ -84,6 +84,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 		Dimensions:    Dimensions,
 		Offset:        offset,
 		KeepEmptyRows: true,
+		Limit:         GaReportMaxResult,
 	}
 	if len(query.Dimensions) > 0 {
 		req.OrderBys = []*analyticsdata.OrderBy{
@@ -95,11 +96,66 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 		}
 	}
 	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter =  &query.DimensionFilter
+		req.DimensionFilter = &query.DimensionFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunReport(query.WebPropertyID, &req).Do()
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+	//  TODO 페이지 네이션
+	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
+
+	if report.RowCount > (query.Offset + GaReportMaxResult) {
+		query.Offset = query.Offset + GaReportMaxResult
+		newReport, err := client.getReport(query)
+		if err != nil {
+			return nil, fmt.Errorf(err.Error())
+		}
+
+		report.Rows = append(report.Rows, newReport.Rows...)
+		return report, nil
+	}
+	return report, nil
+}
+
+func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analyticsdata.RunRealtimeReportResponse, error) {
+	defer util.Elapsed("Get getRealtimeReport data at GA API")()
+	log.DefaultLogger.Debug("getRealtimeReport", "queries", query)
+	Metrics := []*analyticsdata.Metric{}
+	Dimensions := []*analyticsdata.Dimension{}
+	for _, metric := range query.Metrics {
+		Metrics = append(Metrics, &analyticsdata.Metric{Name: metric})
+	}
+	for _, dimension := range query.Dimensions {
+		Dimensions = append(Dimensions, &analyticsdata.Dimension{Name: dimension})
+	}
+	req := analyticsdata.RunRealtimeReportRequest{
+		Metrics:    Metrics,
+		Dimensions: Dimensions,
+		MinuteRanges: []*analyticsdata.MinuteRange{
+			{
+				EndMinutesAgo:   0,
+				StartMinutesAgo: 29,
+			},
+		},
+	}
+	if len(query.Dimensions) > 0 {
+		req.OrderBys = []*analyticsdata.OrderBy{
+			{
+				Dimension: &analyticsdata.DimensionOrderBy{
+					DimensionName: query.Dimensions[0],
+				},
+			},
+		}
+	}
+	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
+		req.DimensionFilter = &query.DimensionFilter
+	}
+	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
+	// Call the BatchGet method and return the response.
+	report, err := client.analyticsdata.Properties.RunRealtimeReport(query.WebPropertyID, &req).Do()
 	if err != nil {
 		return nil, fmt.Errorf(err.Error())
 	}
