@@ -206,7 +206,6 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       default:
         serviceLevelBadge = <Badge color="orange" text="Unknown" tooltip="Unknown" icon="google"></Badge>;
     }
-    console.log('mode', mode+parsedWebPropertyId)
     return (
       <>
         <div className="gf-form-group">
