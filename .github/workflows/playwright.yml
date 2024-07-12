@@ -20,7 +20,7 @@ jobs:
         uses: grafana/plugin-actions/e2e-version@main
         with:
           version-resolver-type: plugin-grafana-dependency
-
+          skip-grafana-dev-image: false
   playwright-tests:
     needs: resolve-versions
     timeout-minutes: 60
