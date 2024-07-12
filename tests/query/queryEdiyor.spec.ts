@@ -40,7 +40,7 @@ test('table', async ({ readProvisionedDataSource, explorePage, page }) => {
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  await explorePage.getQueryEditorRow('A').getByRole('radio', {name:"Table"}).click()
+  await explorePage.getQueryEditorRow('A').getByText('Table',{exact: true})
   // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
   await page.getByText('Default Account for Firebase').click();
@@ -74,7 +74,7 @@ test('realtime', async ({ readProvisionedDataSource, explorePage, page }) => {
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  await explorePage.getQueryEditorRow('A').getByRole('radio', {name:"Table"}).click()
+  await explorePage.getQueryEditorRow('A').getByText('Realtime',{exact: true})
   // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
   await page.getByText('Default Account for Firebase').click();
