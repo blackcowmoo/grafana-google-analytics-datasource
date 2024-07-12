@@ -192,11 +192,9 @@ func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *sett
 	return accounts, nil
 }
 
-
 func (ga *GoogleAnalytics) GetServiceLevel(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (string, error) {
 	return "", nil
 }
-
 
 func (ga *GoogleAnalytics) GetRealtimeDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
 	cacheKey := "ga:metadata:" + propertyId + ":realtime-dimensions"

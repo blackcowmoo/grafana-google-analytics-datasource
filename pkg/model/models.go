@@ -10,9 +10,9 @@ import (
 type ServiceLevel string
 
 const (
-  ServiceLevelStandard = "GOOGLE_ANALYTICS_STANDARD"
-  ServiceLevelPremium = "GOOGLE_ANALYTICS_360"
-  ServiceLevelUnspecified = "SERVICE_LEVEL_UNSPECIFIED"
+	ServiceLevelStandard    = "GOOGLE_ANALYTICS_STANDARD"
+	ServiceLevelPremium     = "GOOGLE_ANALYTICS_360"
+	ServiceLevelUnspecified = "SERVICE_LEVEL_UNSPECIFIED"
 )
 
 // ColumnType is the set of possible column types
@@ -117,28 +117,28 @@ const (
 )
 
 type QueryModel struct {
-	AccountID         string    `json:"accountId"`
-	WebPropertyID     string    `json:"webPropertyId"`
-	ProfileID         string    `json:"profileId"`
-	StartDate         string    `json:"startDate"`
-	EndDate           string    `json:"endDate"`
-	RefID             string    `json:"refId"`
-	Metrics           []string  `json:"metrics"`
-	TimeDimension     string    `json:"timeDimension"`
-	Dimensions        []string  `json:"dimensions"`
-	PageSize          int64     `json:"pageSize,omitempty"`
-	PageToken         string    `json:"pageToken,omitempty"`
-	UseNextPage       bool      `json:"useNextpage,omitempty"`
-	Timezone          string    `json:"timezone,omitempty"`
-	FiltersExpression string    `json:"filtersExpression,omitempty"`
-	Offset            int64     `json:"offset,omitempty"`
-	Mode              QueryMode `json:"mode,omitempty"`
-  ServiceLevel      ServiceLevel `json:"serviceLevel,omitempty"`
+	AccountID         string       `json:"accountId"`
+	WebPropertyID     string       `json:"webPropertyId"`
+	ProfileID         string       `json:"profileId"`
+	StartDate         string       `json:"startDate"`
+	EndDate           string       `json:"endDate"`
+	RefID             string       `json:"refId"`
+	Metrics           []string     `json:"metrics"`
+	TimeDimension     string       `json:"timeDimension"`
+	Dimensions        []string     `json:"dimensions"`
+	PageSize          int64        `json:"pageSize,omitempty"`
+	PageToken         string       `json:"pageToken,omitempty"`
+	UseNextPage       bool         `json:"useNextpage,omitempty"`
+	Timezone          string       `json:"timezone,omitempty"`
+	FiltersExpression string       `json:"filtersExpression,omitempty"`
+	Offset            int64        `json:"offset,omitempty"`
+	Mode              QueryMode    `json:"mode,omitempty"`
+	ServiceLevel      ServiceLevel `json:"serviceLevel,omitempty"`
 	// TODO type convert
 	DimensionFilter analyticsdata.FilterExpression `json:"dimensionFilter,omitempty"`
 
-  From time.Time
-  To time.Time
+	From time.Time
+	To   time.Time
 	// Not from JSON
 	// TimeRange     backend.TimeRange `json:"-"`
 	// MaxDataPoints int64             `json:"-"`

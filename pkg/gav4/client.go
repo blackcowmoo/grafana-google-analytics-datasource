@@ -139,14 +139,14 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	log.DefaultLogger.Info("getRealtimeReport", "start", start.Minutes())
 	log.DefaultLogger.Info("getRealtimeReport", "end", end.Minutes())
 
-  var (
-    min = GaRealTimeMinMinute
-    max = GaRealTimeMaxMinute
-  )
+	var (
+		min = GaRealTimeMinMinute
+		max = GaRealTimeMaxMinute
+	)
 
-  if query.ServiceLevel == model.ServiceLevelPremium {
-    max = Ga360RealTimeMaxMinute
-  }
+	if query.ServiceLevel == model.ServiceLevelPremium {
+		max = Ga360RealTimeMaxMinute
+	}
 
 	if end < min {
 		end = min

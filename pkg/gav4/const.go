@@ -120,28 +120,28 @@ var GaRealTimeDimensions = []model.MetadataItem{
 
 var GaRealTimeMetrics = []model.MetadataItem{
 	{
-		ID:   "activeUsers",
+		ID: "activeUsers",
 		Attributes: model.MetadataItemAttribute{
 			UIName:      "Active users",
 			Description: "The number of distinct users who visited your site or app.",
 		},
 	},
 	{
-		ID:   "conversions",
+		ID: "conversions",
 		Attributes: model.MetadataItemAttribute{
 			UIName:      "Conversions",
 			Description: "The count of conversion events. Events are marked as conversions at collection time; changes to an event's conversion marking apply going forward. You can mark any event as a conversion in Google Analytics, and some events (i.e. first_open, purchase) are marked as conversions by default. To learn more, see About conversions.",
 		},
 	},
 	{
-		ID:   "eventCount",
+		ID: "eventCount",
 		Attributes: model.MetadataItemAttribute{
 			UIName:      "Event count",
 			Description: "The count of events.",
 		},
 	},
 	{
-		ID:   "screenPageViews",
+		ID: "screenPageViews",
 		Attributes: model.MetadataItemAttribute{
 			UIName:      "Views",
 			Description: "The number of app screens or web pages your users viewed. Repeated views of a single page or screen are counted. (screen_view + page_view events).",

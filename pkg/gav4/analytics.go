@@ -150,7 +150,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *sett
 		metadataItem.Attributes.Description = metric.Description
 		metadataItem.Attributes.Group = metric.Category
 		metadataItem.Attributes.UIName = metric.UiName
-    metrics[idx]= *metadataItem
+		metrics[idx] = *metadataItem
 	}
 	for idx, dimension := range metadata.Dimensions {
 		var metadataItem = &model.MetadataItem{}
@@ -158,7 +158,7 @@ func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *sett
 		metadataItem.Attributes.Description = dimension.Description
 		metadataItem.Attributes.Group = dimension.Category
 		metadataItem.Attributes.UIName = dimension.UiName
-    dimensions[idx] = *metadataItem
+		dimensions[idx] = *metadataItem
 	}
 
 	return metrics, dimensions, nil

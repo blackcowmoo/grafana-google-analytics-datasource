@@ -39,6 +39,11 @@ jobs:
           cache: 'yarn'
           node-version-file: .nvmrc
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22
+          
       - name: Install Mage
         uses: magefile/mage-action@v3
         with:
