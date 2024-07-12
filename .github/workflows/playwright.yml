@@ -20,7 +20,7 @@ jobs:
         uses: grafana/plugin-actions/e2e-version@main
         with:
           version-resolver-type: plugin-grafana-dependency
-          skip-grafana-dev-image: false
+          skip-grafana-dev-image: true
   playwright-tests:
     needs: resolve-versions
     timeout-minutes: 60
@@ -84,6 +84,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.GRAFANA_IMAGE.VERSION }}
           path: playwright-report/
           retention-days: 30
