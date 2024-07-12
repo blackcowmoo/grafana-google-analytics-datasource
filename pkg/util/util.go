@@ -1,9 +1,11 @@
 package util
 
 import (
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"encoding/json"
 	"strings"
 	"time"
+
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 func Elapsed(what string) func() {
@@ -65,4 +67,17 @@ func FillArray(array []string, value string) []string {
 		array[i] = value
 	}
 	return array
+}
+
+func TypeConverter[R any](data any) (*R, error) {
+	var result R
+	b, err := json.Marshal(&data)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(b, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, err
 }

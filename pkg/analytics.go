@@ -13,7 +13,10 @@ type GoogleAnalytics interface {
 	Query(context.Context, *setting.DatasourceSecretSettings, backend.DataQuery) (*data.Frames, error)
 	GetAccountSummaries(context.Context, *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error)
 	GetTimezone(context.Context, *setting.DatasourceSecretSettings, string, string, string) (string, error)
+	GetServiceLevel(context.Context, *setting.DatasourceSecretSettings, string, string) (string, error)
 	GetDimensions(context.Context, *setting.DatasourceSecretSettings, string) ([]model.MetadataItem, error)
+	GetRealtimeDimensions(context.Context, *setting.DatasourceSecretSettings, string) ([]model.MetadataItem, error)
+	GetRealTimeMetrics(context.Context, *setting.DatasourceSecretSettings, string) ([]model.MetadataItem, error)
 	GetMetrics(context.Context, *setting.DatasourceSecretSettings, string) ([]model.MetadataItem, error)
 	CheckHealth(context.Context, *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error)
 }

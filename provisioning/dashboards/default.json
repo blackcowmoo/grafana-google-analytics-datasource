@@ -1,0 +1,165 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "blackcowmoo-googleanalytics-datasource",
+        "uid": "lcc3108_test"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "accountId": "accounts/145710468",
+          "cacheDurationSeconds": 300,
+          "datasource": {
+            "type": "blackcowmoo-googleanalytics-datasource",
+            "uid": "${DS__GOOGLE ANALYTICS}"
+          },
+          "dimensionFilter": {},
+          "dimensions": [
+            "country"
+          ],
+          "displayName": {},
+          "metrics": [
+            "activeUsers"
+          ],
+          "mode": "timeSeries",
+          "refId": "A",
+          "selectedDimensions": [
+            {
+              "description": "The country from which the user activity originated.",
+              "label": "Country",
+              "value": "country"
+            }
+          ],
+          "selectedMetrics": [
+            {
+              "description": "The number of distinct users who visited your site or app.",
+              "label": "Active users",
+              "value": "activeUsers"
+            }
+          ],
+          "selectedTimeDimensions": {
+            "description": "The combined values of date and hour formatted as YYYYMMDDHH.",
+            "label": "Date + hour (YYYYMMDDHH)",
+            "value": "dateHour"
+          },
+          "serviceLevel": "GOOGLE_ANALYTICS_STANDARD",
+          "timeDimension": "dateHour",
+          "timezone": "Asia/Seoul",
+          "version": "v4",
+          "webPropertyId": "properties/323466308"
+        }
+      ],
+      "title": "E2E",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "New dashboard",
+  "uid": "cdrhlrxwp375sc",
+  "version": 1,
+  "weekStart": ""
+}
