@@ -18,7 +18,7 @@ jobs:
         id: resolve-versions
         uses: grafana/plugin-actions/e2e-version@main
         with:
-          version-resolver-type: version-support-policy
+          version-resolver-type: plugin-grafana-dependency
 
   playwright-tests:
     needs: resolve-versions
@@ -71,9 +71,9 @@ jobs:
       - name: Restore Google Analytics Json
         id: restore-google-json
         run: |
-          mkdir -p ./test/credencials
-          echo '${{ secrets.GOOGLE_AUTH_JSON }}' | base64 --decode > ./tests/credencials/grafana-success.json
-          echo '${{ secrets.GOOGLE_AUTH_FAIL_JSON }}' | base64 --decode > ./tests/credencials/grafana-fail.json
+          mkdir -p ./tests/credentials
+          echo '${{ secrets.GOOGLE_AUTH_JSON }}' | base64 --decode > ./tests/credentials/grafana-success.json
+          echo '${{ secrets.GOOGLE_AUTH_FAIL_JSON }}' | base64 --decode > ./tests/credentials/grafana-fail.json
 
 
       - name: Run E2E tests
