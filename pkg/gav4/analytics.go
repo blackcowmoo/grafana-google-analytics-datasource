@@ -144,21 +144,21 @@ func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *sett
 	}
 	var dimensions = make([]model.MetadataItem, len(metadata.Dimensions))
 	var metrics = make([]model.MetadataItem, len(metadata.Metrics))
-	for _, metric := range metadata.Metrics {
+	for idx, metric := range metadata.Metrics {
 		var metadataItem = &model.MetadataItem{}
 		metadataItem.ID = metric.ApiName
 		metadataItem.Attributes.Description = metric.Description
 		metadataItem.Attributes.Group = metric.Category
 		metadataItem.Attributes.UIName = metric.UiName
-		metrics = append(metrics, *metadataItem)
+    metrics[idx]= *metadataItem
 	}
-	for _, dimension := range metadata.Dimensions {
+	for idx, dimension := range metadata.Dimensions {
 		var metadataItem = &model.MetadataItem{}
 		metadataItem.ID = dimension.ApiName
 		metadataItem.Attributes.Description = dimension.Description
 		metadataItem.Attributes.Group = dimension.Category
 		metadataItem.Attributes.UIName = dimension.UiName
-		dimensions = append(dimensions, *metadataItem)
+    dimensions[idx] = *metadataItem
 	}
 
 	return metrics, dimensions, nil

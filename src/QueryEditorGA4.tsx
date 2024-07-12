@@ -214,7 +214,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               <ButtonCascader options={this.options} onChange={this.onIdSelect}>
                 Account Select
               </ButtonCascader>
-              <InlineLabel>{`Account: ${accountId || ''},Property: ${webPropertyId || ''}`}</InlineLabel>
+              <InlineLabel aria-label='account-info'>{`Account: ${accountId || ''},Property: ${webPropertyId || ''}`}</InlineLabel>
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
               </InlineLabel>
@@ -257,6 +257,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               menuPlacement="bottom"
               isClearable
               key={mode+webPropertyId+"metrics"}
+              aria-label='metrics'
             />
 
             <InlineFormLabel
@@ -280,6 +281,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               menuPlacement="bottom"
               isClearable
               disabled={mode === 'realtime'}
+              aria-label='time-dimension'
             />
 
             <InlineFormLabel
@@ -308,6 +310,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               menuPlacement="bottom"
               isClearable
               key={mode+parsedWebPropertyId+"dimensions"}
+              aria-label='dimensions'
             />
           </div>
           <div className="gf-form">

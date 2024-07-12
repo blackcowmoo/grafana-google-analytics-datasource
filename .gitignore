@@ -26,9 +26,14 @@ work/
 ci/
 e2e-results/
 
-test/credentials
+tests/credentials
 cypress/videos
 cypress/report.json
 # Editor
 .idea
 .vscode
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

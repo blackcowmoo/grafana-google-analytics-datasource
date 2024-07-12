@@ -84,7 +84,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   async getMetrics(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('metrics', { webPropertyId }).then(({ metrics }) => {
-      return metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
+      console.log('metrics', metrics)
+      let test =metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
           element.id.toLowerCase().indexOf(query) > -1 ||
           element.attributes.uiName.toLowerCase().indexOf(query) > -1
@@ -97,6 +98,8 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         }
         return pre;
       }, []);
+      console.log('test', test)
+      return test
     });
   }
 
