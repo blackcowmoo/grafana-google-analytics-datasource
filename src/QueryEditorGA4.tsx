@@ -2,10 +2,13 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
   AsyncMultiSelect,
   AsyncSelect,
-  Badge, ButtonCascader,
+  Badge,
+  ButtonCascader,
   CascaderOption,
-  HorizontalGroup, InlineFormLabel,
-  InlineLabel, RadioButtonGroup
+  HorizontalGroup,
+  InlineFormLabel,
+  InlineLabel,
+  RadioButtonGroup,
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import { DimensionFilter } from 'Filter';
@@ -15,38 +18,55 @@ import { GADataSourceOptions, GAQuery } from 'types';
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
-const badgeMap = {
-  "v4": {
-    "text": "GA4(alpha)",
-    "tootip": "experimental support"
+const gaVersionBadge = {
+  v4: {
+    text: 'GA4(alpha)',
+    tootip: 'experimental support',
   },
-} as const
+} as const;
 const queryMode = [
-  { label: 'Time Series', value: 'time series' },
+  { label: 'Time Series', value: 'timeSeries' },
   { label: 'Table', value: 'table' },
+  { label: 'Realtime', value: 'realtime' },
 ] as Array<SelectableValue<string>>;
 
+const gaServiceLevelBadge = {
+  GOOGLE_ANALYTICS_STANDARD: {
+    text: 'Standard',
+    tootip: 'max realtime query 30min',
+  },
+  GOOGLE_ANALYTICS_360: {
+    text: 'Premium',
+    tootip: 'max realtime query 60min',
+  },
+};
+
+export const GAServiceLevel = {
+  ServiceLevelStandard: 'GOOGLE_ANALYTICS_STANDARD',
+  ServiceLevelPremium: 'GOOGLE_ANALYTICS_360',
+  ServiceLevelUnspecified: 'SERVICE_LEVEL_UNSPECIFIED',
+};
 
 export class QueryEditorGA4 extends PureComponent<Props> {
-  options: CascaderOption[] = []
+  options: CascaderOption[] = [];
   constructor(props: Readonly<Props>) {
     super(props);
-    const { query } = this.props
-    console.log('query.mode', query.mode)
+    const { query } = this.props;
+    console.log('query.mode', query.mode);
     if (!query.hasOwnProperty('cacheDurationSeconds')) {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
     }
-    this.props.query.version = props.datasource.getGaVersion()
-    this.props.query.displayName = new Map<string, string>()
+    this.props.query.version = props.datasource.getGaVersion();
+    this.props.query.displayName = new Map<string, string>();
     this.props.datasource.getAccountSummaries().then((accountSummaries) => {
-      this.options = accountSummaries
-      this.props.onChange(this.props.query)
-    })
+      this.options = accountSummaries;
+      this.props.onChange(this.props.query);
+    });
     if (query.mode === undefined || query.mode === '') {
-      query.mode = 'time series'
+      query.mode = 'timeSeries';
     }
     if (query.dimensionFilter === undefined) {
-      query.dimensionFilter = {}
+      query.dimensionFilter = {};
     }
   }
 
@@ -66,7 +86,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
   };
 
   onTimeDimensionChange = (value: SelectableValue<string>) => {
-    console.log('value', value)
+    console.log('value', value);
     const { query, onChange } = this.props;
 
     let timeDimension = value?.value || '';
@@ -77,16 +97,13 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  onIdSelect = (value: string[], selectedOptions: CascaderOption[]) => {
-    const [account, proerty, profile] = value
+  onIdSelect = async (value: string[], selectedOptions: CascaderOption[]) => {
+    const [account, property, profile] = value;
     const { query, onChange, datasource } = this.props;
-    datasource.getTimezone(account, proerty, profile).then((timezone) => {
-      const { query, onChange } = this.props;
-      console.log(`timezone`, timezone);
-      onChange({ ...query, timezone });
-      this.willRunQuery();
-    });
-    onChange({ ...query, accountId: account, webPropertyId: proerty, profileId: profile });
+    const timezone = await datasource.getTimezone(account, property, profile);
+    const serviceLevel = await datasource.getServiceLevel(account, property);
+
+    onChange({ ...query, accountId: account, webPropertyId: property, profileId: profile, timezone, serviceLevel });
     this.willRunQuery();
   };
 
@@ -116,32 +133,41 @@ export class QueryEditorGA4 extends PureComponent<Props> {
 
   onModeChange = (value: string) => {
     const { query, onChange } = this.props;
+    switch (value) {
+      case 'realtime':
+        query.timeDimension = '';
+        query.selectedTimeDimensions = {};
+    }
     onChange({ ...query, mode: value });
-    this.willRunQuery()
-  }
+    this.willRunQuery();
+  };
 
   willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
     const { webPropertyId, metrics, timeDimension, mode } = query;
     console.log(`willRunQuery`);
     console.log(`query`, query);
-    if (webPropertyId && metrics && (mode === 'table' || timeDimension)) {
+    if (webPropertyId && metrics && (mode === 'table' || mode === 'realtime' || timeDimension)) {
       console.log(`onRunQuery`);
       onRunQuery();
     }
   }, 500);
 
-  setDisplayName = (key: string, value = "") => {
-    const { query: { displayName } } = this.props
-    displayName.set(key, value)
-  }
+  setDisplayName = (key: string, value = '') => {
+    const {
+      query: { displayName },
+    } = this.props;
+    displayName.set(key, value);
+  };
   getDisplayName = (key: string) => {
-    const { query: { displayName } } = this.props
+    const {
+      query: { displayName },
+    } = this.props;
     if (displayName.has(key)) {
-      return displayName.get(key)
+      return displayName.get(key);
     }
-    return ""
-  }
+    return '';
+  };
   render() {
     const { query, datasource } = this.props;
     const {
@@ -151,25 +177,59 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       selectedMetrics,
       selectedDimensions,
       timezone,
-      mode
+      mode,
+      serviceLevel,
     } = query;
-    const parsedWebPropertyId = webPropertyId?.split('/')[1]
+    const parsedWebPropertyId = webPropertyId?.split('/')[1];
+    let serviceLevelBadge;
+    switch (serviceLevel) {
+      case GAServiceLevel.ServiceLevelPremium:
+        serviceLevelBadge = (
+          <Badge
+            color="orange"
+            text={gaServiceLevelBadge.GOOGLE_ANALYTICS_360.text}
+            tooltip={gaServiceLevelBadge.GOOGLE_ANALYTICS_360.tootip}
+            icon="google"
+          ></Badge>
+        );
+        break;
+      case GAServiceLevel.ServiceLevelStandard:
+        serviceLevelBadge = (
+          <Badge
+            color="orange"
+            text={gaServiceLevelBadge.GOOGLE_ANALYTICS_STANDARD.text}
+            tooltip={gaServiceLevelBadge.GOOGLE_ANALYTICS_STANDARD.tootip}
+            icon="google"
+          ></Badge>
+        );
+        break;
+      default:
+        serviceLevelBadge = <Badge color="orange" text="Unknown" tooltip="Unknown" icon="google"></Badge>;
+    }
     return (
       <>
         <div className="gf-form-group">
           <div className="gf-form">
-            <HorizontalGroup spacing="sm" justify='flex-start' >
-              <ButtonCascader options={this.options} onChange={this.onIdSelect} >Account Select</ButtonCascader>
-              <InlineLabel>{`Account: ${accountId || ""},Property: ${webPropertyId || ""}`}</InlineLabel>
+            <HorizontalGroup spacing="sm" justify="flex-start">
+              <ButtonCascader options={this.options} onChange={this.onIdSelect}>
+                Account Select
+              </ButtonCascader>
+              <InlineLabel aria-label='account-info'>{`Account: ${accountId || ''},Property: ${webPropertyId || ''}`}</InlineLabel>
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
               </InlineLabel>
               <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
-              <Badge color='orange' text={badgeMap.v4.text} tooltip={badgeMap.v4.tootip} icon='google'></Badge>
+              <Badge
+                color="orange"
+                text={gaVersionBadge.v4.text}
+                tooltip={gaVersionBadge.v4.tootip}
+                icon="google"
+              ></Badge>
+              {serviceLevelBadge}
             </HorizontalGroup>
           </div>
 
-          <div className="gf-form" key={parsedWebPropertyId}>
+          <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
               tooltip={
@@ -181,16 +241,23 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               Metrics
             </InlineFormLabel>
             <AsyncMultiSelect
-              loadOptions={(q) => datasource.getMetrics(q, parsedWebPropertyId)}
+              loadOptions={(q) => {
+                console.log('load')
+                if(mode === "realtime"){
+                  return datasource.getRealtimeMetrics(q,parsedWebPropertyId)
+                }
+               return datasource.getMetrics(q, parsedWebPropertyId)}
+              }
               placeholder={'ga:sessions'}
               value={selectedMetrics}
               onChange={this.onMetricChange}
               backspaceRemovesValue
-              cacheOptions
               noOptionsMessage={'Search Metrics'}
               defaultOptions
               menuPlacement="bottom"
               isClearable
+              key={mode+webPropertyId+"metrics"}
+              aria-label='metrics'
             />
 
             <InlineFormLabel
@@ -209,11 +276,12 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               value={selectedTimeDimensions}
               onChange={this.onTimeDimensionChange}
               backspaceRemovesValue
-              cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
               menuPlacement="bottom"
               isClearable
+              disabled={mode === 'realtime'}
+              aria-label='time-dimension'
             />
 
             <InlineFormLabel
@@ -227,16 +295,22 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               Dimensions
             </InlineFormLabel>
             <AsyncMultiSelect
-              loadOptions={(q) => datasource.getDimensionsExcludeTimeDimensions(q, parsedWebPropertyId)}
+              loadOptions={(q) => {
+                if(mode === "realtime"){
+                  return datasource.getRealtimeDimensions(q,null,parsedWebPropertyId)
+                }
+                return datasource.getDimensionsExcludeTimeDimensions(q, parsedWebPropertyId);
+              }}
               placeholder={'ga:country'}
               value={selectedDimensions}
               onChange={this.onDimensionChange}
               backspaceRemovesValue
-              cacheOptions
               noOptionsMessage={'Search Dimension'}
               defaultOptions
               menuPlacement="bottom"
               isClearable
+              key={mode+parsedWebPropertyId+"dimensions"}
+              aria-label='dimensions'
             />
           </div>
           <div className="gf-form">
@@ -250,23 +324,14 @@ export class QueryEditorGA4 extends PureComponent<Props> {
             >
               DimensionFilter
             </InlineFormLabel>
-            <DimensionFilter props={this.props} ></DimensionFilter>
+            <DimensionFilter props={this.props}></DimensionFilter>
           </div>
           <div className="gf-form">
-            <InlineFormLabel
-              className="query-keyword"
-            >
-              Query Mode
-            </InlineFormLabel>
-            <RadioButtonGroup
-              options={queryMode}
-              onChange={this.onModeChange}
-              value={mode}
-            />
+            <InlineFormLabel className="query-keyword">Query Mode</InlineFormLabel>
+            <RadioButtonGroup options={queryMode} onChange={this.onModeChange} value={mode} />
           </div>
         </div>
       </>
     );
   }
 }
-

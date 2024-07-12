@@ -52,6 +52,9 @@ func NewDataSource(dis backend.DataSourceInstanceSettings) (instancemgmt.Instanc
 	mux.HandleFunc("/dimensions", ds.handleResourceDimensions)
 	mux.HandleFunc("/metrics", ds.handleResourceMetrics)
 	mux.HandleFunc("/account-summaries", ds.handleResourceAccountSummaries)
+	mux.HandleFunc("/property/service-level", ds.handleResourcePropertyServiceLevel)
+	mux.HandleFunc("/realtime-dimensions", ds.handleResourceRealtimeDimensions)
+	mux.HandleFunc("/realtime-metrics", ds.handleResourceRealtimeMetrics)
 
 	return ds, nil
 }
@@ -117,8 +120,6 @@ func writeResult(rw http.ResponseWriter, path string, val interface{}, err error
 	rw.WriteHeader(code)
 }
 
-
-
 func (ds *GoogleAnalyticsDataSource) handleResourceDimensions(rw http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		return
@@ -149,6 +150,36 @@ func (ds *GoogleAnalyticsDataSource) handleResourceMetrics(rw http.ResponseWrite
 	writeResult(rw, "metrics", res, err)
 }
 
+func (ds *GoogleAnalyticsDataSource) handleResourceRealtimeDimensions(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+
+	query := req.URL.Query()
+	var (
+		webPropertyId = query.Get("webPropertyId")
+	)
+	res, err := ds.analytics.GetRealtimeDimensions(ctx, config, webPropertyId)
+	writeResult(rw, "dimensions", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourceRealtimeMetrics(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+
+	query := req.URL.Query()
+	var (
+		webPropertyId = query.Get("webPropertyId")
+	)
+	res, err := ds.analytics.GetRealTimeMetrics(ctx, config, webPropertyId)
+	writeResult(rw, "metrics", res, err)
+}
+
 func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		return
@@ -168,6 +199,26 @@ func (ds *GoogleAnalyticsDataSource) handleResourceProfileTimezone(rw http.Respo
 	)
 	res, err := ds.analytics.GetTimezone(ctx, config, accountId, webPropertyId, profileId)
 	writeResult(rw, "timezone", res, err)
+}
+
+func (ds *GoogleAnalyticsDataSource) handleResourcePropertyServiceLevel(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		return
+	}
+
+	ctx := req.Context()
+	config, err := setting.LoadSettings(httpadapter.PluginConfigFromContext(ctx))
+	if err != nil {
+		writeResult(rw, "?", nil, err)
+		return
+	}
+	query := req.URL.Query()
+	var (
+		accountId     = query.Get("accountId")
+		webPropertyId = query.Get("webPropertyId")
+	)
+	res, err := ds.analytics.GetServiceLevel(ctx, config, accountId, webPropertyId)
+	writeResult(rw, "serviceLevel", res, err)
 }
 
 func (ds *GoogleAnalyticsDataSource) handleResourceAccountSummaries(rw http.ResponseWriter, req *http.Request) {

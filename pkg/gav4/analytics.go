@@ -7,6 +7,8 @@ import (
 
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
+	"google.golang.org/api/analyticsdata/v1beta"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -33,20 +35,20 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 
 	if len(queryModel.WebPropertyID) == 0 {
 		log.DefaultLogger.Error("Query", "error", "Required WebPropertyID")
-		return nil, fmt.Errorf("Required WebPropertyID")
+		return nil, fmt.Errorf("required webpropertyid")
 	}
 
 	if len(queryModel.Dimensions) == 0 && len(queryModel.Metrics) == 0 {
 		log.DefaultLogger.Error("Query", "error", "Required Dimensions or Metrics")
-		return nil, fmt.Errorf("Required Dimensions or Metrics")
+		return nil, fmt.Errorf("required dimensions or metrics")
 	}
 
 	if queryModel.Mode == "time series" && len(queryModel.TimeDimension) == 0 {
 		log.DefaultLogger.Error("Query", "error", "TimeSeries query need TimeDimension")
-		return nil, fmt.Errorf("TimeSeries query need TimeDimensions")
+		return nil, fmt.Errorf("time series query need time dimensions")
 	}
 
-	report, err := client.getReport(*queryModel)
+	report, err := ga.getReport(ctx, client, queryModel)
 	if err != nil {
 		log.DefaultLogger.Error("Query", "error", err)
 		return nil, err
@@ -54,6 +56,37 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 
 	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone, queryModel.Mode)
 
+}
+
+func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, queryModel *model.QueryModel) (*analyticsdata.RunReportResponse, error) {
+	var report *analyticsdata.RunReportResponse
+	var err error
+	switch queryModel.Mode {
+	case model.REALTIME:
+		log.DefaultLogger.Debug("Query", "realtime")
+		r, err := client.getRealtimeReport(*queryModel)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+		cvt, err := util.TypeConverter[analyticsdata.RunReportResponse](r)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+		log.DefaultLogger.Debug("Query", "convert end")
+		report = cvt
+		log.DefaultLogger.Debug("Query", "realtime end")
+	case model.TIME_SERIES, model.TABLE:
+		report, err = client.getReport(*queryModel)
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("unknown query mode")
+	}
+	return report, nil
 }
 
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
@@ -78,6 +111,28 @@ func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.Data
 	return timezone, nil
 }
 
+func (ga *GoogleAnalytics) GetServiceLevel(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string) (string, error) {
+	client, err := NewGoogleClient(ctx, config.JWT)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Google API client: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:account:%s:webproperty:%s:service_level", accountId, webPropertyId)
+	if item, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return item.(string), nil
+	}
+
+	webproperty, err := client.GetWebProperty(webPropertyId)
+	if err != nil {
+		return "", err
+	}
+
+	serviceLevel := webproperty.ServiceLevel
+
+	ga.Cache.Set(cacheKey, serviceLevel, 60*time.Second)
+	return serviceLevel, nil
+}
+
 func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, []model.MetadataItem, error) {
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
@@ -87,23 +142,23 @@ func (ga *GoogleAnalytics) getFilteredMetadata(ctx context.Context, config *sett
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get metadata: %w", err)
 	}
-	var dimensions = make([]model.MetadataItem, 0)
-	var metrics = make([]model.MetadataItem, 0)
-	for _, metric := range metadata.Metrics {
+	var dimensions = make([]model.MetadataItem, len(metadata.Dimensions))
+	var metrics = make([]model.MetadataItem, len(metadata.Metrics))
+	for idx, metric := range metadata.Metrics {
 		var metadataItem = &model.MetadataItem{}
 		metadataItem.ID = metric.ApiName
 		metadataItem.Attributes.Description = metric.Description
 		metadataItem.Attributes.Group = metric.Category
 		metadataItem.Attributes.UIName = metric.UiName
-		metrics = append(metrics, *metadataItem)
+		metrics[idx] = *metadataItem
 	}
-	for _, dimension := range metadata.Dimensions {
+	for idx, dimension := range metadata.Dimensions {
 		var metadataItem = &model.MetadataItem{}
 		metadataItem.ID = dimension.ApiName
 		metadataItem.Attributes.Description = dimension.Description
 		metadataItem.Attributes.Group = dimension.Category
 		metadataItem.Attributes.UIName = dimension.UiName
-		dimensions = append(dimensions, *metadataItem)
+		dimensions[idx] = *metadataItem
 	}
 
 	return metrics, dimensions, nil
@@ -137,16 +192,34 @@ func (ga *GoogleAnalytics) GetMetrics(ctx context.Context, config *setting.Datas
 	return metrics, nil
 }
 
+func (ga *GoogleAnalytics) GetRealtimeDimensions(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":realtime-dimensions"
+	if dimensions, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return dimensions.([]model.MetadataItem), nil
+	}
+
+	return GaRealTimeDimensions, nil
+}
+
+func (ga *GoogleAnalytics) GetRealTimeMetrics(ctx context.Context, config *setting.DatasourceSecretSettings, propertyId string) ([]model.MetadataItem, error) {
+	cacheKey := "ga:metadata:" + propertyId + ":realtime-metrics"
+	if metrics, _, found := ga.Cache.GetWithExpiration(cacheKey); found {
+		return metrics.([]model.MetadataItem), nil
+	}
+
+	return GaRealTimeMetrics, nil
+}
+
 func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.DatasourceSecretSettings) (*backend.CheckHealthResult, error) {
 	var status = backend.HealthStatusOk
 	var message = "Success"
 
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", config.JWT)
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: "CheckHealth: Fail NewGoogleClient" + err.Error(),
+			Message: "CheckHealth: Fail NewGoogleClient" + err.Error() + "json:" + config.JWT,
 		}, nil
 	}
 
@@ -159,10 +232,10 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 		}, nil
 	}
 	if len(accountSummaries) == 0 {
-		log.DefaultLogger.Error("CheckHealth: Not Exist Valid Proerty")
+		log.DefaultLogger.Error("CheckHealth: Not Exist Valid Property")
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: "CheckHealth: Not Exist Valid Proerty",
+			Message: "CheckHealth: Not Exist Valid Property",
 		}, nil
 	}
 

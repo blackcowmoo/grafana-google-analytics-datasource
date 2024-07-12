@@ -11,7 +11,15 @@
       "name": "blackcowmoo",
       "url": "https://github.com/blackcowmoo"
     },
-    "keywords": ["GA", "ga", "GoogleAnalytics", "Google", "googleanalytics", "google", "analytics"],
+    "keywords": [
+      "GA",
+      "ga",
+      "GoogleAnalytics",
+      "Google",
+      "googleanalytics",
+      "google",
+      "analytics"
+    ],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"

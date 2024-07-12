@@ -19,6 +19,7 @@ export interface GAQuery extends DataQuery {
   filtersExpression: string;
   mode: string;
   dimensionFilter: GAFilterExpression;
+  serviceLevel: string;
   // metricFilter: Array<GAFilter>;
 }
 // mapping on google-key.json

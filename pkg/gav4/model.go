@@ -32,9 +32,13 @@ func GetQueryModel(query backend.DataQuery) (*model.QueryModel, error) {
 
 	model.StartDate = query.TimeRange.From.In(timezone).Format("2006-01-02")
 	model.EndDate = query.TimeRange.To.In(timezone).Format("2006-01-02")
+
+	model.From = query.TimeRange.From
+	model.To = query.TimeRange.To
 	if model.TimeDimension != "" {
 		model.Dimensions = append([]string{model.TimeDimension}, model.Dimensions...)
 	}
+
 	// model.TimeRange = query.TimeRange
 	// model.MaxDataPoints = query.MaxDataPoints
 	return model, nil

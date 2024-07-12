@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: ' Google Analytics'
+    type: 'blackcowmoo-googleanalytics-datasource'
+    access: proxy
+    isDefault: false
+    orgId: 1
+    version: 1
+    editable: true
+    uid: lcc3108_test
+    jsonData:
+      path: '/resources'
+    secureJsonData:
+      apiKey: 'api-key'

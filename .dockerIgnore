@@ -7,3 +7,5 @@ dist
 node_modules
 LICENSE
 README.md
+docker*
+Docker*
