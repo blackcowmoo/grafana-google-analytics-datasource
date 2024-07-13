@@ -1,4 +1,4 @@
-import { Button, InlineFormLabel } from '@grafana/ui';
+import { Alert, Button, InlineFormLabel } from '@grafana/ui';
 import { isObject, startCase } from 'lodash';
 import React, { useState } from 'react';
 import { DropZone } from './DropZone';
@@ -57,9 +57,7 @@ export function JWTConfig({ onChange, isConfigured }: Props) {
       </DropZone>
 
       {error && (
-        <pre style={{ margin: '12px 0 0' }} className="gf-form-pre alert alert-error">
-          {error}
-        </pre>
+        <Alert severity='error' title={error}></Alert>
       )}
     </>
   ) : (
