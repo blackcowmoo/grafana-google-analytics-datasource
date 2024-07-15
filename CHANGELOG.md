@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+- Fix timezone no zoneinfo.zip([#102](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/102))
+- Supprot variable at Dimensions Filter([#103](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/103))
+- Support realtime Report([#107](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/107))
+- Fix error message typo([#110](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/110))
+- Replace deprecated Grafana(v12) SCSS styles([#114](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/114))
+
 ## 0.2.3
 - Support DimensionFilter([#90](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/90))
 - Fix metric type bug([#88](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/88))
