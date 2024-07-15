@@ -14,7 +14,6 @@ export class QueryEditorCommon extends PureComponent<Props> {
     this.props.query.version = props.datasource.getGaVersion()
   }
   render() {
-    console.log("common")
     const { query, datasource, onChange, onRunQuery } = this.props;
     const { version } = query
     if (version === "v4") {

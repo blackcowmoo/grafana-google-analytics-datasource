@@ -328,7 +328,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
           </div>
           <div className="gf-form">
             <InlineFormLabel className="query-keyword">Query Mode</InlineFormLabel>
-            <RadioButtonGroup options={queryMode} onChange={this.onModeChange} value={mode} />
+            <RadioButtonGroup options={queryMode} onChange={this.onModeChange} value={mode} aria-label='query-mode' />
           </div>
         </div>
       </>
