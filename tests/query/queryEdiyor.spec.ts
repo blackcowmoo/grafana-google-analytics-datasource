@@ -6,7 +6,9 @@ test('time series', async ({ readProvisionedDataSource, explorePage, page }) => 
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  await explorePage.getQueryEditorRow('A').getByLabel('query-mode').getByLabel('Time Series').check()
+
+
+  await explorePage.getQueryEditorRow('A').getByLabel('Time Series').check()
 
   // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
@@ -41,7 +43,7 @@ test('table', async ({ readProvisionedDataSource, explorePage, page }) => {
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  await explorePage.getQueryEditorRow('A').getByLabel('query-mode').getByLabel('Table').check()
+  await explorePage.getQueryEditorRow('A').getByLabel('Table').check()
   // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
   await page.getByText('Default Account for Firebase').click();
@@ -75,7 +77,7 @@ test('realtime', async ({ readProvisionedDataSource, explorePage, page }) => {
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  await explorePage.getQueryEditorRow('A').getByLabel('query-mode').getByLabel('Realtime').check()
+  await explorePage.getQueryEditorRow('A').getByLabel('Realtime').check()
   // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
   await page.getByText('Default Account for Firebase').click();
