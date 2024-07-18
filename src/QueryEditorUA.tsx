@@ -1,14 +1,14 @@
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
-  AsyncMultiSelect,
-  AsyncSelect,
-  Badge,
-  ButtonCascader,
-  CascaderOption,
-  HorizontalGroup,
-  InlineFormLabel,
-  InlineLabel,
-  Input
+    AsyncMultiSelect,
+    AsyncSelect,
+    Badge,
+    ButtonCascader,
+    CascaderOption,
+    HorizontalGroup,
+    InlineFormLabel,
+    InlineLabel,
+    Input
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
@@ -54,7 +54,7 @@ export class QueryEditorUA extends PureComponent<Props> {
         metrics.push(item.value);
       }
     });
-    console.log(`metrics`, metrics);
+
 
     onChange({ ...query, selectedMetrics: items, metrics });
     this.willRunQuery();
@@ -65,7 +65,7 @@ export class QueryEditorUA extends PureComponent<Props> {
 
     let timeDimension = item.value;
 
-    console.log(`timeDimension`, timeDimension);
+
 
     onChange({ ...query, timeDimension, selectedTimeDimensions: item });
     this.willRunQuery();
@@ -76,7 +76,7 @@ export class QueryEditorUA extends PureComponent<Props> {
     const { query, onChange, datasource } = this.props;
     datasource.getTimezone(account, proerty, profile).then((timezone) => {
       const { query, onChange } = this.props;
-      console.log(`timezone`, timezone);
+
       onChange({ ...query, timezone });
       this.willRunQuery();
     });
@@ -93,7 +93,7 @@ export class QueryEditorUA extends PureComponent<Props> {
       }
     });
 
-    console.log(`dimensions`, dimensions);
+
 
     onChange({ ...query, selectedDimensions: items, dimensions });
     this.willRunQuery();
@@ -111,13 +111,13 @@ export class QueryEditorUA extends PureComponent<Props> {
   willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
     const { version, webPropertyId, profileId, metrics, timeDimension } = query;
-    console.log(`willRunQuery`);
-    console.log(`query`, query);
+
+
     if (
       (profileId && metrics && timeDimension && version === "v3") ||
       (webPropertyId && metrics && timeDimension && version === "v4")
     ) {
-      console.log(`onRunQuery`);
+
       onRunQuery();
     }
   }, 500);
@@ -146,7 +146,7 @@ export class QueryEditorUA extends PureComponent<Props> {
       filtersExpression,
       version
     } = query;
-    console.log('UA')
+
     const parsedWebPropertyId = webPropertyId?.split('/')[1]
     return (
       <>
