@@ -13,7 +13,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
     const templateSrv = getTemplateSrv();
     let dimensionFilter = query.dimensionFilter;
-    dimensionFilter.orGroup?.expressions.map((expression) => {
+    dimensionFilter?.orGroup?.expressions.map((expression) => {
       if (expression.filter?.stringFilter) {
         expression.filter.stringFilter.value = templateSrv.replace(expression.filter.stringFilter.value, scopedVars);
       }
