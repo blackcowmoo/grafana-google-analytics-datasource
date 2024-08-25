@@ -43,7 +43,7 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		return nil, fmt.Errorf("required dimensions or metrics")
 	}
 
-	if queryModel.Mode == "time series" && len(queryModel.TimeDimension) == 0 {
+	if queryModel.Mode == model.TIME_SERIES && len(queryModel.TimeDimension) == 0 {
 		log.DefaultLogger.Error("Query", "error", "TimeSeries query need TimeDimension")
 		return nil, fmt.Errorf("time series query need time dimensions")
 	}
@@ -84,7 +84,7 @@ func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, 
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("unknown query mode")
+		return nil, fmt.Errorf("unknown query mode [%s]", queryModel.Mode)
 	}
 	return report, nil
 }

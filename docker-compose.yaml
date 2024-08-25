@@ -18,6 +18,7 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
+      # - ~/.grafana:/var/lib/grafana
       - ./dist:/var/lib/grafana/plugins/blackcowmoo-googleanalytics-datasource
       - ./provisioning:/etc/grafana/provisioning
       - .:/root/blackcowmoo-googleanalytics-datasource

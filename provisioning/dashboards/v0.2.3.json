@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 38,
   "links": [],
   "panels": [
     {
@@ -38,6 +38,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -99,31 +100,22 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0-74991",
       "targets": [
         {
           "accountId": "accounts/145710468",
           "cacheDurationSeconds": 300,
           "datasource": {
             "type": "blackcowmoo-googleanalytics-datasource",
-            "uid": "${DS__GOOGLE ANALYTICS}"
+            "uid": "e7bdc464-a204-4e54-b865-9d712e112c66"
           },
           "dimensionFilter": {},
-          "dimensions": [
-            "country"
-          ],
           "displayName": {},
           "metrics": [
             "activeUsers"
           ],
           "mode": "time series",
           "refId": "A",
-          "selectedDimensions": [
-            {
-              "description": "The country from which the user activity originated.",
-              "label": "Country",
-              "value": "country"
-            }
-          ],
           "selectedMetrics": [
             {
               "description": "The number of distinct users who visited your site or app.",
@@ -132,34 +124,35 @@
             }
           ],
           "selectedTimeDimensions": {
-            "description": "The combined values of date and hour formatted as YYYYMMDDHH.",
-            "label": "Date + hour (YYYYMMDDHH)",
-            "value": "dateHour"
+            "description": "The date of the event, formatted as YYYYMMDD.",
+            "label": "Date",
+            "value": "date"
           },
-          "serviceLevel": "GOOGLE_ANALYTICS_STANDARD",
-          "timeDimension": "dateHour",
+          "timeDimension": "date",
           "timezone": "Asia/Seoul",
           "version": "v4",
           "webPropertyId": "properties/323466308"
         }
       ],
-      "title": "E2E",
+      "title": "Panel Title",
       "type": "timeseries"
     }
   ],
+  "preload": false,
+  "refresh": "",
   "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "browser",
-  "title": "New dashboard",
-  "uid": "cdrhlrxwp375sc",
-  "version": 1,
+  "timezone": "",
+  "title": "0.2.3",
+  "uid": "b8503369-1580-4f6d-972f-0718f0f14fa6",
+  "version": 5,
   "weekStart": ""
 }

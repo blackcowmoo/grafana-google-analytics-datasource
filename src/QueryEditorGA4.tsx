@@ -25,7 +25,7 @@ const gaVersionBadge = {
   },
 } as const;
 const queryMode = [
-  { label: 'Time Series', value: 'timeSeries' },
+  { label: 'Time Series', value: 'time series' },
   { label: 'Table', value: 'table' },
   { label: 'Realtime', value: 'realtime' },
 ] as Array<SelectableValue<string>>;
@@ -62,8 +62,8 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       this.options = accountSummaries;
       this.props.onChange(this.props.query);
     });
-    if (query.mode === undefined || query.mode === '' || query.mode === 'time series') {
-      query.mode = 'timeSeries';
+    if (query.mode === undefined || query.mode === '') {
+      query.mode = 'time series';
     }
     if (query.dimensionFilter === undefined) {
       query.dimensionFilter = {};
