@@ -111,7 +111,7 @@ type ProfileSummary struct {
 type QueryMode string
 
 const (
-	TIME_SERIES QueryMode = "timeSeries"
+	TIME_SERIES QueryMode = "time series"
 	TABLE       QueryMode = "table"
 	REALTIME    QueryMode = "realtime"
 )

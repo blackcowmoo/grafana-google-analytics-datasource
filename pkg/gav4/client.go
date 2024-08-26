@@ -136,8 +136,8 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	end := time.Since(query.To)
 	start := time.Since(query.From)
 
-	log.DefaultLogger.Info("getRealtimeReport", "start", start.Minutes())
-	log.DefaultLogger.Info("getRealtimeReport", "end", end.Minutes())
+	log.DefaultLogger.Debug("getRealtimeReport", "start", start.Minutes())
+	log.DefaultLogger.Debug("getRealtimeReport", "end", end.Minutes())
 
 	var (
 		min = GaRealTimeMinMinute
@@ -156,11 +156,11 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 		start = max
 	}
 
-	log.DefaultLogger.Info("getRealtimeReport", "after start", start.Minutes())
-	log.DefaultLogger.Info("getRealtimeReport", "after end", end.Minutes())
+	log.DefaultLogger.Debug("getRealtimeReport", "after start", start.Minutes())
+	log.DefaultLogger.Debug("getRealtimeReport", "after end", end.Minutes())
 
-	log.DefaultLogger.Info("getRealtimeReport", "real start", int64(start.Minutes()))
-	log.DefaultLogger.Info("getRealtimeReport", "real end", int64(end.Minutes()))
+	log.DefaultLogger.Debug("getRealtimeReport", "real start", int64(start.Minutes()))
+	log.DefaultLogger.Debug("getRealtimeReport", "real end", int64(end.Minutes()))
 	req := analyticsdata.RunRealtimeReportRequest{
 		Metrics:    Metrics,
 		Dimensions: Dimensions,
