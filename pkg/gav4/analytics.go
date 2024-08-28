@@ -84,7 +84,12 @@ func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, 
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("unknown query mode [%s]", queryModel.Mode)
+    report, err = client.getReport(*queryModel)
+    log.DefaultLogger.Debug("getReport", "no query.mode use default timeseries")
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+    }
 	}
 	return report, nil
 }
