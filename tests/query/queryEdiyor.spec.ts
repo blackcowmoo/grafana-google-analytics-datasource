@@ -1,6 +1,13 @@
 import { expect, test } from '@grafana/plugin-e2e';
 
 
+test('0_2_2 migration test', async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
+  // default settings
+  const dashboard = await readProvisionedDashboard({fileName: 'v0.2.2.json'})
+  const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
+  await dashboardPage.refreshDashboard()
+  await expect(dashboardPage.waitForQueryDataResponse()).toBeOK()
+});
 
 test('0_2_3 migration test', async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
   // default settings
