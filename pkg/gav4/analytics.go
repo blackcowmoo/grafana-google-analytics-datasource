@@ -43,7 +43,7 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		return nil, fmt.Errorf("required dimensions or metrics")
 	}
 
-	if queryModel.Mode == "time series" && len(queryModel.TimeDimension) == 0 {
+	if queryModel.Mode == model.TIME_SERIES && len(queryModel.TimeDimension) == 0 {
 		log.DefaultLogger.Error("Query", "error", "TimeSeries query need TimeDimension")
 		return nil, fmt.Errorf("time series query need time dimensions")
 	}
@@ -84,7 +84,12 @@ func (ga *GoogleAnalytics) getReport(ctx context.Context, client *GoogleClient, 
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("unknown query mode")
+    report, err = client.getReport(*queryModel)
+    log.DefaultLogger.Debug("getReport", "no query.mode use default timeseries")
+		if err != nil {
+			log.DefaultLogger.Error("Query", "error", err)
+			return nil, err
+    }
 	}
 	return report, nil
 }
@@ -216,10 +221,10 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 
 	client, err := NewGoogleClient(ctx, config.JWT)
 	if err != nil {
-		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", config.JWT)
+		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err)
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: "CheckHealth: Fail NewGoogleClient" + err.Error() + "json:" + config.JWT,
+			Message: "CheckHealth: Fail NewGoogleClient" + err.Error(),
 		}, nil
 	}
 

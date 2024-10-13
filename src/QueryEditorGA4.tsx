@@ -25,7 +25,7 @@ const gaVersionBadge = {
   },
 } as const;
 const queryMode = [
-  { label: 'Time Series', value: 'timeSeries' },
+  { label: 'Time Series', value: 'time series' },
   { label: 'Table', value: 'table' },
   { label: 'Realtime', value: 'realtime' },
 ] as Array<SelectableValue<string>>;
@@ -52,7 +52,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
     const { query } = this.props;
-    console.log('query.mode', query.mode);
+
     if (!query.hasOwnProperty('cacheDurationSeconds')) {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
     }
@@ -63,7 +63,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       this.props.onChange(this.props.query);
     });
     if (query.mode === undefined || query.mode === '') {
-      query.mode = 'timeSeries';
+      query.mode = 'time series';
     }
     if (query.dimensionFilter === undefined) {
       query.dimensionFilter = {};
@@ -79,19 +79,19 @@ export class QueryEditorGA4 extends PureComponent<Props> {
         metrics.push(item.value);
       }
     });
-    console.log(`metrics`, metrics);
+
 
     onChange({ ...query, selectedMetrics: items, metrics });
     this.willRunQuery();
   };
 
   onTimeDimensionChange = (value: SelectableValue<string>) => {
-    console.log('value', value);
+
     const { query, onChange } = this.props;
 
     let timeDimension = value?.value || '';
 
-    console.log(`timeDimension`, timeDimension);
+
 
     onChange({ ...query, timeDimension, selectedTimeDimensions: value });
     this.willRunQuery();
@@ -116,7 +116,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       }
     });
 
-    console.log(`dimensions`, dimensions);
+
 
     onChange({ ...query, selectedDimensions: items, dimensions });
     this.willRunQuery();
@@ -145,10 +145,10 @@ export class QueryEditorGA4 extends PureComponent<Props> {
   willRunQuery = _.debounce(() => {
     const { query, onRunQuery } = this.props;
     const { webPropertyId, metrics, timeDimension, mode } = query;
-    console.log(`willRunQuery`);
-    console.log(`query`, query);
+
+
     if (webPropertyId && metrics && (mode === 'table' || mode === 'realtime' || timeDimension)) {
-      console.log(`onRunQuery`);
+
       onRunQuery();
     }
   }, 500);
@@ -242,7 +242,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
             </InlineFormLabel>
             <AsyncMultiSelect
               loadOptions={(q) => {
-                console.log('load')
+
                 if(mode === "realtime"){
                   return datasource.getRealtimeMetrics(q,parsedWebPropertyId)
                 }

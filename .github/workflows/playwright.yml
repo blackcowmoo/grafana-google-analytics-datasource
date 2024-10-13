@@ -43,7 +43,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.22
-          
+
       - name: Install Mage
         uses: magefile/mage-action@v3
         with:
@@ -63,8 +63,8 @@ jobs:
 
       - name: Start Grafana
         run: |
-          docker-compose pull
-          GRAFANA_VERSION=${{ matrix.GRAFANA_IMAGE.VERSION }} GRAFANA_IMAGE=${{ matrix.GRAFANA_IMAGE.NAME }} docker-compose up -d
+          docker compose pull
+          GRAFANA_VERSION=${{ matrix.GRAFANA_IMAGE.VERSION }} GRAFANA_IMAGE=${{ matrix.GRAFANA_IMAGE.NAME }} docker compose up -d
 
       - name: Wait for Grafana to start
         uses: nev7n/wait_for_response@v1

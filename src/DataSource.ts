@@ -7,64 +7,61 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   version: string;
   constructor(instanceSettings: DataSourceInstanceSettings<GADataSourceOptions>) {
     super(instanceSettings);
-    console.log('instanceSettings', instanceSettings);
-    this.version = instanceSettings.jsonData.version
+    this.version = instanceSettings.jsonData.version;
   }
 
   applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
     const templateSrv = getTemplateSrv();
-    let dimensionFilter = query.dimensionFilter
-    if (dimensionFilter.orGroup) {
-      dimensionFilter.orGroup.expressions.map(expression => {
-        if (expression.filter?.stringFilter) {
-          expression.filter.stringFilter.value = templateSrv.replace(expression.filter.stringFilter.value, scopedVars)
-        }
-        if (expression.filter?.inListFilter) {
-          expression.filter.inListFilter.values = expression.filter.inListFilter.values.map(value => {
-            value = templateSrv.replace(value, scopedVars)
-            return value
-          })
-        }
-        return expression
-      })
-    }
+    let dimensionFilter = query.dimensionFilter;
+    dimensionFilter?.orGroup?.expressions.map((expression) => {
+      if (expression.filter?.stringFilter) {
+        expression.filter.stringFilter.value = templateSrv.replace(expression.filter.stringFilter.value, scopedVars);
+      }
+      if (expression.filter?.inListFilter) {
+        expression.filter.inListFilter.values = expression.filter.inListFilter.values.map((value) => {
+          value = templateSrv.replace(value, scopedVars);
+          return value;
+        });
+      }
+      return expression;
+    });
     return {
       ...query,
-      dimensionFilter
+      dimensionFilter,
     };
   }
   async getAccountSummaries(): Promise<CascaderOption[]> {
-    let accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[]
+    let accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[];
     let accounts: CascaderOption[] = [];
     for (const accountSummary of accountSummaries) {
       let accountCascader: CascaderOption = {
         label: accountSummary.DisplayName,
         value: accountSummary.Account,
-      }
+      };
       let properties: CascaderOption[] = [];
       for (const propertySummary of accountSummary.PropertySummaries) {
         let propertyCascader: CascaderOption = {
           label: propertySummary.DisplayName,
           value: propertySummary.Property,
-        }
+        };
         properties.push(propertyCascader);
         let profiles: CascaderOption[] = [];
 
         if (!propertySummary.ProfileSummaries) {
-          continue
+          continue;
         }
         for (const profileSummary of propertySummary.ProfileSummaries) {
           let profileCascader: CascaderOption = {
             label: profileSummary.DisplayName,
             value: profileSummary.Profile,
-          }
+          };
           profiles.push(profileCascader);
         }
         propertyCascader.children = profiles;
         propertyCascader.items = profiles;
       }
-      accountCascader.children = properties
-      accountCascader.items = properties
+      accountCascader.children = properties;
+      accountCascader.items = properties;
       accounts.push(accountCascader);
     }
     return accounts;
@@ -84,8 +81,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   async getMetrics(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('metrics', { webPropertyId }).then(({ metrics }) => {
-      console.log('metrics', metrics)
-      let test =metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
+      let test = metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
           element.id.toLowerCase().indexOf(query) > -1 ||
           element.attributes.uiName.toLowerCase().indexOf(query) > -1
@@ -98,8 +94,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         }
         return pre;
       }, []);
-      console.log('test', test)
-      return test
+      return test;
     });
   }
 
@@ -127,7 +122,6 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   async getRealtimeMetrics(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
     return this.getResource('realtime-metrics', { webPropertyId }).then(({ metrics }) => {
-      console.log('metrics', metrics)
       let test = metrics.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
           element.id.toLowerCase().indexOf(query) > -1 ||
@@ -141,11 +135,15 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         }
         return pre;
       }, []);
-      return test
+      return test;
     });
   }
 
-  async getRealtimeDimensions(query: string, exclude: any, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+  async getRealtimeDimensions(
+    query: string,
+    exclude: any,
+    webPropertyId: string
+  ): Promise<Array<SelectableValue<string>>> {
     return this.getResource('realtime-dimensions', { webPropertyId }).then(({ dimensions }) => {
       return dimensions.reduce((pre: Array<SelectableValue<string>>, element: GAMetadata) => {
         if (
@@ -171,10 +169,13 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     return this.getDimensions('date', null, '');
   }
 
-  async getDimensionsExcludeTimeDimensions(query: string, webPropertyId: string): Promise<Array<SelectableValue<string>>> {
+  async getDimensionsExcludeTimeDimensions(
+    query: string,
+    webPropertyId: string
+  ): Promise<Array<SelectableValue<string>>> {
     return await this.getDimensions(query, 'date', webPropertyId);
   }
   getGaVersion(): string {
-    return this.version
+    return this.version;
   }
 }

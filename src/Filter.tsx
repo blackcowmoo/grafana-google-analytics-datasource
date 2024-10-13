@@ -79,7 +79,6 @@ export const DimensionFilter = ({ props }: { props: Props }) => {
         }
         break;
       case GADimensionFilterType.IN_LIST:
-        console.log('IN_LIST', targetData)
         if (targetData.inListFilter !== undefined) {
           targetData.inListFilter.values = value.split(',')
           data[index].filter = targetData
@@ -144,7 +143,7 @@ export const DimensionFilter = ({ props }: { props: Props }) => {
 
   //   data[index].filedName = value.value || ''
   //   setFormFields(data);
-  //   console.log('filterFields', filterFields)
+  //
   //   onChange({...query, metricFilter: data[index]})
   // }
 
