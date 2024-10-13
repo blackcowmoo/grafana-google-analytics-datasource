@@ -1,7 +1,7 @@
 [![CodeQL](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/actions/workflows/codeql-analysis.yml)  ![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgrafana.com%2Fapi%2Fplugins%2Fblackcowmoo-googleanalytics-datasource%3Fversion%3Dlatest&query=%24.downloads&label=downloads) ![](https://img.shields.io/github/v/release/blackcowmoo/Grafana-Google-Analytics-DataSource?style=plastic?label=repo) ![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgrafana.com%2Fapi%2Fplugins%2Fblackcowmoo-googleanalytics-datasource%3Fversion%3Dlatest&query=%24.version&label=grafana%20release&prefix=v)
 # Google Analytics datasource
 
-Visualize data from Google Analytics UA And GA4(beta)
+Visualize data from Google Analytics UA(Deprecated) And GA4(beta)
 
 ## Feature
 - AutoComplete AccountID & WebpropertyID & ProfileID
@@ -22,8 +22,8 @@ Visualize data from Google Analytics UA And GA4(beta)
 6.  On the `Service account permissions` page, don't add a role to the service account. Just click `Continue`
 7.  In the next step, click `Create Key`. Choose key type `JSON` and click `Create`. A JSON key file will be created and downloaded to your computer
 8.  Note your `service account email` ex) *@*.iam.gserviceaccount.com
-9.  Open the [Google Analytics API](https://console.cloud.google.com/apis/library/analytics.googleapis.com)  in API Library and enable access for your account
-10. Open the [Google Analytics Reporting API](https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com)  in API Library and enable access for your GA Data
+9.  Open the [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com)  in API Library and enable access for your account
+10. Open the [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)  in API Library and enable access for your GA Data
 
 ### Google Analytics Setting
 
