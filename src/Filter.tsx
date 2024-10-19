@@ -126,11 +126,11 @@ export const GAFilterExpressionComponent: React.FC<Props> = ({ expression = {}, 
       switch (option.value) {
         case GADimensionFilterType.STRING:
           newFilter.stringFilter = { matchType: GAStringFilterMatchType.EXACT, value: '', caseSensitive: false };
-          delete newFilter.inListFilter;
+          newFilter.inListFilter = undefined;
           break;
         case GADimensionFilterType.IN_LIST:
           newFilter.inListFilter = { values: [], caseSensitive: false };
-          delete newFilter.stringFilter;
+          newFilter.stringFilter = undefined;
           break;
       }
 
