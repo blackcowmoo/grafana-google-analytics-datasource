@@ -1,240 +1,234 @@
-import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { ActionMeta, Button, Field, HorizontalGroup, Input, Select, VerticalGroup } from '@grafana/ui';
-import { DataSource } from 'DataSource';
-import React, { useState } from 'react';
-import { GADataSourceOptions, GADimensionFilterType, GAFilterExpression, GAFilterExpressionList, GAInListFilter, GAQuery, GAStringFilter, GAStringFilterMatchType } from 'types';
+// cursor ai로 작성됨
+import { SelectableValue } from '@grafana/data';
+import { Button, FieldSet, HorizontalGroup, Input, RadioButtonGroup, Select, VerticalGroup } from '@grafana/ui';
+import React from 'react';
+import { GADimensionFilterType, GAFilter, GAFilterExpression, GAFilterExpressionList, GAInListFilter, GAStringFilter, GAStringFilterMatchType } from 'types';
 
-type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
+interface Props {
+  expression: GAFilterExpression;
+  onChange: (expression: GAFilterExpression) => void;
+  onDelete?: () => void;  // New prop added
+  selectedDimensions: Array<SelectableValue<string>>; // New prop added
+}
 
-export const DimensionFilter = ({ props }: { props: Props }) => {
-  const [dimensionFilter, setDimensionFilter] = useState(props.query.dimensionFilter)
-  // const filterAction = ["dimensionChanged", "metricChanged", "filterTypeChanged", "filterOperationChanged"] as Array<string>
+export const GAFilterExpressionComponent: React.FC<Props> = ({ expression = {}, onChange, onDelete, selectedDimensions }) => {
+  const expressionTypes: Array<SelectableValue<string>> = [
+    { label: 'no filter', value: 'none' },
+    { label: 'AND', value: 'andGroup' },
+    { label: 'OR', value: 'orGroup' },
+    { label: 'NOT', value: 'notExpression' },
+    { label: 'FILTER', value: 'filter' },
+  ];
 
-  const dimensionFilterType = Object.keys(GADimensionFilterType)
-    .filter(x => isNaN(parseInt(x, 10)))
-    .reduce((acc: Array<SelectableValue<string>>, val: string) => {
-      acc.push({
-        label: val.toString().toLowerCase(),
-        value: val
-      } as SelectableValue<string>)
-      return acc
-    }, [])
-
-  const stringFilterMatchType = Object.keys(GAStringFilterMatchType)
-    .filter(x => isNaN(parseInt(x, 10)))
-    .reduce((acc: Array<SelectableValue<string>>, val: string) => {
-      acc.push({
-        label: val.toString().toLowerCase(),
-        value: val
-      } as SelectableValue<string>)
-      return acc
-    }, [])
-
-  const addFields = () => {
-    const { query, onChange } = props;
-
-    let filter = {
-      filter: {
-        fieldName: '',
-        filterType: undefined
-      }
-    } as GAFilterExpression
-
-    if (dimensionFilter.orGroup === undefined) {
-      let orGroup = {
-        expressions: []
-      } as GAFilterExpressionList
-      dimensionFilter.orGroup = orGroup
-    }
-
-    dimensionFilter.orGroup.expressions.push(
-      filter
-    )
-    setDimensionFilter(dimensionFilter)
-    onChange({ ...query, dimensionFilter })
-  }
-
-  const removeFields = (index: number) => {
-    const { query, onChange } = props;
-
-    dimensionFilter.orGroup!.expressions.splice(index, 1)
-    if (dimensionFilter.orGroup?.expressions.length === 0) {
-      setDimensionFilter({})
-      onChange({ ...query, dimensionFilter: {} })
-    } else {
-      setDimensionFilter(dimensionFilter)
-      onChange({ ...query, dimensionFilter })
-    }
-  }
-  const filedValueChange = (value: string, index: number) => {
-
-    let data = [...dimensionFilter.orGroup!.expressions];
-    let targetData = data[index].filter
-    const { query, onChange } = props;
-    switch (targetData?.filterType) {
-      case GADimensionFilterType.STRING:
-        if (targetData.stringFilter !== undefined) {
-          targetData.stringFilter.value = value
-          data[index].filter = targetData
-        }
+  const handleExpressionTypeChange = (option: SelectableValue<string>) => {
+    let newExpression: GAFilterExpression;
+    switch (option.value) {
+      case 'none':
+        newExpression = {};
         break;
-      case GADimensionFilterType.IN_LIST:
-        if (targetData.inListFilter !== undefined) {
-          targetData.inListFilter.values = value.split(',')
-          data[index].filter = targetData
-        }
+      case 'andGroup':
+      case 'orGroup':
+        newExpression = { [option.value]: { expressions: [] } };
         break;
+      case 'notExpression':
+        newExpression = { notExpression: {} };
+        break;
+      case 'filter':
+        newExpression = { 
+          filter: { 
+            fieldName: '', 
+            filterType: GADimensionFilterType.STRING,
+            stringFilter: { matchType: GAStringFilterMatchType.EXACT, value: '', caseSensitive: false }
+          } 
+        };
+        break;
+      default:
+        return;
     }
-    dimensionFilter.orGroup!.expressions = data
-    onChange({
-      ...query, dimensionFilter
-    })
-  }
-  const fieldNameChange = (value: SelectableValue<string>, action: ActionMeta, index: number) => {
-    let data = [...dimensionFilter.orGroup!.expressions];
-    let targetData = data[index].filter!
-    const { query, onChange } = props;
-    if (value.value !== undefined) {
-      switch (action.name) {
-        case "dimensionChanged":
-          targetData.fieldName = value.value
+    onChange(newExpression);
+  };
+
+  const renderExpressionContent = () => {
+    if (Object.keys(expression).length === 0) {
+      return <div>No filter set</div>;
+    } else if (expression.andGroup) {
+      return renderExpressionList(expression.andGroup, 'andGroup');
+    } else if (expression.orGroup) {
+      return renderExpressionList(expression.orGroup, 'orGroup');
+    } else if (expression.notExpression) {
+      return renderNotExpression();
+    } else if (expression.filter) {
+      return renderFilter();
+    }
+    return null;
+  };
+
+  const renderExpressionList = (list: GAFilterExpressionList, type: 'andGroup' | 'orGroup') => {
+    return (
+      <VerticalGroup>
+        {list.expressions.map((expr, index) => (
+          <HorizontalGroup key={index}>
+            <GAFilterExpressionComponent
+              expression={expr}
+              selectedDimensions={selectedDimensions}
+              onChange={(newExpr) => {
+                const newList = { ...list, expressions: [...list.expressions] };
+                newList.expressions[index] = newExpr;
+                onChange({ [type]: newList });
+              }}
+              onDelete={() => {
+                const newList = { ...list, expressions: [...list.expressions] };
+                newList.expressions.splice(index, 1);
+                onChange({ [type]: newList });
+              }}
+            />
+          </HorizontalGroup>
+        ))}
+        <HorizontalGroup>
+          <Button
+            onClick={() => {
+              const newList = { ...list, expressions: [...list.expressions, {}] };
+              onChange({ [type]: newList });
+            }}
+          >
+            Add Expression
+          </Button>
+        </HorizontalGroup>
+      </VerticalGroup>
+    );
+  };
+
+  const renderNotExpression = () => {
+    return (
+      <GAFilterExpressionComponent
+        expression={expression.notExpression!}
+        selectedDimensions={selectedDimensions}
+        onChange={(newExpr) => onChange({ notExpression: newExpr })}
+        onDelete={() => onChange({})}
+      />
+    );
+  };
+
+  const renderFilter = () => {
+    const filter = expression.filter || { fieldName: '', filterType: GADimensionFilterType.STRING };
+
+    const filterTypes: Array<SelectableValue<string>> = [
+      { label: 'String', value: 'STRING' },
+      { label: 'List', value: 'IN_LIST' },
+    ];
+
+    const handleFilterTypeChange = (option: SelectableValue<string>) => {
+      let newFilter: GAFilter = {
+        ...filter,
+        filterType: option.value as GADimensionFilterType,
+      };
+
+      // Set initial values based on filter type
+      switch (option.value) {
+        case GADimensionFilterType.STRING:
+          newFilter.stringFilter = { matchType: GAStringFilterMatchType.EXACT, value: '', caseSensitive: false };
+          newFilter.inListFilter = undefined;
           break;
-        case "filterTypeChanged":
-          if (value.value !== undefined) {
-            const filterType = GADimensionFilterType[value.value as keyof typeof GADimensionFilterType]
-            targetData.filterType = filterType
-            if (filterType === GADimensionFilterType.IN_LIST) {
-              const inListFilter = {
-                caseSensitive: true,
-                values: targetData.inListFilter?.values || []
-              } as GAInListFilter
-              targetData.inListFilter = inListFilter
-            } else if (filterType === GADimensionFilterType.STRING) {
-              const stringFilter = {
-                matchType: GAStringFilterMatchType.MATCH_TYPE_UNSPECIFIED,
-                caseSensitive: true,
-                value: targetData.stringFilter?.value || ''
-              } as GAStringFilter
-              targetData.stringFilter = stringFilter
-            }
-          }
+        case GADimensionFilterType.IN_LIST:
+          newFilter.inListFilter = { values: [], caseSensitive: false };
+          newFilter.stringFilter = undefined;
           break;
-        case "matchTypeChanged":
-          if (targetData.filterType === GADimensionFilterType.STRING) {
-            const stringFilter = {
-              matchType: GAStringFilterMatchType[value.value as keyof typeof GAStringFilterMatchType],
-              caseSensitive: true,
-              value: targetData.stringFilter?.value || ''
-            } as GAStringFilter
-            targetData.stringFilter = stringFilter
-          }
       }
-    }
-    data[index].filter! = targetData
-    dimensionFilter.orGroup!.expressions = data
-    onChange({
-      ...query, dimensionFilter
-    })
-  }
 
-  // const fieldNameChange = (value: SelectableValue<string>, index: number) => {
-  //   let data = [...filterFields];
-  //   const { query, onChange} = props;
+      onChange({ filter: newFilter });
+    };
 
-  //   data[index].filedName = value.value || ''
-  //   setFormFields(data);
-  //
-  //   onChange({...query, metricFilter: data[index]})
-  // }
+    const renderFilterContent = () => {
+      switch (filter.filterType) {
+        case GADimensionFilterType.STRING:
+          return renderStringFilter(filter.stringFilter!);
+        case GADimensionFilterType.IN_LIST:
+          return renderInListFilter(filter.inListFilter!);
+        default:
+          return null;
+      }
+    };
 
+    return (
+      <VerticalGroup>
+        <Select
+          options={selectedDimensions}
+          value={filter.fieldName}
+          onChange={(option) => onChange({ filter: { ...filter, fieldName: option.value! } })}
+          placeholder="Select field"
+        />
+        <Select
+          options={filterTypes}
+          value={filter.filterType}
+          onChange={handleFilterTypeChange}
+        />
+        {renderFilterContent()}
+      </VerticalGroup>
+    );
+  };
+
+  const renderStringFilter = (stringFilter: GAStringFilter) => {
+    const matchTypes = Object.values(GAStringFilterMatchType).map(value => ({ label: value, value }));
+
+    return (
+      <VerticalGroup>
+        <Select
+          options={matchTypes}
+          value={stringFilter.matchType}
+          onChange={(option) => onChange({ filter: { ...expression.filter!, stringFilter: { ...stringFilter, matchType: option.value! } } })}
+        />
+        <Input
+          value={stringFilter.value}
+          onChange={(e) => onChange({ filter: { ...expression.filter!, stringFilter: { ...stringFilter, value: e.currentTarget.value } } })}
+          placeholder="Value"
+        />
+        <RadioButtonGroup
+          options={[
+            { label: 'Case sensitive', value: true },
+            { label: 'Case insensitive', value: false },
+          ]}
+          value={stringFilter.caseSensitive}
+          onChange={(value) => onChange({ filter: { ...expression.filter!, stringFilter: { ...stringFilter, caseSensitive: value } } })}
+        />
+      </VerticalGroup>
+    );
+  };
+
+  const renderInListFilter = (inListFilter: GAInListFilter = { values: [], caseSensitive: false }) => {
+    return (
+      <VerticalGroup>
+        <Input
+          value={inListFilter.values.join(', ')}
+          onChange={(e) => onChange({ filter: { ...expression.filter!, inListFilter: { ...inListFilter, values: e.currentTarget.value.split(',').map(v => v.trim()) } } })}
+          placeholder="Values (comma-separated)"
+        />
+        <RadioButtonGroup
+          options={[
+            { label: 'Case sensitive', value: true },
+            { label: 'Case insensitive', value: false },
+          ]}
+          value={inListFilter.caseSensitive}
+          onChange={(value) => onChange({ filter: { ...expression.filter!, inListFilter: { ...inListFilter, caseSensitive: value } } })}
+        />
+      </VerticalGroup>
+    );
+  };
 
   return (
-    <>
-      <div className="gf-form">
-        <VerticalGroup >
-          {dimensionFilter.orGroup?.expressions.map(({ filter }, index) => {
-            return (
-              <>
-                <HorizontalGroup>
-                  <Field label="dimension">
-                    <Select
-                      options={props.query.selectedDimensions}
-                      onChange={(value, action) => {
-                        action.name = "dimensionChanged"
-                        fieldNameChange(value, action, index)
-                      }}
-                      value={filter?.fieldName}
-                    />
-                  </Field>
-                  <Field label="filter type">
-
-                    <Select
-                      options={dimensionFilterType}
-                      onChange={(value, action) => {
-                        action.name = "filterTypeChanged"
-                        fieldNameChange(value, action, index)
-                      }}
-                      value={filter?.filterType?.toString()}
-                    />
-                  </Field>
-
-                  {
-                    filter?.filterType === GADimensionFilterType.STRING &&
-                    <>
-                      <Field label="match type">
-                        <Select
-                          options={stringFilterMatchType}
-                          onChange={(value, action) => {
-                            action.name = "matchTypeChanged"
-                            fieldNameChange(value, action, index)
-                          }}
-                          value={filter.stringFilter?.matchType.toString()}
-                        />
-                      </Field>
-
-                    </>
-                  }
-                  {
-                    filter?.filterType === GADimensionFilterType.STRING &&
-                    <>
-                      <Field label="value" invalid={filter.stringFilter?.value === ''} error={filter.stringFilter?.value === '' ? 'This input is required' : ''}>
-                        <Input required onChange={(e) => {
-                          filedValueChange(e.currentTarget.value, index)
-                        }}
-                          value={filter.stringFilter?.value}
-                        ></Input>
-                      </Field>
-                    </>
-                  }
-                  {
-                    filter?.filterType === GADimensionFilterType.IN_LIST &&
-                    <>
-                      <Field label="values sperate by comma" invalid={filter.inListFilter?.values.join(',') === ''} error={filter.inListFilter?.values.join(',') === '' ? 'This input is required' : ''} >
-                        <Input required onChange={(e) => {
-                          filedValueChange(e.currentTarget.value, index)
-                        }}
-                          value={filter.inListFilter?.values.join(',')}
-                        ></Input>
-                      </Field>
-                    </>
-                  }
-                  {/* <Field label="filter type" description="filter type"> */}
-                  <Button variant='secondary' icon='minus' onClick={() => removeFields(index)} ></Button>
-                  <Button variant='secondary' icon='plus' onClick={addFields} ></Button>
-
-                  {/* </Field> */}
-                </HorizontalGroup>
-
-              </>
-            )
-          })}
-          {
-            (Object.keys(dimensionFilter).length === 0 || dimensionFilter.orGroup?.expressions.length === 0) && <Button variant='secondary' icon='plus' onClick={addFields} ></Button>
-          }
-        </VerticalGroup>
-        {/* <Field label="filter type" description="filter type"> */}
-        {/* </Field> */}
-      </div>
-    </>
+    <FieldSet>
+      <HorizontalGroup>
+        <Select
+          options={expressionTypes}
+          value={Object.keys(expression).length === 0 ? 'none' : Object.keys(expression)[0]}
+          onChange={handleExpressionTypeChange}
+        />
+        {renderExpressionContent()}
+        {onDelete && (
+          <Button variant="destructive" onClick={onDelete}>
+            Delete
+          </Button>
+        )}
+      </HorizontalGroup>
+    </FieldSet>
   );
-}
+};

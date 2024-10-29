@@ -11,10 +11,10 @@ import {
   RadioButtonGroup,
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
-import { DimensionFilter } from 'Filter';
+import { GAFilterExpressionComponent } from 'Filter';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import { GADataSourceOptions, GAQuery } from 'types';
+import { GADataSourceOptions, GAFilterExpression, GAQuery } from 'types';
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
@@ -122,12 +122,9 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  onFiltersExpressionChange = (item: any, ...t: any) => {
+  onFiltersExpressionChange = (newFilter: GAFilterExpression) => {
     const { query, onChange } = this.props;
-    let { filtersExpression } = query;
-    filtersExpression = item;
-
-    onChange({ ...query, filtersExpression });
+    onChange({ ...query, dimensionFilter: newFilter });
     this.willRunQuery();
   };
 
@@ -324,7 +321,12 @@ export class QueryEditorGA4 extends PureComponent<Props> {
             >
               DimensionFilter
             </InlineFormLabel>
-            <DimensionFilter props={this.props}></DimensionFilter>
+            <GAFilterExpressionComponent 
+              expression={query.dimensionFilter} 
+              onChange={this.onFiltersExpressionChange}
+              selectedDimensions={selectedDimensions}
+              onDelete={undefined}
+            />
           </div>
           <div className="gf-form">
             <InlineFormLabel className="query-keyword">Query Mode</InlineFormLabel>

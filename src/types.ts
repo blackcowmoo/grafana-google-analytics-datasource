@@ -98,7 +98,9 @@ export interface GAFilterExpressionList {
 
 export interface GAFilter {
   fieldName: string;
-  filterType: GAMetricFilterType | GADimensionFilterType | undefined;
+  
+  // filterType: GAMetricFilterType | GADimensionFilterType | undefined;
+  filterType: GADimensionFilterType;
   stringFilter?: GAStringFilter;
   inListFilter?: GAInListFilter;
   numberFilter?: GANumbericFilter;
