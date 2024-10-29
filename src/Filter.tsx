@@ -1,3 +1,4 @@
+// cursor ai로 작성됨
 import { SelectableValue } from '@grafana/data';
 import { Button, FieldSet, HorizontalGroup, Input, RadioButtonGroup, Select, VerticalGroup } from '@grafana/ui';
 import React from 'react';
@@ -16,7 +17,7 @@ export const GAFilterExpressionComponent: React.FC<Props> = ({ expression = {}, 
     { label: 'AND', value: 'andGroup' },
     { label: 'OR', value: 'orGroup' },
     { label: 'NOT', value: 'notExpression' },
-    { label: 'filter', value: 'filter' },
+    { label: 'FILTER', value: 'filter' },
   ];
 
   const handleExpressionTypeChange = (option: SelectableValue<string>) => {
