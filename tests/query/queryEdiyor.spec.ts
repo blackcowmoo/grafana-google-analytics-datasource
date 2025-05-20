@@ -1,20 +1,24 @@
 import { expect, test } from '@grafana/plugin-e2e';
+import * as fs from 'fs';
+import * as path from 'path';
 
+// 대시보드 버전 목록 가져오기
+const getDashboardVersions = () => {
+  const dashboardsDir = path.join(__dirname, '../../provisioning/dashboards');
+  const files = fs.readdirSync(dashboardsDir);
+  return files
+    .filter(file => file.match(/^v\d+\.\d+\.\d+\.json$/))
+    .map(file => file.replace('.json', ''));
+};
 
-test('0_2_2 migration test', async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
-  // default settings
-  const dashboard = await readProvisionedDashboard({fileName: 'v0.2.2.json'})
-  const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
-  await dashboardPage.refreshDashboard()
-  await expect(dashboardPage.waitForQueryDataResponse()).toBeOK()
-});
-
-test('0_2_3 migration test', async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
-  // default settings
-  const dashboard = await readProvisionedDashboard({fileName: 'v0.2.3.json'})
-  const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
-  await dashboardPage.refreshDashboard()
-  await expect(dashboardPage.waitForQueryDataResponse()).toBeOK()
+// 각 버전별 마이그레이션 테스트
+getDashboardVersions().forEach(version => {
+  test(`${version} migration test`, async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
+    const dashboard = await readProvisionedDashboard({fileName: `${version}.json`});
+    const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
+    await dashboardPage.refreshDashboard();
+    await expect(dashboardPage.waitForQueryDataResponse()).toBeOK();
+  });
 });
 
 test('time series', async ({ readProvisionedDataSource, explorePage, page }) => {
