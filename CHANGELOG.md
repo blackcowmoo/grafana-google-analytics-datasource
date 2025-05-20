@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+- Support or,and,not filter[#128](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/128)
+- Support grafana version < 13[#136](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/136)
+- Fix github actions [#136](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/136)
+- Update README.md[#127](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/127)
+
 ## 0.3.0
 - Fix timezone no zoneinfo.zip([#102](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/102))
 - Supprot variable at Dimensions Filter([#103](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/103))
