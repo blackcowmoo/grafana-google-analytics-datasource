@@ -80,8 +80,8 @@ jobs:
           mv dist ${PLUGIN_ID}
           zip ${ARCHIVE} ${PLUGIN_ID} -r
         env:
-          ARCHIVE: $\{{ steps.metadata.outputs.archive }}
-          PLUGIN_ID: $\{{ steps.metadata.outputs.plugin-id }}
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
 
       - name: Check plugin.json
         run: |
@@ -89,7 +89,7 @@ jobs:
             -v $PWD/${ARCHIVE}:/archive.zip \
             grafana/plugin-validator-cli -analyzer=metadatavalid /archive.zip
         env:
-          ARCHIVE: $\{{ steps.metadata.outputs.archive }}
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
       
       - name: Restore Google Analytics Json
         id: restore-google-json
