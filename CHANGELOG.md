@@ -5,6 +5,7 @@
 - Support grafana version < 13[#136](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/136)
 - Fix github actions [#136](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/136)
 - Update README.md[#127](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/127)
+- Remove upper bound of your grafana dependency
 
 ## 0.3.0
 - Fix timezone no zoneinfo.zip([#102](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/102))
