@@ -3,7 +3,6 @@ import {
     AsyncMultiSelect,
     AsyncSelect,
     Badge,
-    CascaderOption,
     HorizontalGroup,
     InlineFormLabel,
     InlineLabel,
@@ -29,20 +28,20 @@ const badgeMap = {
 } as const
 
 export class QueryEditorUA extends PureComponent<Props> {
-  options: CascaderOption[] = [] // kept for backward compatibility but not used for variable input
   constructor(props: Readonly<Props>) {
     super(props);
-    if (!this.props.query.hasOwnProperty('cacheDurationSeconds')) {
-      this.props.query.cacheDurationSeconds = defaultCacheDuration;
-      this.props.query.filtersExpression = '';
+    const { query, datasource, onChange } = props;
+
+    if (!('cacheDurationSeconds' in query)) {
+      query.cacheDurationSeconds = defaultCacheDuration;
+      query.filtersExpression = '';
     }
-    this.props.query.version = props.datasource.getGaVersion()
-    this.props.query.displayName = new Map<string, string>()
-    // 기존 계정 요약 호출은 더이상 필요하지 않지만, 과거 캐스케이더 사용과 호환성 유지를 위해 유지한다.
-    this.props.datasource.getAccountSummaries().then((accountSummaries) => {
-      this.options = accountSummaries;
-      this.props.onChange(this.props.query);
-    });
+
+    query.version = datasource.getGaVersion();
+    query.displayName = new Map<string, string>();
+
+    // Ensure modified query is propagated
+    onChange(query);
   }
 
   onMetricChange = (items: Array<SelectableValue<string>>) => {
@@ -74,18 +73,21 @@ export class QueryEditorUA extends PureComponent<Props> {
   onAccountIdChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, accountId: value });
+    this.refreshTimezone(value, query.webPropertyId, query.profileId);
     this.willRunQuery();
   };
 
   onWebPropertyIdChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, webPropertyId: value });
+    this.refreshTimezone(query.accountId, value, query.profileId);
     this.willRunQuery();
   };
 
   onProfileIdChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, profileId: value });
+    this.refreshTimezone(query.accountId, query.webPropertyId, value);
     this.willRunQuery();
   };
 
@@ -126,6 +128,25 @@ export class QueryEditorUA extends PureComponent<Props> {
       onRunQuery();
     }
   }, 500);
+
+  refreshTimezone = (accountId?: string, webPropertyId?: string, profileId?: string) => {
+    const { query, onChange, datasource } = this.props;
+    if (
+      accountId &&
+      webPropertyId &&
+      profileId &&
+      !accountId.includes('$') &&
+      !webPropertyId.includes('$') &&
+      !profileId.includes('$')
+    ) {
+      datasource.getTimezone(accountId, webPropertyId, profileId).then((timezone) => {
+        onChange({ ...query, timezone });
+      });
+    } else {
+      // 템플릿 변수를 사용하는 경우, timezone 은 쿼리 실행 시점에 결정된다.
+      onChange({ ...query, timezone: '' });
+    }
+  };
 
   setDisplayName = (key: string, value = "") => {
     const { query: { displayName } } = this.props

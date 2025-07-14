@@ -3,7 +3,6 @@ import {
   AsyncMultiSelect,
   AsyncSelect,
   Badge,
-  CascaderOption,
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
@@ -48,27 +47,32 @@ export const GAServiceLevel = {
 };
 
 export class QueryEditorGA4 extends PureComponent<Props> {
-  options: CascaderOption[] = []; // kept for compatibility
   constructor(props: Readonly<Props>) {
     super(props);
-    const { query } = this.props;
+    const { query, datasource, onChange } = props;
 
-    if (!query.hasOwnProperty('cacheDurationSeconds')) {
-      this.props.query.cacheDurationSeconds = defaultCacheDuration;
+    if (!('cacheDurationSeconds' in query)) {
+      query.cacheDurationSeconds = defaultCacheDuration;
     }
-    this.props.query.version = props.datasource.getGaVersion();
-    this.props.query.displayName = new Map<string, string>();
+
+    query.version = datasource.getGaVersion();
+    query.displayName = new Map<string, string>();
+
     // 유지: 캐스케이더 사용 코드를 제거했지만, 기존 로직 호환을 위해 계정 목록을 캐시한다.
-    this.props.datasource.getAccountSummaries().then((accountSummaries) => {
-      this.options = accountSummaries;
-      this.props.onChange(this.props.query);
+    datasource.getAccountSummaries().then((accountSummaries) => {
+      // 현재 UI에서는 사용하지 않지만, 향후 확장성을 위해 결과를 보존한다.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _unused = accountSummaries;
     });
-    if (query.mode === undefined || query.mode === '') {
+
+    if (!query.mode) {
       query.mode = 'time series';
     }
-    if (query.dimensionFilter === undefined) {
-      query.dimensionFilter = {};
+    if (!query.dimensionFilter) {
+      query.dimensionFilter = {} as any;
     }
+
+    onChange(query);
   }
 
   onMetricChange = (items: Array<SelectableValue<string>>) => {
@@ -101,18 +105,21 @@ export class QueryEditorGA4 extends PureComponent<Props> {
   onAccountIdChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, accountId: value });
+    this.refreshServiceInfo(value, query.webPropertyId, query.profileId);
     this.willRunQuery();
   };
 
   onWebPropertyIdChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, webPropertyId: value });
+    this.refreshServiceInfo(query.accountId, value, query.profileId);
     this.willRunQuery();
   };
 
   onProfileIdChange = (value: string) => {
     const { query, onChange } = this.props;
     onChange({ ...query, profileId: value });
+    this.refreshServiceInfo(query.accountId, query.webPropertyId, value);
     this.willRunQuery();
   };
 
@@ -158,6 +165,27 @@ export class QueryEditorGA4 extends PureComponent<Props> {
       onRunQuery();
     }
   }, 500);
+
+  refreshServiceInfo = (accountId?: string, webPropertyId?: string, profileId?: string) => {
+    const { query, onChange, datasource } = this.props;
+    if (
+      accountId &&
+      webPropertyId &&
+      !accountId.includes('$') &&
+      !webPropertyId.includes('$')
+    ) {
+      if (profileId && !profileId.includes('$')) {
+        datasource.getTimezone(accountId, webPropertyId, profileId).then((timezone) => {
+          onChange({ ...query, timezone });
+        });
+      }
+      datasource.getServiceLevel(accountId, webPropertyId).then((serviceLevel) => {
+        onChange({ ...query, serviceLevel });
+      });
+    } else {
+      onChange({ ...query, timezone: '', serviceLevel: '' });
+    }
+  };
 
   setDisplayName = (key: string, value = '') => {
     const {
