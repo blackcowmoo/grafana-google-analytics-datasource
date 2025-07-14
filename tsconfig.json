@@ -4,5 +4,9 @@
     "lib": ["DOM", "ES2015"],
     "target": "es5",
     "jsx": "react"
-  }
+  },
+  "include": [
+    "src",
+    "types"
+  ]
 }
