@@ -1,20 +1,30 @@
 import React from 'react';
-import { DataSourcePlugin, QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
-    AsyncMultiSelect,
-    AsyncSelect,
-    Badge,
-    HorizontalGroup,
-    InlineFormLabel,
-    InlineLabel,
-    Input
+  DataSourcePlugin,
+  QueryEditorProps,
+  SelectableValue,
+  ScopedVars,
+} from '@grafana/data';
+import { getTemplateSrv } from '@grafana/runtime';
+import {
+  Input,
+  InlineLabel,
+  AsyncMultiSelect,
+  AsyncSelect,
+  Badge,
+  HorizontalGroup,
+  InlineFormLabel,
 } from '@grafana/ui';
-import { DataSource } from 'DataSource';
 import _ from 'lodash';
-import { PureComponent } from 'react';
-import { GADataSourceOptions, GAQuery } from 'types';
+import { DataSource } from 'DataSource';
+import { GAQuery, GADataSourceOptions } from './types';
 
-interface Props extends QueryEditorProps<DataSource, GAQuery, GADataSourceOptions> {}
+interface Props extends QueryEditorProps<DataSource, GAQuery, GADataSourceOptions> {
+  query: GAQuery;
+  onChange: (query: GAQuery) => void;
+  onRunQuery: () => void;
+  datasource: DataSource;
+}
 
 const defaultCacheDuration = 300;
 const badgeMap = {
