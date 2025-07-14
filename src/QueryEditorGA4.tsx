@@ -1,20 +1,33 @@
-import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import React from 'react';
 import {
+  DataSourcePlugin,
+  QueryEditorProps,
+  SelectableValue,
+  ScopedVars,
+  DataSourceWithBackend,
+} from '@grafana/data';
+import { getTemplateSrv } from '@grafana/runtime';
+import {
+  Input,
+  InlineLabel,
   AsyncMultiSelect,
   AsyncSelect,
   Badge,
   HorizontalGroup,
   InlineFormLabel,
-  InlineLabel,
   RadioButtonGroup,
-  Input,
 } from '@grafana/ui';
+import _ from 'lodash';
 import { DataSource } from 'DataSource';
 import { GAFilterExpressionComponent } from 'Filter';
-import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { GADataSourceOptions, GAFilterExpression, GAQuery } from 'types';
-type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
+import { GAQuery, GADataSourceOptions, GAFilterExpression } from './types';
+
+interface Props extends QueryEditorProps<DataSource, GAQuery, GADataSourceOptions> {
+  query: GAQuery;
+  onChange: (query: GAQuery) => void;
+  onRunQuery: () => void;
+  datasource: DataSource;
+}
 
 const defaultCacheDuration = 300;
 const gaVersionBadge = {
@@ -46,7 +59,7 @@ export const GAServiceLevel = {
   ServiceLevelUnspecified: 'SERVICE_LEVEL_UNSPECIFIED',
 };
 
-export class QueryEditorGA4 extends PureComponent<Props> {
+export class QueryEditorGA4 extends React.PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
     const { query, datasource, onChange } = props;
