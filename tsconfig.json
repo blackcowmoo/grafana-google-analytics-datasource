@@ -1,17 +1,20 @@
 {
   "extends": "./.config/tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ES2017"],
     "target": "es5",
+    "lib": ["DOM", "ES2015"],
     "jsx": "react",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": [
-      "react",
-      "lodash"
-    ]
+    "types": ["react", "lodash"],
+    "typeRoots": ["./node_modules/@types"],
+    "baseUrl": "./src",
+    "paths": {
+      "@grafana/data": ["node_modules/@grafana/data"],
+      "@grafana/runtime": ["node_modules/@grafana/runtime"],
+      "@grafana/ui": ["node_modules/@grafana/ui"]
+    }
   },
-  "include": [
-    "src",
-    "types"
-  ]
+  "include": ["src", "types"]
 }

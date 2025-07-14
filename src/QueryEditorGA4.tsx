@@ -1,8 +1,16 @@
 import React from 'react';
+import type {
+  DataSourcePlugin,
+  ScopedVars,
+} from '@grafana/data';
 import {
   QueryEditorProps,
   SelectableValue,
 } from '@grafana/data';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { getTemplateSrv } from '@grafana/runtime';
+
+void getTemplateSrv;
 import {
   Input,
   InlineLabel,
@@ -23,6 +31,8 @@ interface Props extends QueryEditorProps<DataSource, GAQuery, GADataSourceOption
   onChange: (query: GAQuery) => void;
   onRunQuery: () => void;
   datasource: DataSource;
+  _plugin?: DataSourcePlugin<any, any>;
+  _scopedVars?: ScopedVars;
 }
 
 const defaultCacheDuration = 300;

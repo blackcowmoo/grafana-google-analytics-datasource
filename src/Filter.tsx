@@ -168,7 +168,11 @@ export const GAFilterExpressionComponent: React.FC<Props> = ({ expression = {}, 
   };
 
   const renderStringFilter = (stringFilter: GAStringFilter) => {
-    const matchTypes = Object.values(GAStringFilterMatchType).map((value: string) => ({ label: value, value }));
+    const matchTypes = (Object.keys(GAStringFilterMatchType) as Array<keyof typeof GAStringFilterMatchType>)
+      .map((key) => {
+        const value = GAStringFilterMatchType[key];
+        return { label: value, value };
+      });
 
     return (
       <VerticalGroup>
