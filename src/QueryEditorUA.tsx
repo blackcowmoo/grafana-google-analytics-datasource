@@ -1,4 +1,5 @@
-import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import React from 'react';
+import { DataSourcePlugin, QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
     AsyncMultiSelect,
     AsyncSelect,
@@ -10,10 +11,10 @@ import {
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import { PureComponent } from 'react';
 import { GADataSourceOptions, GAQuery } from 'types';
 
-type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
+interface Props extends QueryEditorProps<DataSource, GAQuery, GADataSourceOptions> {}
 
 const defaultCacheDuration = 300;
 const badgeMap = {
@@ -27,7 +28,7 @@ const badgeMap = {
   },
 } as const
 
-export class QueryEditorUA extends PureComponent<Props> {
+export class QueryEditorUA extends React.PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
     const { query, datasource, onChange } = props;
