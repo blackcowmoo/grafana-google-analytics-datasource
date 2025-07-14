@@ -1,7 +1,13 @@
 import { DataSourceInstanceSettings, ScopedVars, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
-import { CascaderOption } from '@grafana/ui';
 import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
+
+type Option = {
+  label: string;
+  value: string;
+  children?: Option[];
+  items?: Option[];
+};
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
   version: string;
@@ -50,28 +56,28 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
       dimensionFilter,
     };
   }
-  async getAccountSummaries(): Promise<CascaderOption[]> {
+  async getAccountSummaries(): Promise<Option[]> {
     let accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[];
-    let accounts: CascaderOption[] = [];
+    let accounts: Option[] = [];
     for (const accountSummary of accountSummaries) {
-      let accountCascader: CascaderOption = {
+      let accountCascader: Option = {
         label: accountSummary.DisplayName,
         value: accountSummary.Account,
       };
-      let properties: CascaderOption[] = [];
+      let properties: Option[] = [];
       for (const propertySummary of accountSummary.PropertySummaries) {
-        let propertyCascader: CascaderOption = {
+        let propertyCascader: Option = {
           label: propertySummary.DisplayName,
           value: propertySummary.Property,
         };
         properties.push(propertyCascader);
-        let profiles: CascaderOption[] = [];
+        let profiles: Option[] = [];
 
         if (!propertySummary.ProfileSummaries) {
           continue;
         }
         for (const profileSummary of propertySummary.ProfileSummaries) {
-          let profileCascader: CascaderOption = {
+          let profileCascader: Option = {
             label: profileSummary.DisplayName,
             value: profileSummary.Profile,
           };

@@ -1,11 +1,8 @@
 import React from 'react';
 import {
-  DataSourcePlugin,
   QueryEditorProps,
   SelectableValue,
-  ScopedVars,
 } from '@grafana/data';
-import { getTemplateSrv } from '@grafana/runtime';
 import {
   Input,
   InlineLabel,

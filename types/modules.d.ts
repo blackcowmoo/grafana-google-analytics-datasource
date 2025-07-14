@@ -1,5 +1,1 @@
-declare module '@grafana/data';
-declare module '@grafana/runtime';
-declare module '@grafana/ui';
-declare module 'react';
-declare module 'lodash';
+// Custom module declarations for external packages without type definitions can be added here.

@@ -1,12 +1,8 @@
 import React from 'react';
 import {
-  DataSourcePlugin,
   QueryEditorProps,
   SelectableValue,
-  ScopedVars,
-  DataSourceWithBackend,
 } from '@grafana/data';
-import { getTemplateSrv } from '@grafana/runtime';
 import {
   Input,
   InlineLabel,
@@ -72,11 +68,8 @@ export class QueryEditorGA4 extends React.PureComponent<Props> {
     query.displayName = new Map<string, string>();
 
     // 유지: 캐스케이더 사용 코드를 제거했지만, 기존 로직 호환을 위해 계정 목록을 캐시한다.
-    datasource.getAccountSummaries().then((accountSummaries) => {
-      // 현재 UI에서는 사용하지 않지만, 향후 확장성을 위해 결과를 보존한다.
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _unused = accountSummaries;
-    });
+    // 호출하여 인증/권한 여부를 사전에 확인하지만, UI에서는 사용하지 않음
+    void datasource.getAccountSummaries();
 
     if (!query.mode) {
       query.mode = 'time series';
