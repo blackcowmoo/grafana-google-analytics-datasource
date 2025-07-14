@@ -12,21 +12,41 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
     const templateSrv = getTemplateSrv();
+    // Replace variables in scalar fields
+    const accountId = templateSrv.replace(query.accountId ?? '', scopedVars);
+    const webPropertyId = templateSrv.replace(query.webPropertyId ?? '', scopedVars);
+    const profileId = templateSrv.replace(query.profileId ?? '', scopedVars);
+    const timeDimension = templateSrv.replace(query.timeDimension ?? '', scopedVars);
+
+    // Replace variables in array fields
+    const metrics = (query.metrics ?? []).map((m) => templateSrv.replace(m, scopedVars));
+    const dimensions = (query.dimensions ?? []).map((d) => templateSrv.replace(d, scopedVars));
+
+    // Replace variables inside dimensionFilter object
     let dimensionFilter = query.dimensionFilter;
     dimensionFilter?.orGroup?.expressions.map((expression) => {
       if (expression.filter?.stringFilter) {
-        expression.filter.stringFilter.value = templateSrv.replace(expression.filter.stringFilter.value, scopedVars);
+        expression.filter.stringFilter.value = templateSrv.replace(
+          expression.filter.stringFilter.value,
+          scopedVars
+        );
       }
       if (expression.filter?.inListFilter) {
         expression.filter.inListFilter.values = expression.filter.inListFilter.values.map((value) => {
-          value = templateSrv.replace(value, scopedVars);
-          return value;
+          return templateSrv.replace(value, scopedVars);
         });
       }
       return expression;
     });
+
     return {
       ...query,
+      accountId,
+      webPropertyId,
+      profileId,
+      timeDimension,
+      metrics,
+      dimensions,
       dimensionFilter,
     };
   }

@@ -3,12 +3,12 @@ import {
   AsyncMultiSelect,
   AsyncSelect,
   Badge,
-  ButtonCascader,
   CascaderOption,
   HorizontalGroup,
   InlineFormLabel,
   InlineLabel,
   RadioButtonGroup,
+  Input,
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
 import { GAFilterExpressionComponent } from 'Filter';
@@ -48,7 +48,7 @@ export const GAServiceLevel = {
 };
 
 export class QueryEditorGA4 extends PureComponent<Props> {
-  options: CascaderOption[] = [];
+  options: CascaderOption[] = []; // kept for compatibility
   constructor(props: Readonly<Props>) {
     super(props);
     const { query } = this.props;
@@ -58,6 +58,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     }
     this.props.query.version = props.datasource.getGaVersion();
     this.props.query.displayName = new Map<string, string>();
+    // 유지: 캐스케이더 사용 코드를 제거했지만, 기존 로직 호환을 위해 계정 목록을 캐시한다.
     this.props.datasource.getAccountSummaries().then((accountSummaries) => {
       this.options = accountSummaries;
       this.props.onChange(this.props.query);
@@ -97,13 +98,21 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     this.willRunQuery();
   };
 
-  onIdSelect = async (value: string[], selectedOptions: CascaderOption[]) => {
-    const [account, property, profile] = value;
-    const { query, onChange, datasource } = this.props;
-    const timezone = await datasource.getTimezone(account, property, profile);
-    const serviceLevel = await datasource.getServiceLevel(account, property);
+  onAccountIdChange = (value: string) => {
+    const { query, onChange } = this.props;
+    onChange({ ...query, accountId: value });
+    this.willRunQuery();
+  };
 
-    onChange({ ...query, accountId: account, webPropertyId: property, profileId: profile, timezone, serviceLevel });
+  onWebPropertyIdChange = (value: string) => {
+    const { query, onChange } = this.props;
+    onChange({ ...query, webPropertyId: value });
+    this.willRunQuery();
+  };
+
+  onProfileIdChange = (value: string) => {
+    const { query, onChange } = this.props;
+    onChange({ ...query, profileId: value });
     this.willRunQuery();
   };
 
@@ -208,9 +217,24 @@ export class QueryEditorGA4 extends PureComponent<Props> {
         <div className="gf-form-group">
           <div className="gf-form">
             <HorizontalGroup spacing="sm" justify="flex-start">
-              <ButtonCascader options={this.options} onChange={this.onIdSelect}>
-                Account Select
-              </ButtonCascader>
+              <Input
+                width={20}
+                value={accountId || ''}
+                placeholder="$accountId"
+                onChange={(e) => this.onAccountIdChange(e.currentTarget.value)}
+              />
+              <Input
+                width={30}
+                value={webPropertyId || ''}
+                placeholder="$webPropertyId"
+                onChange={(e) => this.onWebPropertyIdChange(e.currentTarget.value)}
+              />
+              <Input
+                width={30}
+                value={query.profileId || ''}
+                placeholder="$profileId"
+                onChange={(e) => this.onProfileIdChange(e.currentTarget.value)}
+              />
               <InlineLabel aria-label='account-info'>{`Account: ${accountId || ''},Property: ${webPropertyId || ''}`}</InlineLabel>
               <InlineLabel className="query-keyword" width={'auto'} tooltip={<>GA timeZone</>}>
                 Timezone
