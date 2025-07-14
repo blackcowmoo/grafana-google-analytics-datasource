@@ -1,9 +1,14 @@
 {
   "extends": "./.config/tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ES2015"],
+    "lib": ["DOM", "ES2017"],
     "target": "es5",
-    "jsx": "react"
+    "jsx": "react",
+    "esModuleInterop": true,
+    "types": [
+      "react",
+      "lodash"
+    ]
   },
   "include": [
     "src",

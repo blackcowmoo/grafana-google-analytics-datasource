@@ -168,14 +168,14 @@ export const GAFilterExpressionComponent: React.FC<Props> = ({ expression = {}, 
   };
 
   const renderStringFilter = (stringFilter: GAStringFilter) => {
-    const matchTypes = Object.values(GAStringFilterMatchType).map(value => ({ label: value, value }));
+    const matchTypes = Object.values(GAStringFilterMatchType).map((value: string) => ({ label: value, value }));
 
     return (
       <VerticalGroup>
         <Select
           options={matchTypes}
           value={stringFilter.matchType}
-          onChange={(option) => onChange({ filter: { ...expression.filter!, stringFilter: { ...stringFilter, matchType: option.value! } } })}
+          onChange={(option) => onChange({ filter: { ...expression.filter!, stringFilter: { ...stringFilter, matchType: option.value! as GAStringFilterMatchType } } })}
         />
         <Input
           value={stringFilter.value}
