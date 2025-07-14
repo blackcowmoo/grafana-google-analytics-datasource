@@ -10,7 +10,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     this.version = instanceSettings.jsonData.version;
   }
 
-  applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
+  applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): GAQuery {
     const templateSrv = getTemplateSrv();
     // Replace variables in scalar fields
     const accountId = templateSrv.replace(query.accountId ?? '', scopedVars);
