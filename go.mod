@@ -6,7 +6,7 @@ require (
 	github.com/grafana/grafana-plugin-sdk-go v0.250.0
 	github.com/jinzhu/copier v0.3.5
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.162.0
 )
 
