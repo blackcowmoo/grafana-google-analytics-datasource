@@ -14,8 +14,14 @@ export type Props = DataSourcePluginOptionsEditorProps<GADataSourceOptions, GASe
 export class ConfigEditor extends PureComponent<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
-    if (!this.props.options.jsonData.version) {
-      this.props.options.jsonData.version = 'v4';
+    if (!props.options.jsonData.version) {
+      props.onOptionsChange({
+        ...props.options,
+        jsonData: {
+          ...props.options.jsonData,
+          version: 'v4',
+        },
+      });
     }
   }
   onResetProfileId = () => {
