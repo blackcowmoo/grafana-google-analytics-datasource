@@ -25,8 +25,13 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
       }
       return expression;
     });
+
+    // Apply template variable interpolation to webPropertyId
+    const webPropertyId = templateSrv.replace(query.webPropertyId, scopedVars);
+
     return {
       ...query,
+      webPropertyId,
       dimensionFilter,
     };
   }
