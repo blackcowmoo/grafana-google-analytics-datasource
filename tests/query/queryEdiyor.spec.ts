@@ -1,6 +1,25 @@
 import { expect, test } from '@grafana/plugin-e2e';
+import type { Locator } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+
+// Grafana 10.4.5+ renders the RadioButtonGroup with a visible <label> and a
+// stacked opacity:0 <input>, so Playwright's `.check()` on the native input
+// times out (waits for visibility) and a plain `.click()` on the label is
+// blocked by the input's pointer-event interception. Use `force: true` to
+// click the visible label directly. Fall back to the old plain-text path for
+// pre-10.4.5 Grafana (no label-wrapped radios).
+const selectQueryMode = async (row: Locator, mode: string) => {
+  const label = row
+    .getByLabel('query-mode')
+    .locator('label')
+    .filter({ hasText: new RegExp(`^${mode}\\s*$`) });
+  if ((await label.count()) > 0) {
+    await label.click({ force: true });
+    return;
+  }
+  await row.getByText(mode, { exact: true }).check();
+};
 
 // 대시보드 버전 목록 가져오기
 const getDashboardVersions = () => {
@@ -28,12 +47,7 @@ test('time series', async ({ readProvisionedDataSource, explorePage, page }) => 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
 
-  let queryMode =  explorePage.getQueryEditorRow('A').getByLabel('query-mode').getByLabel('Time Series')
-  // for grafana version < 10.4.5
-  if(await queryMode.count()==0){
-    queryMode =  explorePage.getQueryEditorRow('A').getByText('Time Series',{exact: true})
-  }
-  await queryMode.check()
+  await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Time Series');
 
   // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
@@ -68,12 +82,8 @@ test('table', async ({ readProvisionedDataSource, explorePage, page }) => {
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  let queryMode =  explorePage.getQueryEditorRow('A').getByLabel('query-mode').getByLabel('Table')
-  // for grafana version < 10.4.5
-  if(await queryMode.count()==0){
-    queryMode =  explorePage.getQueryEditorRow('A').getByText('Table',{exact: true})
-  }
-  await queryMode.check()  // account select
+  await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Table');
+  // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
   await page.getByText('Default Account for Firebase').click();
   await page.getByText('gitblog - GA4').click();
@@ -106,12 +116,8 @@ test('realtime', async ({ readProvisionedDataSource, explorePage, page }) => {
 
   await explorePage.datasource.set(ds.name);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
-  let queryMode =  explorePage.getQueryEditorRow('A').getByLabel('query-mode').getByLabel('Realtime')
-  // for grafana version < 10.4.5
-  if(await queryMode.count()==0){
-    queryMode =  explorePage.getQueryEditorRow('A').getByText('Realtime',{exact: true})
-  }
-  await queryMode.check()  // account select
+  await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Realtime');
+  // account select
   await explorePage.getQueryEditorRow('A').getByRole('button', { name: 'Account Select' }).click();
   await page.getByText('Default Account for Firebase').click();
   await page.getByText('gitblog - GA4').click();
