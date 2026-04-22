@@ -9,16 +9,23 @@ import * as path from 'path';
 // blocked by the input's pointer-event interception. Use `force: true` to
 // click the visible label directly. Fall back to the old plain-text path for
 // pre-10.4.5 Grafana (no label-wrapped radios).
+//
+// The `count()` check is a snapshot of the current DOM and does not wait -
+// plugin-e2e >= 2.0 no longer uses networkidle, so the datasource editor can
+// still be rendering when we reach this helper. Wait for either the radio
+// group or the legacy text to actually appear before branching.
 const selectQueryMode = async (row: Locator, mode: string) => {
   const label = row
     .getByLabel('query-mode')
     .locator('label')
     .filter({ hasText: new RegExp(`^${mode}\\s*$`) });
+  const legacyText = row.getByText(mode, { exact: true });
+  await expect(label.or(legacyText).first()).toBeVisible();
   if ((await label.count()) > 0) {
     await label.click({ force: true });
     return;
   }
-  await row.getByText(mode, { exact: true }).check();
+  await legacyText.check();
 };
 
 // 대시보드 버전 목록 가져오기
