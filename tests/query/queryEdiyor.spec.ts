@@ -20,12 +20,22 @@ const selectQueryMode = async (row: Locator, mode: string) => {
     .locator('label')
     .filter({ hasText: new RegExp(`^${mode}\\s*$`) });
   const legacyText = row.getByText(mode, { exact: true });
-  await expect(label.or(legacyText).first()).toBeVisible();
+  await expect(label.or(legacyText).first()).toBeVisible({ timeout: 15000 });
   if ((await label.count()) > 0) {
     await label.click({ force: true });
     return;
   }
   await legacyText.check();
+};
+
+// plugin-e2e >= 2.0 dropped `waitUntil: 'networkidle'` from GrafanaPage.navigate()
+// in favor of `'load'`, so when gotoDashboardPage/explorePage returns the initial
+// panel queries may still be in flight and the scenes-based dashboard (Grafana 11+)
+// may not be ready to react to refresh/datasource selection. Replicate the v1.6.x
+// behavior by explicitly waiting for the network to settle; the catch swallows the
+// harmless timeout on dashboards that keep polling (e.g. live data).
+const waitForPageSettle = async (page: import('@playwright/test').Page) => {
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 };
 
 // 대시보드 버전 목록 가져오기
@@ -39,13 +49,15 @@ const getDashboardVersions = () => {
 
 // 각 버전별 마이그레이션 테스트
 getDashboardVersions().forEach(version => {
-  test(`${version} migration test`, async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
+  test(`${version} migration test`, async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage, page }) => {
     const dashboard = await readProvisionedDashboard({fileName: `${version}.json`});
     const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
-    // waitForQueryDataResponse must be set up before refreshDashboard triggers the query,
-    // otherwise the response can arrive before the listener attaches (plugin-e2e >= 2.0
-    // dropped networkidle on navigate, so the initial query is no longer guaranteed to be
-    // complete when gotoDashboardPage returns).
+    // Wait for the initial dashboard render/hydration to settle. Without this,
+    // Grafana 11/12 scenes are not yet ready to react to the refresh click and
+    // no /api/ds/query request is emitted.
+    await waitForPageSettle(page);
+    // Attach the listener BEFORE clicking refresh so we don't miss the response
+    // to a fast-firing query.
     const responsePromise = dashboardPage.waitForQueryDataResponse();
     await dashboardPage.refreshDashboard();
     await expect(responsePromise).toBeOK();
@@ -57,6 +69,7 @@ test('time series', async ({ readProvisionedDataSource, explorePage, page }) => 
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
   await explorePage.datasource.set(ds.name);
+  await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
 
   await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Time Series');
@@ -93,6 +106,7 @@ test('table', async ({ readProvisionedDataSource, explorePage, page }) => {
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
   await explorePage.datasource.set(ds.name);
+  await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
   await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Table');
   // account select
@@ -127,6 +141,7 @@ test('realtime', async ({ readProvisionedDataSource, explorePage, page }) => {
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
   await explorePage.datasource.set(ds.name);
+  await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
   await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Realtime');
   // account select
