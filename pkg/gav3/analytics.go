@@ -52,7 +52,7 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		return nil, err
 	}
 
-	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone)
+	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone, queryModel.From, queryModel.To)
 }
 
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
