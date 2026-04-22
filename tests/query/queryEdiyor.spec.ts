@@ -35,8 +35,13 @@ getDashboardVersions().forEach(version => {
   test(`${version} migration test`, async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage }) => {
     const dashboard = await readProvisionedDashboard({fileName: `${version}.json`});
     const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
+    // waitForQueryDataResponse must be set up before refreshDashboard triggers the query,
+    // otherwise the response can arrive before the listener attaches (plugin-e2e >= 2.0
+    // dropped networkidle on navigate, so the initial query is no longer guaranteed to be
+    // complete when gotoDashboardPage returns).
+    const responsePromise = dashboardPage.waitForQueryDataResponse();
     await dashboardPage.refreshDashboard();
-    await expect(dashboardPage.waitForQueryDataResponse()).toBeOK();
+    await expect(responsePromise).toBeOK();
   });
 });
 
