@@ -77,7 +77,7 @@ func transformReportToDataFrameByDimensions(columns []*model.ColumnDefinition, r
 // <--------- primary secondary --------->
 var timeDimensions []string = []string{"ga:dateHourMinute", "ga:dateHour", "ga:date"}
 
-func transformReportToDataFrames(report *reporting.Report, refId string, timezone string) ([]*data.Frame, error) {
+func transformReportToDataFrames(report *reporting.Report, refId string, timezone string, from, to time.Time) ([]*data.Frame, error) {
 	timeDimension := reporting.MetricHeaderEntry{
 		Name: report.ColumnHeader.Dimensions[0],
 		Type: "TIME",
@@ -103,6 +103,16 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 			// aggregate "(other)" bucket when the response exceeds the
 			// cardinality limit). Skip from time-series output.
 			continue
+		}
+		// Google Analytics UA reports only accept day-resolution date ranges,
+		// so sub-day Grafana ranges (e.g. "Last 6 hours") fetch entire days.
+		// Drop rows whose bucket does not intersect [from, to] (issue #108).
+		// Skipped when the caller did not supply a range (zero time = unset).
+		if !from.IsZero() && !to.IsZero() {
+			bucketEnd := timeAddFunction(*parsedTime)
+			if !parsedTime.Before(to) || !bucketEnd.After(from) {
+				continue
+			}
 		}
 		dimension := strings.Join(parsedRow.Dimensions, "|")
 		if _, ok := dimensions[dimension]; !ok {
@@ -166,10 +176,10 @@ func transformReportToDataFrames(report *reporting.Report, refId string, timezon
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string, timezone string) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *reporting.GetReportsResponse, refId string, timezone string, from, to time.Time) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
 	for _, report := range reportsResponse.Reports {
-		frame, err := transformReportToDataFrames(report, refId, timezone)
+		frame, err := transformReportToDataFrames(report, refId, timezone, from, to)
 		if err != nil {
 			return nil, err
 		}
