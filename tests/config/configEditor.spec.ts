@@ -1,5 +1,6 @@
 import { expect, test } from '@grafana/plugin-e2e';
 import { GADataSourceOptions, GASecureJsonData } from '../../src/types';
+import { dismissWhatsNewModal } from '../utils';
 
 test('"Save & test" should be successful when configuration is valid', async ({
   gotoDataSourceConfigPage,
@@ -8,6 +9,7 @@ test('"Save & test" should be successful when configuration is valid', async ({
 }) => {
   const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({ fileName: 'datasources.yml' });
   const configPage = await gotoDataSourceConfigPage(ds.uid);
+  await dismissWhatsNewModal(page);
   const resetButton =  await page.getByText('Upload another JWT file').isVisible()
   if(resetButton){
     await page.getByText('Upload another JWT file').click()
@@ -23,6 +25,7 @@ test('"Save & test" should fail when configuration is invalid', async ({
 }) => {
   const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({ fileName: 'datasources.yml' });
   const configPage = await createDataSourceConfigPage({ type: ds.type, deleteDataSourceAfterTest: true });
+  await dismissWhatsNewModal(page);
   await page.locator('input[accept="application/json"]').setInputFiles('./tests/credentials/grafana-fail.json')
   await expect(configPage.saveAndTest()).not.toBeOK();
   await expect(configPage).toHaveAlert('error');
