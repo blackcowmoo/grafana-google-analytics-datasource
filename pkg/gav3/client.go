@@ -102,7 +102,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*reporting.GetRep
 	// Call the BatchGet method and return the response.
 	report, err := client.reporting.Reports.BatchGet(req).Do()
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	log.DefaultLogger.Debug("Do GET report", "report len", len(report.Reports), "report", report)
@@ -111,7 +111,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*reporting.GetRep
 		query.PageToken = report.Reports[0].NextPageToken
 		newReport, err := client.getReport(query)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		report.Reports[0].Data.Rows = append(report.Reports[0].Data.Rows, newReport.Reports[0].Data.Rows...)

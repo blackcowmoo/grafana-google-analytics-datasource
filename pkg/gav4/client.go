@@ -103,7 +103,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunReport(query.WebPropertyID, &req).Do()
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return nil, fmt.Errorf("%w", err)
 	}
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
@@ -112,7 +112,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 		query.Offset = query.Offset + GaReportMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		report.Rows = append(report.Rows, newReport.Rows...)
@@ -187,7 +187,7 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunRealtimeReport(query.WebPropertyID, &req).Do()
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return nil, fmt.Errorf("%w", err)
 	}
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
@@ -196,7 +196,7 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 		query.Offset = query.Offset + GaReportMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		report.Rows = append(report.Rows, newReport.Rows...)
