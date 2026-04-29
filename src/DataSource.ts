@@ -1,7 +1,8 @@
 import { DataSourceInstanceSettings, ScopedVars, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
 import { CascaderOption } from '@grafana/ui';
-import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
+import { interpolateFilterExpression } from './interpolation';
+import { AccountSummary, GADataSourceOptions, GAFilterExpression, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
   version: string;
@@ -12,19 +13,12 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
 
   applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
     const templateSrv = getTemplateSrv();
-    let dimensionFilter = query.dimensionFilter;
-    dimensionFilter?.orGroup?.expressions.map((expression) => {
-      if (expression.filter?.stringFilter) {
-        expression.filter.stringFilter.value = templateSrv.replace(expression.filter.stringFilter.value, scopedVars);
-      }
-      if (expression.filter?.inListFilter) {
-        expression.filter.inListFilter.values = expression.filter.inListFilter.values.map((value) => {
-          value = templateSrv.replace(value, scopedVars);
-          return value;
-        });
-      }
-      return expression;
-    });
+    // Deep-clone the filter tree so variable expansion does not mutate the
+    // query object stored on the dashboard (React prop immutability).
+    const dimensionFilter: GAFilterExpression | undefined = query.dimensionFilter
+      ? JSON.parse(JSON.stringify(query.dimensionFilter))
+      : undefined;
+    interpolateFilterExpression(templateSrv, dimensionFilter, scopedVars);
 
     // Apply template variable interpolation to webPropertyId
     const webPropertyId = templateSrv.replace(query.webPropertyId, scopedVars);
