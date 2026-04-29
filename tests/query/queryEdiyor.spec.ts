@@ -2,6 +2,7 @@ import { expect, test } from '@grafana/plugin-e2e';
 import type { Locator } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { dismissWhatsNewModal } from '../utils';
 
 // Grafana 10.4.5+ renders the RadioButtonGroup with a visible <label> and a
 // stacked opacity:0 <input>, so Playwright's `.check()` on the native input
@@ -52,6 +53,7 @@ getDashboardVersions().forEach(version => {
   test(`${version} migration test`, async ({ readProvisionedDataSource, readProvisionedDashboard, gotoDashboardPage, page }) => {
     const dashboard = await readProvisionedDashboard({fileName: `${version}.json`});
     const dashboardPage = await gotoDashboardPage({uid: dashboard.uid});
+    await dismissWhatsNewModal(page);
     // Wait for the initial dashboard render/hydration to settle. Without this,
     // Grafana 11/12 scenes are not yet ready to react to the refresh click and
     // no /api/ds/query request is emitted.
@@ -68,6 +70,7 @@ test('time series', async ({ readProvisionedDataSource, explorePage, page }) => 
   // default settings
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
+  await dismissWhatsNewModal(page);
   await explorePage.datasource.set(ds.name);
   await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
@@ -105,6 +108,7 @@ test('table', async ({ readProvisionedDataSource, explorePage, page }) => {
   // default settings
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
+  await dismissWhatsNewModal(page);
   await explorePage.datasource.set(ds.name);
   await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
@@ -140,6 +144,7 @@ test('realtime', async ({ readProvisionedDataSource, explorePage, page }) => {
   // default settings
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
+  await dismissWhatsNewModal(page);
   await explorePage.datasource.set(ds.name);
   await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
