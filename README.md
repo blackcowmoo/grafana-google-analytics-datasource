@@ -7,35 +7,48 @@ Visualize data from Google Analytics UA(Deprecated) And GA4(beta)
 - AutoComplete AccountID & WebpropertyID & ProfileID
 - AutoComplete Metrics & Dimensions
 - Query using Metrics & Dimensions
+- Dimension filter with AND / OR / NOT groups (GA4)
+- Dashboard variable support for `webPropertyId` and dimension-filter values
 - Setting with json
 
 ![query](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/blob/master/src/img/query.png?raw=true)
 
 ## Preparations
-### Generate a JWT file
 
-1.  if you don't have gcp project, add new gcp project. [link](https://cloud.google.com/resource-manager/docs/creating-managing-projects#console)
-2.  Open the [Credentials](https://console.developers.google.com/apis/credentials) page in the Google API Console.
-3.  Click **Create Credentials** then click **Service account**.
-4.  On the Create service account page, enter the Service account details.
-5.  On the `Create service account` page, fill in the `Service account details` and then click `Create`
-6.  On the `Service account permissions` page, don't add a role to the service account. Just click `Continue`
-7.  In the next step, click `Create Key`. Choose key type `JSON` and click `Create`. A JSON key file will be created and downloaded to your computer
-8.  Note your `service account email` ex) *@*.iam.gserviceaccount.com
-9.  Open the [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com)  in API Library and enable access for your account
-10. Open the [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)  in API Library and enable access for your GA Data
+Setup has three stages: create a Google Cloud service account, grant it access in Google Analytics, and upload the key file in Grafana. Do them in order.
 
-### Google Analytics Setting
+### 1. Create a Google Cloud service account
 
-1. Open the [Google Analytics](https://analytics.google.com/)
-2. Select Your Analytics Account And Open Admin Page
-3. Click **Account User Management** on the **Account Tab**
-4. Click plus Button then Add users
-5. Enter `service account email` at **Generate a JWT file** 8th step and Permissions add `Read & Analyze`
+1. If you don't already have a GCP project, [create one](https://cloud.google.com/resource-manager/docs/creating-managing-projects#console).
+2. Open the [Credentials](https://console.developers.google.com/apis/credentials) page in the Google API Console.
+3. Click **Create Credentials** → **Service account**.
+4. Fill in the service account details and click **Create**.
+5. On the **Service account permissions** page, leave the role empty (no project-level role is required) and click **Continue**.
+6. Open the newly-created service account and click **Keys** → **Add Key** → **Create new key** → **JSON**. A JSON key file will download.
+7. Note the service account email — it looks like `*@*.iam.gserviceaccount.com`. You'll need it in the next step.
 
-### Grafana
-Go To Add Data source then Drag the file to the dotted zone above. Then click `Save & Test`.   
-The file contents will be encrypted and saved in the Grafana database.
+### 2. Enable the required APIs
+
+Enable the following APIs for the GCP project that owns the service account:
+
+- **GA4 (recommended):** [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com) and [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com).
+- **UA (deprecated, read-only):** [Google Analytics API](https://console.cloud.google.com/apis/library/analytics.googleapis.com) and [Google Analytics Reporting API](https://console.cloud.google.com/marketplace/product/google/analyticsreporting.googleapis.com).
+
+Confirm they are enabled on the [API dashboard](https://console.cloud.google.com/apis/dashboard).
+
+### 3. Grant the service account access in Google Analytics
+
+1. Open [Google Analytics](https://analytics.google.com/) and select your account.
+2. Open **Admin**.
+3. **GA4:** open **Property access management** on the property you want to query. **UA:** open **Account User Management** on the account tab.
+4. Click **+** → **Add users** and enter the service account email from step 1.7.
+5. Grant the **Viewer** role (GA4) or **Read & Analyze** permission (UA).
+
+### 4. Add the data source in Grafana
+
+Go to **Add data source** in Grafana, pick this plugin, drag the JSON key file onto the upload area, and click **Save & Test**. The key is encrypted at rest in the Grafana database.
+
+Common setup problems are covered in the [FAQ](./FAQ.md).
 
 ## FAQ
 [FAQ](https://github.com/blackcowmoo/Grafana-Google-Analytics-DataSource/tree/master/FAQ.md)
