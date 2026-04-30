@@ -1,4 +1,8 @@
-import { DataQuery, DataSourceJsonData, SelectableValue } from '@grafana/data';
+import { DataQuery, SelectableValue } from '@grafana/data';
+import type {
+  DataSourceOptions as GoogleDataSourceOptions,
+  DataSourceSecureJsonData as GoogleDataSourceSecureJsonData,
+} from '@grafana/google-sdk';
 
 export interface GAQuery extends DataQuery {
   displayName: Map<string, string>
@@ -35,16 +39,27 @@ export const defaultQuery: Partial<GAQuery> = {
 };
 
 /**
- * These are options configured for each DataSource instance
+ * These are options configured for each DataSource instance.
+ * Extends @grafana/google-sdk's DataSourceOptions so the shared
+ * <ConnectionConfig /> component can read/write the same fields.
  */
-export interface GADataSourceOptions extends DataSourceJsonData {
-  version: string;
+export interface GADataSourceOptions extends GoogleDataSourceOptions {
+  // Optional so the type stays structurally compatible with the SDK's
+  // DataSourceOptions (covariance through <ConnectionConfig />). The
+  // ConfigEditor fills in the default 'v4' on first mount, and the
+  // DataSource constructor coerces missing values to 'v4'.
+  version?: string;
 }
 
 /**
- * Value that is used in the backend, but never sent over HTTP to the frontend
+ * Secret values stored on the backend. Extends the SDK's
+ * DataSourceSecureJsonData (which carries `privateKey`) with the legacy
+ * `jwt` blob so existing datasources continue to authenticate via the
+ * backend's dual-read fallback.
  */
-export interface GASecureJsonData { }
+export interface GASecureJsonData extends GoogleDataSourceSecureJsonData {
+  jwt?: string;
+}
 
 export interface GAMetadata {
   id: string;

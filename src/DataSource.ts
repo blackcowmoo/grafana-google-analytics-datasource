@@ -7,7 +7,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
   version: string;
   constructor(instanceSettings: DataSourceInstanceSettings<GADataSourceOptions>) {
     super(instanceSettings);
-    this.version = instanceSettings.jsonData.version;
+    this.version = instanceSettings.jsonData.version ?? 'v4';
   }
 
   applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
