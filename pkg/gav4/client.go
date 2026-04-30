@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/auth"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 
 	analyticsadmin "google.golang.org/api/analyticsadmin/v1beta"
@@ -20,38 +21,36 @@ type GoogleClient struct {
 	analyticsadmin *analyticsadmin.Service
 }
 
-func NewGoogleClient(ctx context.Context, jwt string) (*GoogleClient, error) {
-	analyticsdataService, analyticsdataError := createAnalyticsdataService(ctx, jwt)
-	if analyticsdataError != nil {
-		return nil, analyticsdataError
+func NewGoogleClient(ctx context.Context, config *setting.DatasourceSecretSettings) (*GoogleClient, error) {
+	resolved, err := auth.Resolve(config)
+	if err != nil {
+		return nil, err
 	}
-
-	analyticsadminService, analyticsadminError := createAnalyticsadminService(ctx, jwt)
-	if analyticsadminError != nil {
-		return nil, analyticsadminError
+	analyticsdataService, err := createAnalyticsdataService(ctx, resolved)
+	if err != nil {
+		return nil, err
 	}
-
+	analyticsadminService, err := createAnalyticsadminService(ctx, resolved)
+	if err != nil {
+		return nil, err
+	}
 	return &GoogleClient{analyticsdataService, analyticsadminService}, nil
 }
 
-func createAnalyticsdataService(ctx context.Context, jwt string) (*analyticsdata.Service, error) {
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(jwt), analyticsdata.AnalyticsReadonlyScope)
+func createAnalyticsdataService(ctx context.Context, r *auth.Resolved) (*analyticsdata.Service, error) {
+	httpClient, err := auth.NewHTTPClient(ctx, r, []string{analyticsdata.AnalyticsReadonlyScope})
 	if err != nil {
-		return nil, fmt.Errorf("error parsing JWT file: %w", err)
+		return nil, err
 	}
-
-	client := jwtConfig.Client(ctx)
-	return analyticsdata.NewService(ctx, option.WithHTTPClient(client))
+	return analyticsdata.NewService(ctx, option.WithHTTPClient(httpClient))
 }
 
-func createAnalyticsadminService(ctx context.Context, jwt string) (*analyticsadmin.Service, error) {
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(jwt), analyticsadmin.AnalyticsReadonlyScope)
+func createAnalyticsadminService(ctx context.Context, r *auth.Resolved) (*analyticsadmin.Service, error) {
+	httpClient, err := auth.NewHTTPClient(ctx, r, []string{analyticsadmin.AnalyticsReadonlyScope})
 	if err != nil {
-		return nil, fmt.Errorf("error parsing JWT file: %w", err)
+		return nil, err
 	}
-
-	client := jwtConfig.Client(ctx)
-	return analyticsadmin.NewService(ctx, option.WithHTTPClient(client))
+	return analyticsadmin.NewService(ctx, option.WithHTTPClient(httpClient))
 }
 
 func (client *GoogleClient) GetWebProperty(webpropertyID string) (*analyticsadmin.GoogleAnalyticsAdminV1betaProperty, error) {
@@ -103,7 +102,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunReport(query.WebPropertyID, &req).Do()
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return nil, fmt.Errorf("%w", err)
 	}
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
@@ -112,7 +111,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 		query.Offset = query.Offset + GaReportMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		report.Rows = append(report.Rows, newReport.Rows...)
@@ -187,7 +186,7 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunRealtimeReport(query.WebPropertyID, &req).Do()
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return nil, fmt.Errorf("%w", err)
 	}
 	//  TODO 페이지 네이션
 	log.DefaultLogger.Debug("Do GET report", "report len", report.RowCount, "report", report)
@@ -196,7 +195,7 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 		query.Offset = query.Offset + GaReportMaxResult
 		newReport, err := client.getReport(query)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		report.Rows = append(report.Rows, newReport.Rows...)
