@@ -20,7 +20,7 @@ type GoogleAnalytics struct {
 }
 
 func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.DatasourceSecretSettings, query backend.DataQuery) (*data.Frames, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
+	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		log.DefaultLogger.Error("Query: Fail NewGoogleClient", "error", err.Error())
 		return nil, err
@@ -56,7 +56,7 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 }
 
 func (ga *GoogleAnalytics) GetTimezone(ctx context.Context, config *setting.DatasourceSecretSettings, accountId string, webPropertyId string, profileId string) (string, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
+	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to create Google API client: %w", err)
 	}
@@ -81,7 +81,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 	var status = backend.HealthStatusOk
 	var message = "Success"
 
-	client, err := NewGoogleClient(ctx, config.JWT)
+	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		log.DefaultLogger.Error("CheckHealth: Fail NewGoogleClient", "error", err.Error())
 		return &backend.CheckHealthResult{
@@ -132,7 +132,7 @@ func (ga *GoogleAnalytics) CheckHealth(ctx context.Context, config *setting.Data
 
 // remove no profile account
 func (ga *GoogleAnalytics) GetAccountSummaries(ctx context.Context, config *setting.DatasourceSecretSettings) ([]*model.AccountSummary, error) {
-	client, err := NewGoogleClient(ctx, config.JWT)
+	client, err := NewGoogleClient(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Google API client: %w", err)
 	}
