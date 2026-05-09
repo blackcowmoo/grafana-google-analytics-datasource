@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/auth"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/model"
+	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/util"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 
 	analytics "google.golang.org/api/analytics/v3"
@@ -19,37 +20,36 @@ type GoogleClient struct {
 	analytics *analytics.Service
 }
 
-func NewGoogleClient(ctx context.Context, jwt string) (*GoogleClient, error) {
-	reportingService, reportingError := createReportingService(ctx, jwt)
-	if reportingError != nil {
-		return nil, reportingError
+func NewGoogleClient(ctx context.Context, config *setting.DatasourceSecretSettings) (*GoogleClient, error) {
+	resolved, err := auth.Resolve(config)
+	if err != nil {
+		return nil, err
 	}
-	analyticsService, analyticsError := createAnalyticsService(ctx, jwt)
-	if analyticsError != nil {
-		return nil, analyticsError
+	reportingService, err := createReportingService(ctx, resolved)
+	if err != nil {
+		return nil, err
 	}
-
+	analyticsService, err := createAnalyticsService(ctx, resolved)
+	if err != nil {
+		return nil, err
+	}
 	return &GoogleClient{reportingService, analyticsService}, nil
 }
 
-func createReportingService(ctx context.Context, jwt string) (*reporting.Service, error) {
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(jwt), reporting.AnalyticsReadonlyScope)
+func createReportingService(ctx context.Context, r *auth.Resolved) (*reporting.Service, error) {
+	httpClient, err := auth.NewHTTPClient(ctx, r, []string{reporting.AnalyticsReadonlyScope})
 	if err != nil {
-		return nil, fmt.Errorf("error parsing JWT file: %w", err)
+		return nil, err
 	}
-
-	client := jwtConfig.Client(ctx)
-	return reporting.NewService(ctx, option.WithHTTPClient(client))
+	return reporting.NewService(ctx, option.WithHTTPClient(httpClient))
 }
 
-func createAnalyticsService(ctx context.Context, jwt string) (*analytics.Service, error) {
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(jwt), analytics.AnalyticsReadonlyScope)
+func createAnalyticsService(ctx context.Context, r *auth.Resolved) (*analytics.Service, error) {
+	httpClient, err := auth.NewHTTPClient(ctx, r, []string{analytics.AnalyticsReadonlyScope})
 	if err != nil {
-		return nil, fmt.Errorf("error parsing JWT file: %w", err)
+		return nil, err
 	}
-
-	client := jwtConfig.Client(ctx)
-	return analytics.NewService(ctx, option.WithHTTPClient(client))
+	return analytics.NewService(ctx, option.WithHTTPClient(httpClient))
 }
 
 func (client *GoogleClient) getProfile(accountId, webpropertyId, profileId string) (*analytics.Profile, error) {
@@ -102,7 +102,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*reporting.GetRep
 	// Call the BatchGet method and return the response.
 	report, err := client.reporting.Reports.BatchGet(req).Do()
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	log.DefaultLogger.Debug("Do GET report", "report len", len(report.Reports), "report", report)
@@ -111,7 +111,7 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*reporting.GetRep
 		query.PageToken = report.Reports[0].NextPageToken
 		newReport, err := client.getReport(query)
 		if err != nil {
-			return nil, fmt.Errorf(err.Error())
+			return nil, fmt.Errorf("%w", err)
 		}
 
 		report.Reports[0].Data.Rows = append(report.Reports[0].Data.Rows, newReport.Reports[0].Data.Rows...)
