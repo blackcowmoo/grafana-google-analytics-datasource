@@ -13,3 +13,19 @@ datasources:
       path: '/resources'
     secureJsonData:
       apiKey: 'api-key'
+  # Simulates a datasource saved before gav3 was removed: jsonData.version = "v3".
+  # The plugin must still load this config without crashing after the upgrade
+  # (the field is now ignored and the GA4 path runs).
+  - name: ' Google Analytics (legacy v3)'
+    type: 'blackcowmoo-googleanalytics-datasource'
+    access: proxy
+    isDefault: false
+    orgId: 1
+    version: 1
+    editable: true
+    uid: lcc3108_test_legacy_v3
+    jsonData:
+      version: v3
+      path: '/resources'
+    secureJsonData:
+      apiKey: 'api-key'

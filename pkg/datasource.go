@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/gav3"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/gav4"
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/setting"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -25,27 +24,11 @@ type GoogleAnalyticsDataSource struct {
 
 // NewDataSource creates the google analytics datasource and sets up all the routes
 func NewDataSource(_ context.Context, dis backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	version := &setting.DatasourceSettings{}
 	cache := cache.New(300*time.Second, 5*time.Second)
 	mux := http.NewServeMux()
-	err := json.Unmarshal(dis.JSONData, &version)
-	if err != nil {
-		return nil, err
-	}
-
-	var analytics GoogleAnalytics
-	if version.Version == "v3" {
-		analytics = &gav3.GoogleAnalytics{
-			Cache: cache,
-		}
-	} else {
-		analytics = &gav4.GoogleAnalytics{
-			Cache: cache,
-		}
-	}
 
 	ds := &GoogleAnalyticsDataSource{
-		analytics:       analytics,
+		analytics:       &gav4.GoogleAnalytics{Cache: cache},
 		resourceHandler: httpadapter.New(mux),
 	}
 	mux.HandleFunc("/profile/timezone", ds.handleResourceProfileTimezone)

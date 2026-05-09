@@ -5,7 +5,6 @@ import "testing"
 func TestGetColumnType(t *testing.T) {
 	numberTypes := []string{
 		"TYPE_INTEGER", "TYPE_FLOAT", "TYPE_CURRENCY", "TYPE_MILLISECONDS", "TYPE_SECONDS",
-		"CURRENCY", "INTEGER", "FLOAT", "PERCENT",
 	}
 	for _, ty := range numberTypes {
 		if got := getColumnType(ty); got != ColumTypeNumber {
@@ -17,8 +16,8 @@ func TestGetColumnType(t *testing.T) {
 		t.Errorf("getColumnType(TIME) = %q, want %q", got, ColumTypeTime)
 	}
 
-	// Anything else (including GA string types) falls back to string.
-	for _, ty := range []string{"STRING", "BOOLEAN", "UNKNOWN", ""} {
+	// Anything else falls back to string (including legacy UA numeric types).
+	for _, ty := range []string{"STRING", "BOOLEAN", "UNKNOWN", "", "INTEGER", "CURRENCY", "PERCENT"} {
 		if got := getColumnType(ty); got != ColumTypeString {
 			t.Errorf("getColumnType(%q) = %q, want %q", ty, got, ColumTypeString)
 		}
