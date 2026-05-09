@@ -41,7 +41,7 @@ func (cd *ColumnDefinition) GetType() ColumnType {
 
 func getColumnType(headerType string) ColumnType {
 	switch headerType {
-	case /*gav4*/ "TYPE_INTEGER", "TYPE_FLOAT", "TYPE_CURRENCY", "TYPE_MILLISECONDS", "TYPE_SECONDS" /*gav3*/, "CURRENCY", "INTEGER", "FLOAT", "PERCENT":
+	case "TYPE_INTEGER", "TYPE_FLOAT", "TYPE_CURRENCY", "TYPE_MILLISECONDS", "TYPE_SECONDS":
 		return ColumTypeNumber
 	case "TIME":
 		return ColumTypeTime

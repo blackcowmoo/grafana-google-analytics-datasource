@@ -2,7 +2,6 @@ import { DataQuery, DataSourceJsonData, SelectableValue } from '@grafana/data';
 
 export interface GAQuery extends DataQuery {
   displayName: Map<string, string>
-  version: string;
   accountId: string;
   webPropertyId: string;
   profileId: string;
@@ -37,9 +36,7 @@ export const defaultQuery: Partial<GAQuery> = {
 /**
  * These are options configured for each DataSource instance
  */
-export interface GADataSourceOptions extends DataSourceJsonData {
-  version: string;
-}
+export interface GADataSourceOptions extends DataSourceJsonData {}
 
 /**
  * Value that is used in the backend, but never sent over HTTP to the frontend

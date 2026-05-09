@@ -4,10 +4,8 @@ import { CascaderOption } from '@grafana/ui';
 import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
 
 export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptions> {
-  version: string;
   constructor(instanceSettings: DataSourceInstanceSettings<GADataSourceOptions>) {
     super(instanceSettings);
-    this.version = instanceSettings.jsonData.version;
   }
 
   applyTemplateVariables(query: GAQuery, scopedVars: ScopedVars): Record<string, any> {
@@ -179,8 +177,5 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
     webPropertyId: string
   ): Promise<Array<SelectableValue<string>>> {
     return await this.getDimensions(query, 'date', webPropertyId);
-  }
-  getGaVersion(): string {
-    return this.version;
   }
 }

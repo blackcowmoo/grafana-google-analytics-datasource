@@ -31,4 +31,23 @@ test('"Save & test" should fail when configuration is invalid', async ({
   await expect(configPage).toHaveAlert('error');
 });
 
+// Backwards compatibility: a datasource saved before gav3 was removed will
+// still have `jsonData.version = "v3"` persisted. The plugin must load that
+// config without crashing — the value is ignored and the GA4 path is used.
+test('legacy v3 datasource config loads without crashing', async ({
+  gotoDataSourceConfigPage,
+  readProvisionedDataSource,
+  page,
+}) => {
+  const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({
+    fileName: 'datasources.yml',
+    name: ' Google Analytics (legacy v3)',
+  });
+  const configPage = await gotoDataSourceConfigPage(ds.uid);
+  await dismissWhatsNewModal(page);
+  // The JWT upload control must render — proves ConfigEditor mounted despite
+  // the legacy `version: v3` value in jsonData.
+  await expect(page.locator('input[accept="application/json"]')).toBeAttached();
+});
+
 

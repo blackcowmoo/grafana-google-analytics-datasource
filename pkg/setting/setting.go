@@ -7,16 +7,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-type DatasourceSettings struct {
-	Version string `json:"version"`
-}
-
 // DatasourceSecretSettings contains Google Analytics datasource auth properties.
 // JSON-encoded fields come from `jsonData`; secret fields are pulled from
 // `DecryptedSecureJSONData` in LoadSettings.
 type DatasourceSecretSettings struct {
 	// jsonData
-	Version            string `json:"version"`
 	AuthenticationType string `json:"authenticationType"`
 	ClientEmail        string `json:"clientEmail"`
 	TokenURI           string `json:"tokenUri"`
