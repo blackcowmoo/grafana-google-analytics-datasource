@@ -128,4 +128,68 @@ describe('interpolateFilterExpression', () => {
     const srv = makeTemplateSrv({});
     expect(() => interpolateFilterExpression(srv, undefined, {})).not.toThrow();
   });
+
+  it('flattens inListFilter with mix of literal and multi-value variable', () => {
+    const srv = makeTemplateSrv({ campaigns: ['xxxx', 'yyyy'] });
+    const expr: GAFilterExpression = {
+      filter: {
+        fieldName: 'campaignName',
+        filterType: GADimensionFilterType.IN_LIST,
+        inListFilter: { values: ['static', '$campaigns', 'tail'], caseSensitive: true },
+      },
+    };
+    interpolateFilterExpression(srv, expr, {});
+    expect(expr.filter!.inListFilter!.values).toEqual(['static', 'xxxx', 'yyyy', 'tail']);
+  });
+
+  it('keeps empty inListFilter values intact', () => {
+    const srv = makeTemplateSrv({ x: 'foo' });
+    const expr: GAFilterExpression = {
+      filter: {
+        fieldName: 'campaignName',
+        filterType: GADimensionFilterType.IN_LIST,
+        inListFilter: { values: [], caseSensitive: true },
+      },
+    };
+    interpolateFilterExpression(srv, expr, {});
+    expect(expr.filter!.inListFilter!.values).toEqual([]);
+  });
+
+  it('does not crash on filter with neither stringFilter nor inListFilter', () => {
+    const srv = makeTemplateSrv({});
+    const expr: GAFilterExpression = {
+      filter: {
+        fieldName: 'eventName',
+        filterType: GADimensionFilterType.STRING,
+      },
+    };
+    expect(() => interpolateFilterExpression(srv, expr, {})).not.toThrow();
+  });
+
+  it('expands multi-value variable inside every nested group independently', () => {
+    const srv = makeTemplateSrv({ a: ['1', '2'], b: ['3', '4'] });
+    const expr: GAFilterExpression = {
+      andGroup: {
+        expressions: [
+          {
+            filter: {
+              fieldName: 'x',
+              filterType: GADimensionFilterType.IN_LIST,
+              inListFilter: { values: ['$a'], caseSensitive: true },
+            },
+          },
+          {
+            filter: {
+              fieldName: 'y',
+              filterType: GADimensionFilterType.IN_LIST,
+              inListFilter: { values: ['$b'], caseSensitive: true },
+            },
+          },
+        ],
+      },
+    };
+    interpolateFilterExpression(srv, expr, {});
+    expect(expr.andGroup!.expressions[0].filter!.inListFilter!.values).toEqual(['1', '2']);
+    expect(expr.andGroup!.expressions[1].filter!.inListFilter!.values).toEqual(['3', '4']);
+  });
 });
