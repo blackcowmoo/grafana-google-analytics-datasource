@@ -54,7 +54,7 @@ func (ga *GoogleAnalytics) Query(ctx context.Context, config *setting.Datasource
 		return nil, err
 	}
 
-	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone, queryModel.Mode)
+	return transformReportsResponseToDataFrames(report, queryModel.RefID, queryModel.Timezone, queryModel.Mode, queryModel.From, queryModel.To)
 
 }
 

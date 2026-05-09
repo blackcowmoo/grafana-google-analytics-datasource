@@ -113,7 +113,7 @@ func transformReportToDataFramesTableMode(report *analyticsdata.RunReportRespons
 	return frames, nil
 }
 
-func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
+func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string, from, to time.Time) ([]*data.Frame, error) {
 
 	timeDimension := analyticsdata.MetricHeader{
 		Name: report.DimensionHeaders[0].Name,
@@ -140,6 +140,16 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 			// aggregate "(other)" bucket when the response exceeds the
 			// cardinality limit). Skip from time-series output.
 			continue
+		}
+		// Google Analytics Data API only accepts day-resolution date ranges,
+		// so sub-day Grafana ranges (e.g. "Last 6 hours") fetch entire days.
+		// Drop rows whose bucket does not intersect [from, to] (issue #108).
+		// Skipped when the caller did not supply a range (zero time = unset).
+		if !from.IsZero() && !to.IsZero() {
+			bucketEnd := timeAddFunction(*parsedTime)
+			if !parsedTime.Before(to) || !bucketEnd.After(from) {
+				continue
+			}
 		}
 		var dimension string = ""
 		for _, v := range parsedRow.DimensionValues {
@@ -208,19 +218,16 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode model.QueryMode) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode model.QueryMode, from, to time.Time) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
-	// for _, report := range reportsResponse.Rows {
-	var transformReportToDataFramesFn func(*analyticsdata.RunReportResponse, string, string) ([]*data.Frame, error)
+	var frame []*data.Frame
+	var err error
 	switch mode {
-	case model.TIME_SERIES:
-		transformReportToDataFramesFn = transformReportToDataFrames
 	case model.TABLE, model.REALTIME:
-		transformReportToDataFramesFn = transformReportToDataFramesTableMode
+		frame, err = transformReportToDataFramesTableMode(reportsResponse, refId, timezone)
 	default:
-		transformReportToDataFramesFn = transformReportToDataFrames
+		frame, err = transformReportToDataFrames(reportsResponse, refId, timezone, from, to)
 	}
-	frame, err := transformReportToDataFramesFn(reportsResponse, refId, timezone)
 	if err != nil {
 		return nil, err
 	}
