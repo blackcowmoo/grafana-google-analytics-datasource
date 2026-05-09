@@ -113,7 +113,7 @@ func transformReportToDataFramesTableMode(report *analyticsdata.RunReportRespons
 	return frames, nil
 }
 
-func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string) ([]*data.Frame, error) {
+func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId string, timezone string, from, to time.Time) ([]*data.Frame, error) {
 
 	timeDimension := analyticsdata.MetricHeader{
 		Name: report.DimensionHeaders[0].Name,
@@ -135,6 +135,22 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 
 	for _, row := range report.Rows {
 		parsedRow, parsedTime := parseRow(row, tz)
+		if parsedRow == nil || parsedTime == nil {
+			// Row's time dimension is unparseable (e.g. Google Analytics
+			// aggregate "(other)" bucket when the response exceeds the
+			// cardinality limit). Skip from time-series output.
+			continue
+		}
+		// Google Analytics Data API only accepts day-resolution date ranges,
+		// so sub-day Grafana ranges (e.g. "Last 6 hours") fetch entire days.
+		// Drop rows whose bucket does not intersect [from, to] (issue #108).
+		// Skipped when the caller did not supply a range (zero time = unset).
+		if !from.IsZero() && !to.IsZero() {
+			bucketEnd := timeAddFunction(*parsedTime)
+			if !parsedTime.Before(to) || !bucketEnd.After(from) {
+				continue
+			}
+		}
 		var dimension string = ""
 		for _, v := range parsedRow.DimensionValues {
 			if strings.TrimSpace(v.Value) != "" {
@@ -202,19 +218,16 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 	return frames, nil
 }
 
-func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode model.QueryMode) (*data.Frames, error) {
+func transformReportsResponseToDataFrames(reportsResponse *analyticsdata.RunReportResponse, refId string, timezone string, mode model.QueryMode, from, to time.Time) (*data.Frames, error) {
 	var frames = make(data.Frames, 0)
-	// for _, report := range reportsResponse.Rows {
-	var transformReportToDataFramesFn func(*analyticsdata.RunReportResponse, string, string) ([]*data.Frame, error)
+	var frame []*data.Frame
+	var err error
 	switch mode {
-	case model.TIME_SERIES:
-		transformReportToDataFramesFn = transformReportToDataFrames
 	case model.TABLE, model.REALTIME:
-		transformReportToDataFramesFn = transformReportToDataFramesTableMode
+		frame, err = transformReportToDataFramesTableMode(reportsResponse, refId, timezone)
 	default:
-		transformReportToDataFramesFn = transformReportToDataFrames
+		frame, err = transformReportToDataFrames(reportsResponse, refId, timezone, from, to)
 	}
-	frame, err := transformReportToDataFramesFn(reportsResponse, refId, timezone)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +331,9 @@ func parseRow(row *analyticsdata.Row, timezone *time.Location) (*analyticsdata.R
 	otherDimensions := row.DimensionValues[1:]
 	parsedTime, err := util.ParseAndTimezoneTime(timeDimension, timezone)
 	if err != nil {
-		log.DefaultLogger.Error("parseRow: Failed to parse time dimension", "error", err.Error())
+		log.DefaultLogger.Warn("parseRow: skipping row with unparseable time dimension",
+			"value", timeDimension, "error", err.Error())
+		return nil, nil
 	}
 	strTime := parsedTime.Format(time.RFC3339)
 

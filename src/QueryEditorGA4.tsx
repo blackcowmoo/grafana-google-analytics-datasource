@@ -18,12 +18,6 @@ import { GADataSourceOptions, GAFilterExpression, GAQuery } from 'types';
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
-const gaVersionBadge = {
-  v4: {
-    text: 'GA4(alpha)',
-    tootip: 'experimental support',
-  },
-} as const;
 const queryMode = [
   { label: 'Time Series', value: 'time series' },
   { label: 'Table', value: 'table' },
@@ -56,7 +50,6 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     if (!query.hasOwnProperty('cacheDurationSeconds')) {
       this.props.query.cacheDurationSeconds = defaultCacheDuration;
     }
-    this.props.query.version = props.datasource.getGaVersion();
     this.props.query.displayName = new Map<string, string>();
     this.props.datasource.getAccountSummaries().then((accountSummaries) => {
       this.options = accountSummaries;
@@ -218,8 +211,8 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               <InlineLabel width="auto">{timezone ? timezone : 'determined by profileId'}</InlineLabel>
               <Badge
                 color="orange"
-                text={gaVersionBadge.v4.text}
-                tooltip={gaVersionBadge.v4.tootip}
+                text="GA4(alpha)"
+                tooltip="experimental support"
                 icon="google"
               ></Badge>
               {serviceLevelBadge}
