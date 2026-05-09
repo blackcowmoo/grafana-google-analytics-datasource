@@ -135,6 +135,12 @@ func transformReportToDataFrames(report *analyticsdata.RunReportResponse, refId 
 
 	for _, row := range report.Rows {
 		parsedRow, parsedTime := parseRow(row, tz)
+		if parsedRow == nil || parsedTime == nil {
+			// Row's time dimension is unparseable (e.g. Google Analytics
+			// aggregate "(other)" bucket when the response exceeds the
+			// cardinality limit). Skip from time-series output.
+			continue
+		}
 		var dimension string = ""
 		for _, v := range parsedRow.DimensionValues {
 			if strings.TrimSpace(v.Value) != "" {
@@ -318,7 +324,9 @@ func parseRow(row *analyticsdata.Row, timezone *time.Location) (*analyticsdata.R
 	otherDimensions := row.DimensionValues[1:]
 	parsedTime, err := util.ParseAndTimezoneTime(timeDimension, timezone)
 	if err != nil {
-		log.DefaultLogger.Error("parseRow: Failed to parse time dimension", "error", err.Error())
+		log.DefaultLogger.Warn("parseRow: skipping row with unparseable time dimension",
+			"value", timeDimension, "error", err.Error())
+		return nil, nil
 	}
 	strTime := parsedTime.Format(time.RFC3339)
 
