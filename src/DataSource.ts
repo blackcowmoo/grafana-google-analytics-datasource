@@ -1,4 +1,4 @@
-import { DataSourceInstanceSettings, ScopedVars, SelectableValue } from '@grafana/data';
+import { DataSourceInstanceSettings, MetricFindValue, ScopedVars, SelectableValue } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
 import { CascaderOption } from '@grafana/ui';
 import { AccountSummary, GADataSourceOptions, GAMetadata, GAQuery } from './types';
@@ -166,6 +166,43 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
         return pre;
       }, []);
     });
+  }
+
+  async metricFindQuery(query: string, options?: { scopedVars?: ScopedVars }): Promise<MetricFindValue[]> {
+    const templateSrv = getTemplateSrv();
+    const interpolated = templateSrv.replace(query.trim(), options?.scopedVars);
+
+    const accountSummaries = (await this.getResource('account-summaries')).accountSummaries as AccountSummary[];
+
+    const propertiesMatch = interpolated.match(/^properties\(([^)]+)\)$/i);
+    if (propertiesMatch) {
+      const accountId = propertiesMatch[1].trim();
+      const account = accountSummaries.find(
+        (a) => a.Account === accountId || a.Account === `accounts/${accountId}`
+      );
+      return (account?.PropertySummaries ?? []).map((p) => ({
+        text: p.DisplayName,
+        value: p.Property,
+      }));
+    }
+
+    if (/^properties$/i.test(interpolated)) {
+      return accountSummaries.flatMap((a) =>
+        (a.PropertySummaries ?? []).map((p) => ({
+          text: p.DisplayName,
+          value: p.Property,
+        }))
+      );
+    }
+
+    if (/^accounts$/i.test(interpolated)) {
+      return accountSummaries.map((a) => ({
+        text: a.DisplayName,
+        value: a.Account,
+      }));
+    }
+
+    return [];
   }
 
   async getTimeDimensions(): Promise<Array<SelectableValue<string>>> {
