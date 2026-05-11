@@ -3,34 +3,55 @@ import type { Page } from '@playwright/test';
 import { GADataSourceOptions, GASecureJsonData } from '../../src/types';
 import { dismissWhatsNewModal } from '../utils';
 
-// @grafana/google-sdk's <ConnectionConfig /> renders a FileDropzone inside an
-// element marked `data-testid="Configuration drop zone"`. The dropzone holds a
-// native <input type="file"> we can drive directly. If the datasource already
-// has a JWT configured (e.g. left over from a previous test run) the SDK
-// shows JWTForm with a Reset button instead — click it first to surface the
-// dropzone again.
+// @grafana/google-sdk's <ConnectionConfig /> renders a FileDropzone inside
+// `data-testid="Configuration drop zone"` only when isUploading=true (the
+// SDK's default for a brand-new datasource). If a previous test run left JWT
+// credentials behind, the SDK shows JWTForm instead and the dropzone is not
+// rendered until the user clicks "Upload JWT Token".
 //
-// setInputFiles dispatches the change event but resolves before the SDK's
-// FileReader → onOptionsChange → React rerender chain completes. Wait for the
-// dropzone to disappear (proves the JWT was accepted and credentials moved
-// into secureJsonData) before invoking saveAndTest, otherwise the save races
-// the credential update and CheckHealth returns 400.
+// setInputFiles dispatches the change event but the SDK's
+// FileReader → onOptionsChange → React rerender chain is async. Wait for the
+// dropzone to disappear (proves the JWT was accepted into secureJsonData)
+// before invoking saveAndTest, otherwise the save races the credential update
+// and CheckHealth returns 400.
 const uploadJWT = async (page: Page, file: string) => {
-  const reset = page.getByRole('button', { name: /^Reset/ });
-  if (await reset.isVisible({ timeout: 1500 }).catch(() => false)) {
-    await reset.click();
-  }
   const dropzone = page.getByTestId('Configuration drop zone');
+  const uploadBtn = page.getByTestId('Upload JWT button');
+
+  // ConnectionConfig sets authenticationType=JWT on mount via a useEffect,
+  // which triggers a re-render before the JWT section appears. Wait for either
+  // the dropzone (fresh/cleared datasource — isUploading defaults to true) or
+  // the "Upload JWT Token" button (JWTForm shown when credentials already set).
+  await expect(dropzone.or(uploadBtn).first()).toBeVisible({ timeout: 15000 });
+
+  if (!await dropzone.isVisible().catch(() => false)) {
+    await uploadBtn.click();
+    await expect(dropzone).toBeVisible({ timeout: 10000 });
+  }
+
   await dropzone.locator('input[type="file"]').setInputFiles(file);
-  await expect(dropzone).toBeHidden();
+  await expect(dropzone).toBeHidden({ timeout: 10000 });
 };
 
 test('"Save & test" should be successful when configuration is valid', async ({
   gotoDataSourceConfigPage,
   readProvisionedDataSource,
   page,
+  request,
 }) => {
   const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({ fileName: 'datasources.yml' });
+  // Clear any previously saved JWT so ConnectionConfig renders the dropzone
+  // immediately (isUploading defaults to true for a fresh datasource config).
+  await request.put(`http://localhost:3000/api/datasources/uid/${ds.uid}`, {
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({
+      name: ds.name,
+      type: ds.type,
+      access: 'proxy',
+      jsonData: {},
+      secureJsonData: {},
+    }),
+  });
   const configPage = await gotoDataSourceConfigPage(ds.uid);
   await dismissWhatsNewModal(page);
   await uploadJWT(page, './tests/credentials/grafana-success.json');
@@ -68,6 +89,6 @@ test('legacy v3 datasource config loads without crashing', async ({
   // JWTForm (legacy datasources may already have credentials persisted).
   const mounted = page
     .getByTestId('Configuration drop zone')
-    .or(page.getByRole('button', { name: /^Reset/ }));
-  await expect(mounted.first()).toBeVisible();
+    .or(page.getByTestId('Upload JWT button'));
+  await expect(mounted.first()).toBeVisible({ timeout: 15000 });
 });
