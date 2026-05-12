@@ -1,6 +1,6 @@
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { DataSource } from './DataSource';
-import { GADataSourceOptions, GADimensionFilterType, GAFilterExpression, GANumericFilterOperation, GAQuery, GAStringFilterMatchType } from './types';
+import { GADataSourceOptions, GADimensionFilterType, GAFilterExpression, GAQuery, GAStringFilterMatchType } from './types';
 
 jest.mock('@grafana/runtime', () => {
   // Inline the TemplateSrv stub here because jest.mock factories cannot
