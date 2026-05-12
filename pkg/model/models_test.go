@@ -57,8 +57,8 @@ func TestQueryModel_FilterRoundTrip(t *testing.T) {
 	}
 	qm := QueryModel{
 		WebPropertyID:   "properties/123",
-		DimensionFilter: filter,
-		MetricFilter:    filter,
+		DimensionFilter: &filter,
+		MetricFilter:    &filter,
 	}
 
 	b, err := json.Marshal(qm)
@@ -71,10 +71,10 @@ func TestQueryModel_FilterRoundTrip(t *testing.T) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 
-	if got.DimensionFilter.Filter == nil || got.DimensionFilter.Filter.FieldName != "country" {
+	if got.DimensionFilter == nil || got.DimensionFilter.Filter == nil || got.DimensionFilter.Filter.FieldName != "country" {
 		t.Errorf("DimensionFilter round-trip failed: %+v", got.DimensionFilter)
 	}
-	if got.MetricFilter.Filter == nil || got.MetricFilter.Filter.FieldName != "country" {
+	if got.MetricFilter == nil || got.MetricFilter.Filter == nil || got.MetricFilter.Filter.FieldName != "country" {
 		t.Errorf("MetricFilter round-trip failed: %+v", got.MetricFilter)
 	}
 }

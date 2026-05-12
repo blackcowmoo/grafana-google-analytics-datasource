@@ -406,7 +406,7 @@ export const GAFilterExpressionComponent: React.FC<GAFilterExpressionComponentPr
   // ── none ──
   if (currentType === 'none') {
     return (
-      <div className={styles.row}>
+      <div className={styles.row} data-testid="filter-expression">
         {typeSelector}
         {onDelete && (
           <IconButton name="times" tooltip="Remove" size="sm" variant="destructive" onClick={onDelete} />
@@ -419,7 +419,7 @@ export const GAFilterExpressionComponent: React.FC<GAFilterExpressionComponentPr
   if (currentType === 'filter') {
     const filter = expression.filter!;
     return (
-      <div className={styles.row}>
+      <div className={styles.row} data-testid="filter-expression">
         {typeSelector}
         <LeafFilterEditor
           filter={filter}
@@ -455,7 +455,7 @@ export const GAFilterExpressionComponent: React.FC<GAFilterExpressionComponentPr
     };
 
     return (
-      <>
+      <div data-testid="filter-expression">
         <div className={styles.groupHeader}>
           {typeSelector}
           <IconButton name="plus" tooltip="Add expression" size="sm" onClick={addChild} />
@@ -475,14 +475,14 @@ export const GAFilterExpressionComponent: React.FC<GAFilterExpressionComponentPr
             />
           ))}
         </div>
-      </>
+      </div>
     );
   }
 
   // ── NOT ──
   if (currentType === 'notExpression') {
     return (
-      <>
+      <div data-testid="filter-expression">
         <div className={styles.groupHeader}>
           {typeSelector}
           {onDelete && (
@@ -497,7 +497,7 @@ export const GAFilterExpressionComponent: React.FC<GAFilterExpressionComponentPr
             depth={depth + 1}
           />
         </div>
-      </>
+      </div>
     );
   }
 

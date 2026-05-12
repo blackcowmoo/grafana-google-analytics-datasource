@@ -95,11 +95,11 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 			},
 		}
 	}
-	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter = &query.DimensionFilter
+	if query.DimensionFilter != nil {
+		req.DimensionFilter = query.DimensionFilter
 	}
-	if !(query.MetricFilter.OrGroup == nil && query.MetricFilter.AndGroup == nil && query.MetricFilter.Filter == nil && query.MetricFilter.NotExpression == nil) {
-		req.MetricFilter = &query.MetricFilter
+	if query.MetricFilter != nil {
+		req.MetricFilter = query.MetricFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
@@ -182,11 +182,11 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 			},
 		}
 	}
-	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter = &query.DimensionFilter
+	if query.DimensionFilter != nil {
+		req.DimensionFilter = query.DimensionFilter
 	}
-	if !(query.MetricFilter.OrGroup == nil && query.MetricFilter.AndGroup == nil && query.MetricFilter.Filter == nil && query.MetricFilter.NotExpression == nil) {
-		req.MetricFilter = &query.MetricFilter
+	if query.MetricFilter != nil {
+		req.MetricFilter = query.MetricFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
