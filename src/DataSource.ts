@@ -18,6 +18,11 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
       : undefined;
     interpolateFilterExpression(templateSrv, dimensionFilter, scopedVars);
 
+    const metricFilter: GAFilterExpression | undefined = query.metricFilter
+      ? JSON.parse(JSON.stringify(query.metricFilter))
+      : undefined;
+    interpolateFilterExpression(templateSrv, metricFilter, scopedVars);
+
     // Apply template variable interpolation to webPropertyId
     const webPropertyId = templateSrv.replace(query.webPropertyId, scopedVars);
 
@@ -25,6 +30,7 @@ export class DataSource extends DataSourceWithBackend<GAQuery, GADataSourceOptio
       ...query,
       webPropertyId,
       dimensionFilter,
+      metricFilter,
     };
   }
   async getAccountSummaries(): Promise<CascaderOption[]> {

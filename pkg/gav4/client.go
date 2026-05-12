@@ -98,6 +98,9 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
 		req.DimensionFilter = &query.DimensionFilter
 	}
+	if !(query.MetricFilter.OrGroup == nil && query.MetricFilter.AndGroup == nil && query.MetricFilter.Filter == nil && query.MetricFilter.NotExpression == nil) {
+		req.MetricFilter = &query.MetricFilter
+	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunReport(query.WebPropertyID, &req).Do()
@@ -182,6 +185,9 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
 		req.DimensionFilter = &query.DimensionFilter
 	}
+	if !(query.MetricFilter.OrGroup == nil && query.MetricFilter.AndGroup == nil && query.MetricFilter.Filter == nil && query.MetricFilter.NotExpression == nil) {
+		req.MetricFilter = &query.MetricFilter
+	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
 	report, err := client.analyticsdata.Properties.RunRealtimeReport(query.WebPropertyID, &req).Do()
@@ -225,8 +231,8 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 
 // 			for _, metric := range metrics {
 // 				// We have only 1 date range in the example
-// 				// So it'll always print "Date Range (0)"
-// 				// log.DefaultLogger.Defaultlog.DefaultLogger.Infof("Date Range (%d)", idx)
+// 				// So it'll always print \"Date Range (0)\"
+// 				// log.DefaultLogger.Defaultlog.DefaultLogger.Infof(\"Date Range (%d)\", idx)
 // 				for j := 0; j < len(metricHdrs) && j < len(metric.Values); j++ {
 // 					log.DefaultLogger.Debug("%s: %s", metricHdrs[j].Name, metric.Values[j])
 // 				}
