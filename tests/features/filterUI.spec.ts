@@ -1,4 +1,5 @@
 import { expect, test } from '@grafana/plugin-e2e';
+import { dismissWhatsNewModal } from '../utils';
 
 // Tests for the new Filter UI component (AND/OR/NOT/FILTER tree editor)
 // These tests verify UI interactions without requiring real GA credentials.
@@ -15,6 +16,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');
@@ -34,6 +36,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');
@@ -56,6 +59,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');
@@ -84,6 +88,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');
@@ -103,6 +108,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');
@@ -124,6 +130,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');
@@ -156,6 +163,7 @@ test.describe('DimensionFilter UI', () => {
   }) => {
     const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
     await explorePage.datasource.set(ds.name);
+    await dismissWhatsNewModal(page);
     await waitForPageSettle(page);
 
     const queryRow = explorePage.getQueryEditorRow('A');

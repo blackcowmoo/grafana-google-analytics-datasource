@@ -323,7 +323,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
               loadFields={((q: string) => {
                 const loadDimFields: LoadFieldsFn = mode === 'realtime'
                   ? (s) => datasource.getRealtimeDimensions(s, null, parsedWebPropertyId)
-                  : (s) => datasource.getDimensionsExcludeTimeDimensions(s, parsedWebPropertyId);
+                  : (s) => datasource.getDimensions(s, null, parsedWebPropertyId);
                 return loadDimFields(q);
               }) as LoadFieldsFn}
             />

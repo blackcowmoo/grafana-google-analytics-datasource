@@ -96,7 +96,7 @@ function numericValueStr(v?: GANumericValue): string {
   if (!v) { return ''; }
   // int64Value is a string like "0", "123" — non-empty means it was explicitly set
   if (v.int64Value != null && v.int64Value !== '') { return v.int64Value; }
-  if (v.doubleValue != null && v.doubleValue !== 0) { return String(v.doubleValue); }
+  if (v.doubleValue != null) { return String(v.doubleValue); }
   return '';
 }
 

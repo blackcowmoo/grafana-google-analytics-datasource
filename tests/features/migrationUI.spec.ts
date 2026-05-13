@@ -72,7 +72,9 @@ test('default dashboard loads without JS crash', async ({
 }) => {
   const jsErrors: string[] = [];
   page.on('console', (msg) => {
-    if (msg.type() === 'error') jsErrors.push(msg.text());
+    if (msg.type() === 'error') {
+      jsErrors.push(msg.text());
+    }
   });
 
   const dashboard = await readProvisionedDashboard({ fileName: 'default.json' });

@@ -21,7 +21,11 @@ test('phase1: v0.3.1 provisioned dashboards load without JS crash', async ({
   for (const version of ['v0.2.2', 'v0.2.3', 'v0.3.0']) {
     const dashboard = await readProvisionedDashboard({ fileName: `${version}.json` });
     const errors: string[] = [];
-    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    page.on('console', (m) => {
+      if (m.type() === 'error') {
+        errors.push(m.text());
+      }
+    });
 
     await page.goto(`http://localhost:3000/d/${dashboard.uid}`);
     await waitForPageSettle(page);
@@ -163,7 +167,11 @@ test('phase1: check v0.3.1 handles unknown filter types gracefully', async ({
   const saved = await resp.json();
 
   const errors: string[] = [];
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('console', (m) => {
+    if (m.type() === 'error') {
+      errors.push(m.text());
+    }
+  });
 
   await page.goto(`http://localhost:3000/d/${saved.uid}`);
   await waitForPageSettle(page);
@@ -199,7 +207,11 @@ test('phase2: v0.3.1 mutation-artifact loads after upgrade', async ({ page }) =>
   if (!fixture) { test.skip(); return; }
 
   const errors: string[] = [];
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('console', (m) => {
+    if (m.type() === 'error') {
+      errors.push(m.text());
+    }
+  });
 
   await page.goto(`http://localhost:3000/d/${fixture.uid}`);
   await waitForPageSettle(page);
@@ -227,7 +239,11 @@ test('phase2: forward-compat andGroup filter loads after upgrade', async ({ page
   if (!fixture) { test.skip(); return; }
 
   const errors: string[] = [];
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('console', (m) => {
+    if (m.type() === 'error') {
+      errors.push(m.text());
+    }
+  });
 
   await page.goto(`http://localhost:3000/d/${fixture.uid}`);
   await waitForPageSettle(page);
@@ -248,7 +264,11 @@ test('phase2: provisioned dashboards all pass after upgrade', async ({
   for (const version of ['v0.2.2', 'v0.2.3', 'v0.3.0']) {
     const dashboard = await readProvisionedDashboard({ fileName: `${version}.json` });
     const errors: string[] = [];
-    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    page.on('console', (m) => {
+      if (m.type() === 'error') {
+        errors.push(m.text());
+      }
+    });
 
     await page.goto(`http://localhost:3000/d/${dashboard.uid}`);
     await waitForPageSettle(page);
