@@ -15,6 +15,7 @@ import { GAFilterExpressionComponent } from 'Filter';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAFilterExpression, GAQuery } from 'types';
+import type { LoadFieldsFn } from 'Filter';
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
@@ -118,6 +119,12 @@ export class QueryEditorGA4 extends PureComponent<Props> {
   onFiltersExpressionChange = (newFilter: GAFilterExpression) => {
     const { query, onChange } = this.props;
     onChange({ ...query, dimensionFilter: newFilter });
+    this.willRunQuery();
+  };
+
+  onMetricFilterChange = (newFilter: GAFilterExpression) => {
+    const { query, onChange } = this.props;
+    onChange({ ...query, metricFilter: newFilter });
     this.willRunQuery();
   };
 
@@ -306,19 +313,37 @@ export class QueryEditorGA4 extends PureComponent<Props> {
           <div className="gf-form">
             <InlineFormLabel
               className="query-keyword"
-              tooltip={
-                <>
-                  Currently, only <code>or groups</code> are supported.
-                </>
-              }
+              tooltip="Filter rows by dimension values (applied before aggregation)"
             >
-              DimensionFilter
+              Dimension Filter
             </InlineFormLabel>
-            <GAFilterExpressionComponent 
-              expression={query.dimensionFilter} 
+            <GAFilterExpressionComponent
+              expression={query.dimensionFilter}
               onChange={this.onFiltersExpressionChange}
-              selectedDimensions={selectedDimensions}
-              onDelete={undefined}
+              loadFields={((q: string) => {
+                const loadDimFields: LoadFieldsFn = mode === 'realtime'
+                  ? (s) => datasource.getRealtimeDimensions(s, null, parsedWebPropertyId)
+                  : (s) => datasource.getDimensions(s, null, parsedWebPropertyId);
+                return loadDimFields(q);
+              }) as LoadFieldsFn}
+            />
+          </div>
+          <div className="gf-form">
+            <InlineFormLabel
+              className="query-keyword"
+              tooltip="Filter rows by metric values — applied after aggregation (SQL HAVING equivalent)"
+            >
+              Metric Filter
+            </InlineFormLabel>
+            <GAFilterExpressionComponent
+              expression={query.metricFilter ?? {}}
+              onChange={this.onMetricFilterChange}
+              loadFields={((q: string) => {
+                const loadMetFields: LoadFieldsFn = mode === 'realtime'
+                  ? (s) => datasource.getRealtimeMetrics(s, parsedWebPropertyId)
+                  : (s) => datasource.getMetrics(s, parsedWebPropertyId);
+                return loadMetFields(q);
+              }) as LoadFieldsFn}
             />
           </div>
           <div className="gf-form">

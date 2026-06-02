@@ -21,6 +21,14 @@ type GoogleClient struct {
 	analyticsadmin *analyticsadmin.Service
 }
 
+// filterHasContent returns true only when the filter expression contains at
+// least one meaningful field.  The frontend sends {} for "no filter", which
+// JSON-decodes to a non-nil pointer with all fields nil; we must not forward
+// that empty expression to the GA4 API.
+func filterHasContent(f *analyticsdata.FilterExpression) bool {
+	return f != nil && (f.Filter != nil || f.AndGroup != nil || f.OrGroup != nil || f.NotExpression != nil)
+}
+
 func NewGoogleClient(ctx context.Context, config *setting.DatasourceSecretSettings) (*GoogleClient, error) {
 	resolved, err := auth.Resolve(config)
 	if err != nil {
@@ -95,8 +103,11 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 			},
 		}
 	}
-	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter = &query.DimensionFilter
+	if filterHasContent(query.DimensionFilter) {
+		req.DimensionFilter = query.DimensionFilter
+	}
+	if filterHasContent(query.MetricFilter) {
+		req.MetricFilter = query.MetricFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
@@ -179,8 +190,11 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 			},
 		}
 	}
-	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter = &query.DimensionFilter
+	if filterHasContent(query.DimensionFilter) {
+		req.DimensionFilter = query.DimensionFilter
+	}
+	if filterHasContent(query.MetricFilter) {
+		req.MetricFilter = query.MetricFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
@@ -225,7 +239,7 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 
 // 			for _, metric := range metrics {
 // 				// We have only 1 date range in the example
-// 				// So it'll always print "Date Range (0)"
+// 				// So it'll always print "Date Range (%d)"
 // 				// log.DefaultLogger.Defaultlog.DefaultLogger.Infof("Date Range (%d)", idx)
 // 				for j := 0; j < len(metricHdrs) && j < len(metric.Values); j++ {
 // 					log.DefaultLogger.Debug("%s: %s", metricHdrs[j].Name, metric.Values[j])

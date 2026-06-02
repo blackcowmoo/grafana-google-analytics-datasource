@@ -134,8 +134,8 @@ type QueryModel struct {
 	Offset            int64        `json:"offset,omitempty"`
 	Mode              QueryMode    `json:"mode,omitempty"`
 	ServiceLevel      ServiceLevel `json:"serviceLevel,omitempty"`
-	// TODO type convert
-	DimensionFilter analyticsdata.FilterExpression `json:"dimensionFilter,omitempty"`
+	DimensionFilter *analyticsdata.FilterExpression `json:"dimensionFilter,omitempty"`
+	MetricFilter    *analyticsdata.FilterExpression `json:"metricFilter,omitempty"`
 
 	From time.Time
 	To   time.Time

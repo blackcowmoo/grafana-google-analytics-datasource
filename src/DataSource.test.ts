@@ -1,6 +1,6 @@
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { DataSource } from './DataSource';
-import { GADataSourceOptions, GADimensionFilterType, GAFilterExpression, GAQuery } from './types';
+import { GADataSourceOptions, GADimensionFilterType, GAFilterExpression, GAQuery, GAStringFilterMatchType } from './types';
 
 jest.mock('@grafana/runtime', () => {
   // Inline the TemplateSrv stub here because jest.mock factories cannot
@@ -139,5 +139,76 @@ describe('DataSource.applyTemplateVariables', () => {
     const query = makeQuery({ dimensionFilter: undefined as unknown as GAFilterExpression });
 
     expect(() => ds.applyTemplateVariables(query, {})).not.toThrow();
+  });
+
+  it('interpolates metricFilter inListFilter variables', () => {
+    setVars({ segments: ['organic', 'cpc'] });
+    const ds = makeDataSource();
+    const metricFilter: GAFilterExpression = {
+      filter: {
+        fieldName: 'sessionDefaultChannelGrouping',
+        filterType: GADimensionFilterType.IN_LIST,
+        inListFilter: { values: ['$segments'], caseSensitive: false },
+      },
+    };
+    const query = makeQuery({ metricFilter });
+
+    const interpolated = ds.applyTemplateVariables(query, {});
+
+    expect(interpolated.metricFilter.filter.inListFilter.values).toEqual(['organic', 'cpc']);
+  });
+
+  it('does not mutate the input metricFilter (deep-clones before interpolation)', () => {
+    setVars({ seg: ['a', 'b'] });
+    const ds = makeDataSource();
+    const inputFilter: GAFilterExpression = {
+      filter: {
+        fieldName: 'sessionMedium',
+        filterType: GADimensionFilterType.IN_LIST,
+        inListFilter: { values: ['$seg'], caseSensitive: false },
+      },
+    };
+    const snapshot = JSON.parse(JSON.stringify(inputFilter));
+    const query = makeQuery({ metricFilter: inputFilter });
+
+    ds.applyTemplateVariables(query, {});
+
+    expect(inputFilter).toEqual(snapshot);
+  });
+
+  it('returns undefined metricFilter when query has no metricFilter', () => {
+    setVars({});
+    const ds = makeDataSource();
+    const query = makeQuery({ metricFilter: undefined });
+
+    const interpolated = ds.applyTemplateVariables(query, {});
+
+    expect(interpolated.metricFilter).toBeUndefined();
+  });
+
+  it('interpolates both dimensionFilter and metricFilter independently', () => {
+    setVars({ dim: 'US', met: 'organic' });
+    const ds = makeDataSource();
+    const query = makeQuery({
+      dimensionFilter: {
+        filter: {
+          fieldName: 'country',
+          filterType: GADimensionFilterType.STRING,
+          stringFilter: { matchType: GAStringFilterMatchType.EXACT, value: '$dim', caseSensitive: false },
+        },
+      },
+      metricFilter: {
+        filter: {
+          fieldName: 'sessionMedium',
+          filterType: GADimensionFilterType.STRING,
+          stringFilter: { matchType: GAStringFilterMatchType.EXACT, value: '$met', caseSensitive: false },
+        },
+      },
+    });
+
+    const interpolated = ds.applyTemplateVariables(query, {});
+
+    expect(interpolated.dimensionFilter.filter.stringFilter.value).toBe('US');
+    expect(interpolated.metricFilter.filter.stringFilter.value).toBe('organic');
   });
 });

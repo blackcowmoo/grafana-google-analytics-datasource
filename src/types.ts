@@ -22,9 +22,10 @@ export interface GAQuery extends DataQuery {
   filtersExpression: string;
   mode: string;
   dimensionFilter: GAFilterExpression;
+  metricFilter?: GAFilterExpression;
   serviceLevel: string;
-  // metricFilter: Array<GAFilter>;
 }
+
 // mapping on google-key.json
 export interface JWT {
   private_key: any;
@@ -33,9 +34,7 @@ export interface JWT {
   project_id: any;
 }
 
-export const defaultQuery: Partial<GAQuery> = {
-  // constant: 6.5,
-};
+export const defaultQuery: Partial<GAQuery> = {};
 
 /**
  * These are options configured for each DataSource instance.
@@ -91,28 +90,27 @@ export interface ProfileSummary {
   Type: string
 }
 
-// https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/FilterExpression?hl=ko#Filter
+// https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/FilterExpression
 
 export interface GAFilterExpression {
-  andGroup?: GAFilterExpressionList
-  orGroup?: GAFilterExpressionList
-  notExpression?: GAFilterExpression
-  filter?: GAFilter
+  andGroup?: GAFilterExpressionList;
+  orGroup?: GAFilterExpressionList;
+  notExpression?: GAFilterExpression;
+  filter?: GAFilter;
 }
 
 export interface GAFilterExpressionList {
-  expressions: GAFilterExpression[]
+  expressions: GAFilterExpression[];
 }
 
 export interface GAFilter {
   fieldName: string;
-  
-  // filterType: GAMetricFilterType | GADimensionFilterType | undefined;
   filterType: GADimensionFilterType;
   stringFilter?: GAStringFilter;
   inListFilter?: GAInListFilter;
-  numberFilter?: GANumbericFilter;
+  numericFilter?: GANumericFilter;
   betweenFilter?: GABetweenFilter;
+  emptyFilter?: GAEmptyFilter;
 }
 
 export interface GAStringFilter {
@@ -126,48 +124,54 @@ export interface GAInListFilter {
   caseSensitive: boolean;
 }
 
-export interface GANumbericFilter {
-  operation: GANumbericFilterOperation;
-  value: GANumbericValue;
-  caseSensitive: boolean;
+export interface GANumericFilter {
+  operation: GANumericFilterOperation;
+  value: GANumericValue;
 }
 
 export interface GABetweenFilter {
-  fromValue: GANumbericValue;
-  toValue: GANumbericValue;
+  fromValue: GANumericValue;
+  toValue: GANumericValue;
 }
 
-export interface GANumbericValue {
-  int64Value: string;
-  doubleValue: number;
+// int64Value serialises as a JSON string per the GA4 API spec
+export interface GANumericValue {
+  int64Value?: string;
+  doubleValue?: number;
 }
+
+export interface GAEmptyFilter {}
 
 export enum GADimensionFilterType {
-  STRING = "STRING",
-  IN_LIST = "IN_LIST"
+  STRING  = 'STRING',
+  IN_LIST = 'IN_LIST',
+  NUMERIC = 'NUMERIC',
+  BETWEEN = 'BETWEEN',
+  EMPTY   = 'EMPTY',
 }
-
-export enum GAMetricFilterType {
-  NUMBERIC,
-  BETWEEN
-}
-
 
 export enum GAStringFilterMatchType {
-  MATCH_TYPE_UNSPECIFIED = "MATCH_TYPE_UNSPECIFIED",
-  EXACT = "EXACT",
-  BEGINS_WITH = "BEGINS_WITH",
-  ENDS_WITH = "ENDS_WITH",
-  CONTAINS = "CONTAINS",
-  FULL_REGEXP = "FULL_REGEXP",
-  PARTIAL_REGEXP = "PARTIAL_REGEXP"
+  EXACT           = 'EXACT',
+  BEGINS_WITH     = 'BEGINS_WITH',
+  ENDS_WITH       = 'ENDS_WITH',
+  CONTAINS        = 'CONTAINS',
+  FULL_REGEXP     = 'FULL_REGEXP',
+  PARTIAL_REGEXP  = 'PARTIAL_REGEXP',
 }
 
-export enum GANumbericFilterOperation {
-  OPERATION_UNSPECIFIED,
-  EQUAL,
-  LESS_THAN,
-  LESS_THAN_OR_EQUAL,
-  GREATER_THAN,
-  GREATER_THAN_OR_EQUAL,
+export enum GANumericFilterOperation {
+  OPERATION_UNSPECIFIED   = 'OPERATION_UNSPECIFIED',
+  EQUAL                   = 'EQUAL',
+  LESS_THAN               = 'LESS_THAN',
+  LESS_THAN_OR_EQUAL      = 'LESS_THAN_OR_EQUAL',
+  GREATER_THAN            = 'GREATER_THAN',
+  GREATER_THAN_OR_EQUAL   = 'GREATER_THAN_OR_EQUAL',
 }
+
+// Legacy aliases kept for any persisted dashboard JSON that might reference them
+/** @deprecated use GANumericFilter */
+export type GANumbericFilter = GANumericFilter;
+/** @deprecated use GANumericFilterOperation */
+export type GANumbericFilterOperation = GANumericFilterOperation;
+/** @deprecated use GANumericValue */
+export type GANumbericValue = GANumericValue;
