@@ -1,19 +1,26 @@
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { ConnectionConfig } from '@grafana/google-sdk';
+import { AuthConfig, GOOGLE_AUTH_TYPE_OPTIONS, GoogleAuthType } from '@grafana/google-sdk';
 import { Alert } from '@grafana/ui';
 import React from 'react';
 import { GADataSourceOptions, GASecureJsonData } from 'types';
 
 export type Props = DataSourcePluginOptionsEditorProps<GADataSourceOptions, GASecureJsonData>;
 
+// The backend (pkg/auth/auth.go) only implements JWT auth — GCE and Workload
+// Identity Federation are recognized but return a "not yet supported" error
+// on Save & test. <ConnectionConfig /> has no prop to hide individual auth
+// types, so we render its underlying <AuthConfig /> directly with just the
+// JWT option instead.
+const SUPPORTED_AUTH_OPTIONS = GOOGLE_AUTH_TYPE_OPTIONS.filter((option) => option.value === GoogleAuthType.JWT);
+
 export const ConfigEditor: React.FC<Props> = (props) => {
-  const { options } = props;
+  const { options, onOptionsChange } = props;
 
   // Backwards compat: a datasource created before @grafana/google-sdk
   // adoption stores the full service-account JSON in `secureJsonData.jwt`.
   // The backend's auth.Resolve still parses that blob, so existing
   // datasources keep authenticating without any user action. New
-  // datasources go through <ConnectionConfig /> below and persist the
+  // datasources go through <AuthConfig /> below and persist the
   // explicit (clientEmail / tokenUri / privateKey) fields the SDK reads.
   const usingLegacyJWT =
     options.secureJsonFields?.jwt &&
@@ -25,13 +32,13 @@ export const ConfigEditor: React.FC<Props> = (props) => {
       {usingLegacyJWT && (
         <Alert title="Legacy JWT credentials detected" severity="info">
           This datasource was set up before the unified Google authentication
-          UI. Existing queries continue to work, but to take advantage of new
-          auth options (GCE / Workload Identity / Service Account
-          Impersonation) re-upload your service-account JSON below.
+          UI. Existing queries continue to work, but to take advantage of the
+          unified JWT upload/paste flow, re-upload your service-account JSON
+          below.
         </Alert>
       )}
 
-      <ConnectionConfig {...props} />
+      <AuthConfig authOptions={SUPPORTED_AUTH_OPTIONS} options={options} onOptionsChange={onOptionsChange} />
 
       <Alert title="Generate a JWT file" severity="info">
         <ol style={{ listStylePosition: 'inside' }}>
