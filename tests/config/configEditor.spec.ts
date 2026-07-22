@@ -71,6 +71,24 @@ test('"Save & test" should fail when configuration is invalid', async ({
   await expect(configPage).toHaveAlert('error');
 });
 
+// GCE and Workload Identity Federation are recognized by @grafana/google-sdk
+// but pkg/auth/auth.go returns a "not yet supported" error for both, so
+// ConfigEditor.tsx renders <AuthConfig /> with a JWT-only authOptions list
+// instead of the SDK's default <ConnectionConfig />. This asserts the GCE
+// radio option stays hidden so users can't pick an auth type that always
+// fails Save & test.
+test('auth type selector only offers JWT (GCE is not implemented on the backend)', async ({
+  gotoDataSourceConfigPage,
+  readProvisionedDataSource,
+  page,
+}) => {
+  const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({ fileName: 'datasources.yml' });
+  await gotoDataSourceConfigPage(ds.uid);
+  await dismissWhatsNewModal(page);
+  await expect(page.getByText('Google JWT File')).toBeVisible();
+  await expect(page.getByText('GCE Default Service Account')).toHaveCount(0);
+});
+
 // Backwards compatibility: a datasource saved before gav3 was removed will
 // still have `jsonData.version = "v3"` persisted. The plugin must load that
 // config without crashing — the value is ignored and the GA4 path is used.
