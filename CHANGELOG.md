@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.2
+- Remove deprecated GA3 (Universal Analytics) datasource — GA4 only going forward([#165](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/165))
+- Complete GA4 filter UI overhaul with MetricFilter support([#169](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/169))
+- Support accounts/properties as dashboard variables([#167](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/167))
+- Add dashboard variable support for webPropertyId([#152](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/152))
+- Fix expanding multi-value variables in filter expressions([#154](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/154))
+- Fix sub-day Grafana time range not respected in time-series output([#156](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/156))
+- Fix rows with unparseable time dimension causing failures([#155](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/155))
+
 ## 0.3.1
 - Support or,and,not filter[#128](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/128)
 - Support grafana version < 13[#136](https://github.com/blackcowmoo/grafana-google-analytics-datasource/pull/136)
