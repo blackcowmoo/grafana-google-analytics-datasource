@@ -1,17 +1,17 @@
-FROM grafana/grafana:9.5.2-ubuntu
+FROM grafana/grafana:10.4.0-ubuntu
 
 USER root
 WORKDIR /root
 
-ENV GOFLAGS -buildvcs=false
+ENV GOFLAGS=-buildvcs=false
 
 RUN apt-get -y update
 RUN apt-get -y install git build-essential
 
-RUN curl -L https://golang.org/dl/go1.18.linux-amd64.tar.gz > go1.18.linux-amd64.tar.gz
+RUN curl -L https://golang.org/dl/go1.26.4.linux-amd64.tar.gz > go1.26.4.linux-amd64.tar.gz
 
 RUN rm -rf /usr/local/go && \
-    tar -C /usr/local -xzf go1.18.linux-amd64.tar.gz
+    tar -C /usr/local -xzf go1.26.4.linux-amd64.tar.gz
 
 RUN touch README; printf "~~~~~~ START THE DLV SERVER WITH THIS COMMAND BEFORE RUNNING IDE DEBUGGER ~~~~~~ \r\ndlv attach --headless --listen=:2345 PID\r\n\r\n" >> README
 
