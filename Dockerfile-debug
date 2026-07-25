@@ -1,3 +1,15 @@
+# Standalone debug image: attach a Go debugger to the plugin backend without
+# docker-compose. Build the plugin first, then build and run this image —
+# it bakes the plugin and provisioning in, so no -v mounts are needed:
+#
+#   yarn build && mage
+#   docker build -f Dockerfile-debug -t ga-datasource-debug .
+#   docker run -p 3000:3000 -p 2345:2345 \
+#     --cap-add=SYS_PTRACE --security-opt apparmor=unconfined \
+#     ga-datasource-debug
+#
+# Then exec into the container, find the plugin backend's PID, and run the
+# dlv attach command printed in ~/README.
 FROM grafana/grafana:10.4.0-ubuntu
 
 USER root
@@ -23,3 +35,9 @@ RUN git clone https://github.com/magefile/mage; \
     cd mage; \
     export PATH=$PATH:/usr/local/go/bin; \
     go run bootstrap.go
+
+# Bake the built plugin + provisioning in so the container runs it
+# automatically, matching docker-compose.yaml's volume mounts.
+ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=blackcowmoo-googleanalytics-datasource
+COPY dist /var/lib/grafana/plugins/blackcowmoo-googleanalytics-datasource
+COPY provisioning /etc/grafana/provisioning
