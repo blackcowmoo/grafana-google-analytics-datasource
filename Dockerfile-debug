@@ -1,8 +1,7 @@
-# Standalone debug image: attach a Go debugger to the plugin backend without
-# docker-compose. Build the plugin first, then build and run this image —
-# it bakes the plugin and provisioning in, so no -v mounts are needed:
+# Standalone debug image: builds the plugin from source and attaches a Go
+# debugger to the backend, all inside `docker build` — no host toolchain or
+# prebuilt ./dist required:
 #
-#   yarn build && mage
 #   docker build -f Dockerfile-debug -t ga-datasource-debug .
 #   docker run -p 3000:3000 -p 2345:2345 \
 #     --cap-add=SYS_PTRACE --security-opt apparmor=unconfined \
@@ -16,9 +15,10 @@ USER root
 WORKDIR /root
 
 ENV GOFLAGS=-buildvcs=false
+ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 
 RUN apt-get -y update
-RUN apt-get -y install git build-essential
+RUN apt-get -y install git build-essential curl
 
 RUN curl -L https://golang.org/dl/go1.26.4.linux-amd64.tar.gz > go1.26.4.linux-amd64.tar.gz
 
@@ -27,17 +27,26 @@ RUN rm -rf /usr/local/go && \
 
 RUN touch README; printf "~~~~~~ START THE DLV SERVER WITH THIS COMMAND BEFORE RUNNING IDE DEBUGGER ~~~~~~ \r\ndlv attach --headless --listen=:2345 PID\r\n\r\n" >> README
 
-RUN echo "export PATH=$PATH:/usr/local/go/bin:~/go/bin" >> ~/.bashrc
+RUN echo "export PATH=$PATH" >> ~/.bashrc
 RUN echo "cat ~/README" >> ~/.bashrc
 
-RUN /usr/local/go/bin/go install github.com/go-delve/delve/cmd/dlv@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 RUN git clone https://github.com/magefile/mage; \
     cd mage; \
-    export PATH=$PATH:/usr/local/go/bin; \
     go run bootstrap.go
 
-# Bake the built plugin + provisioning in so the container runs it
-# automatically, matching docker-compose.yaml's volume mounts.
+# Node/Yarn to build the frontend from source (the backend build below uses
+# the Go/mage toolchain already installed above).
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g yarn@1.22.19
+
+# Build the plugin from source inside the image, then bake it + provisioning
+# in so the container runs it automatically — no -v mounts needed.
 ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=blackcowmoo-googleanalytics-datasource
-COPY dist /var/lib/grafana/plugins/blackcowmoo-googleanalytics-datasource
-COPY provisioning /etc/grafana/provisioning
+WORKDIR /root/plugin
+COPY . .
+RUN yarn install --frozen-lockfile && yarn build
+RUN mage build:linux
+RUN cp -r dist /var/lib/grafana/plugins/blackcowmoo-googleanalytics-datasource && \
+    cp -r provisioning /etc/grafana/provisioning
