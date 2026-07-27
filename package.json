@@ -73,11 +73,16 @@
     "tslib": "2.5.3"
   },
   "resolutions": {
+    "**/@istanbuljs/load-nyc-config/js-yaml": "3.15.0",
+    "brace-expansion": "5.0.8",
+    "fast-uri": "3.1.4",
     "form-data": "4.0.6",
     "immutable": "4.3.8",
     "js-cookie": "3.0.7",
+    "js-yaml": "4.3.0",
     "lodash": "4.18.0",
     "minimatch": "9.0.7",
+    "postcss": "8.5.18",
     "protobufjs": "7.6.3",
     "serialize-javascript": "7.0.5",
     "tmp": "0.2.7",
