@@ -1,7 +1,7 @@
 import { ScopedVars } from '@grafana/data';
 import { TemplateSrv } from '@grafana/runtime';
 import { expandVariableToArray, interpolateFilterExpression } from './interpolation';
-import { GADimensionFilterType, GAFilterExpression, GAStringFilterMatchType } from './types';
+import { GADimensionFilterType, GAFilterExpression, GANumericFilterOperation, GAStringFilterMatchType } from './types';
 
 // Minimal TemplateSrv stub that mimics Grafana's behavior for unit tests:
 // - $var / ${var} is looked up in the map.
@@ -191,5 +191,49 @@ describe('interpolateFilterExpression', () => {
     interpolateFilterExpression(srv, expr, {});
     expect(expr.andGroup!.expressions[0].filter!.inListFilter!.values).toEqual(['1', '2']);
     expect(expr.andGroup!.expressions[1].filter!.inListFilter!.values).toEqual(['3', '4']);
+  });
+
+  it('does not touch numericFilter (no string interpolation needed)', () => {
+    const srv = makeTemplateSrv({ n: '999' });
+    const expr: GAFilterExpression = {
+      filter: {
+        fieldName: 'sessions',
+        filterType: GADimensionFilterType.NUMERIC,
+        numericFilter: {
+          operation: GANumericFilterOperation.GREATER_THAN,
+          value: { int64Value: '100' },
+        },
+      },
+    };
+    interpolateFilterExpression(srv, expr, {});
+    // Numeric values are set via the UI as literal numbers, not interpolated.
+    expect(expr.filter!.numericFilter!.value.int64Value).toBe('100');
+    expect(expr.filter!.numericFilter!.operation).toBe(GANumericFilterOperation.GREATER_THAN);
+  });
+
+  it('does not crash on betweenFilter', () => {
+    const srv = makeTemplateSrv({});
+    const expr: GAFilterExpression = {
+      filter: {
+        fieldName: 'sessions',
+        filterType: GADimensionFilterType.BETWEEN,
+        betweenFilter: { fromValue: { int64Value: '10' }, toValue: { int64Value: '100' } },
+      },
+    };
+    expect(() => interpolateFilterExpression(srv, expr, {})).not.toThrow();
+    expect(expr.filter!.betweenFilter!.fromValue.int64Value).toBe('10');
+    expect(expr.filter!.betweenFilter!.toValue.int64Value).toBe('100');
+  });
+
+  it('does not crash on emptyFilter', () => {
+    const srv = makeTemplateSrv({});
+    const expr: GAFilterExpression = {
+      filter: {
+        fieldName: 'campaignName',
+        filterType: GADimensionFilterType.EMPTY,
+        emptyFilter: {},
+      },
+    };
+    expect(() => interpolateFilterExpression(srv, expr, {})).not.toThrow();
   });
 });

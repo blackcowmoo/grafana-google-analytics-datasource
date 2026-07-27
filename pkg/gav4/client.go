@@ -3,6 +3,7 @@ package gav4
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/blackcowmoo/grafana-google-analytics-dataSource/pkg/auth"
@@ -19,6 +20,14 @@ import (
 type GoogleClient struct {
 	analyticsdata  *analyticsdata.Service
 	analyticsadmin *analyticsadmin.Service
+}
+
+// filterHasContent returns true only when the filter expression contains at
+// least one meaningful field.  The frontend sends {} for "no filter", which
+// JSON-decodes to a non-nil pointer with all fields nil; we must not forward
+// that empty expression to the GA4 API.
+func filterHasContent(f *analyticsdata.FilterExpression) bool {
+	return f != nil && (f.Filter != nil || f.AndGroup != nil || f.OrGroup != nil || f.NotExpression != nil)
 }
 
 func NewGoogleClient(ctx context.Context, config *setting.DatasourceSecretSettings) (*GoogleClient, error) {
@@ -95,8 +104,11 @@ func (client *GoogleClient) getReport(query model.QueryModel) (*analyticsdata.Ru
 			},
 		}
 	}
-	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter = &query.DimensionFilter
+	if filterHasContent(query.DimensionFilter) {
+		req.DimensionFilter = query.DimensionFilter
+	}
+	if filterHasContent(query.MetricFilter) {
+		req.MetricFilter = query.MetricFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
@@ -179,8 +191,11 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 			},
 		}
 	}
-	if !(query.DimensionFilter.OrGroup == nil && query.DimensionFilter.AndGroup == nil && query.DimensionFilter.Filter == nil && query.DimensionFilter.NotExpression == nil) {
-		req.DimensionFilter = &query.DimensionFilter
+	if filterHasContent(query.DimensionFilter) {
+		req.DimensionFilter = query.DimensionFilter
+	}
+	if filterHasContent(query.MetricFilter) {
+		req.MetricFilter = query.MetricFilter
 	}
 	log.DefaultLogger.Debug("Doing GET request from analytics reporting", "req", req)
 	// Call the BatchGet method and return the response.
@@ -225,7 +240,7 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 
 // 			for _, metric := range metrics {
 // 				// We have only 1 date range in the example
-// 				// So it'll always print "Date Range (0)"
+// 				// So it'll always print "Date Range (%d)"
 // 				// log.DefaultLogger.Defaultlog.DefaultLogger.Infof("Date Range (%d)", idx)
 // 				for j := 0; j < len(metricHdrs) && j < len(metric.Values); j++ {
 // 					log.DefaultLogger.Debug("%s: %s", metricHdrs[j].Name, metric.Values[j])
@@ -236,11 +251,21 @@ func (client *GoogleClient) getRealtimeReport(query model.QueryModel) (*analytic
 // 	log.DefaultLogger.Info("Completed printing response", "", "")
 // }
 
-func (client *GoogleClient) getMetadata(propertyID string) (*analyticsdata.Metadata, error) {
+// metadataResourceName builds the "properties/{id}/metadata" resource name
+// the Data API expects. propertyID may be passed either as a bare numeric ID
+// or as the full "properties/{id}" resource name (e.g. WebPropertyID as
+// stored from account summaries / the cascader) — TrimPrefix normalises
+// both so callers can't end up with a doubled "properties/properties/..." path.
+func metadataResourceName(propertyID string) string {
+	propertyID = strings.TrimPrefix(propertyID, "properties/")
 	if propertyID == "" {
 		propertyID = "0"
 	}
-	nameid := "properties/" + propertyID + "/metadata"
+	return "properties/" + propertyID + "/metadata"
+}
+
+func (client *GoogleClient) getMetadata(propertyID string) (*analyticsdata.Metadata, error) {
+	nameid := metadataResourceName(propertyID)
 	metadata, err := client.analyticsdata.Properties.GetMetadata(nameid).Do()
 	if err != nil {
 		return nil, err

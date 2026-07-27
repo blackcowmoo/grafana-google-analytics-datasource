@@ -62,6 +62,15 @@ export default defineConfig({
         storageState: 'playwright/.auth/admin.json',
       },
       dependencies: ['config'],
-    }
+    },
+    {
+      name: 'features',
+      testDir: './tests/features',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/admin.json',
+      },
+      dependencies: ['auth'],
+    },
   ],
 });

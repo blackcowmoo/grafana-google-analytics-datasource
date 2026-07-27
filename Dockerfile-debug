@@ -1,25 +1,55 @@
-FROM grafana/grafana:9.5.2-ubuntu
+# Standalone debug image: builds the plugin from source and attaches a Go
+# debugger to the backend, all inside `docker build` — no host toolchain or
+# prebuilt ./dist required:
+#
+#   docker build -f Dockerfile-debug -t ga-datasource-debug .
+#   docker run -p 3000:3000 -p 2345:2345 \
+#     --cap-add=SYS_PTRACE --security-opt apparmor=unconfined \
+#     ga-datasource-debug
+#
+# Then exec into the container, find the plugin backend's PID, and run the
+# dlv attach command printed in ~/README. The Node/Go build toolchains only
+# live in the builder stages below — the final image just carries Grafana,
+# the built plugin, and the dlv binary needed to attach to it.
 
-USER root
-WORKDIR /root
+# ---- Frontend build stage: produces the static assets under ./dist ----
+FROM node:20 AS frontend-builder
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY tsconfig.json README.md LICENSE CHANGELOG.md ./
+COPY .config ./.config
+COPY src ./src
+RUN yarn build
 
-ENV GOFLAGS -buildvcs=false
+# ---- Backend build stage: produces the plugin binary + dlv under ./dist ----
+FROM golang:1.26.4 AS backend-builder
+WORKDIR /app
+ENV GOFLAGS=-buildvcs=false
+COPY go.mod go.sum ./
+RUN go mod download
+COPY pkg ./pkg
+COPY Magefile.go ./
+COPY src/plugin.json ./src/plugin.json
 
-RUN apt-get -y update
-RUN apt-get -y install git build-essential
-
-RUN curl -L https://golang.org/dl/go1.18.linux-amd64.tar.gz > go1.18.linux-amd64.tar.gz
-
-RUN rm -rf /usr/local/go && \
-    tar -C /usr/local -xzf go1.18.linux-amd64.tar.gz
-
-RUN touch README; printf "~~~~~~ START THE DLV SERVER WITH THIS COMMAND BEFORE RUNNING IDE DEBUGGER ~~~~~~ \r\ndlv attach --headless --listen=:2345 PID\r\n\r\n" >> README
-
-RUN echo "export PATH=$PATH:/usr/local/go/bin:~/go/bin" >> ~/.bashrc
-RUN echo "cat ~/README" >> ~/.bashrc
-
-RUN /usr/local/go/bin/go install github.com/go-delve/delve/cmd/dlv@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 RUN git clone https://github.com/magefile/mage; \
     cd mage; \
-    export PATH=$PATH:/usr/local/go/bin; \
     go run bootstrap.go
+RUN mage build:linux
+
+# ---- Final image: Grafana + the built plugin + dlv, nothing else ----
+FROM grafana/grafana:10.4.0-ubuntu
+
+USER root
+
+RUN printf "~~~~~~ START THE DLV SERVER WITH THIS COMMAND BEFORE RUNNING IDE DEBUGGER ~~~~~~ \r\ndlv attach --headless --listen=:2345 PID\r\n\r\n" > /root/README && \
+    echo "cat ~/README" >> /root/.bashrc
+
+# Bake the built plugin + provisioning in so the container runs it
+# automatically — no -v mounts needed.
+ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=blackcowmoo-googleanalytics-datasource
+COPY --from=backend-builder /go/bin/dlv /usr/local/bin/dlv
+COPY --from=frontend-builder /app/dist /var/lib/grafana/plugins/blackcowmoo-googleanalytics-datasource
+COPY --from=backend-builder /app/dist /var/lib/grafana/plugins/blackcowmoo-googleanalytics-datasource
+COPY provisioning /etc/grafana/provisioning
