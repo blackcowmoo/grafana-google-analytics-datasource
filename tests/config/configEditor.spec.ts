@@ -83,7 +83,7 @@ test('auth type selector only offers JWT (GCE is not implemented on the backend)
   const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({ fileName: 'datasources.yml' });
   await gotoDataSourceConfigPage(ds.uid);
   await dismissWhatsNewModal(page);
-  await expect(page.getByTestId('data-testid radio-button').getByText('Google JWT File')).toBeVisible();
+  await expect(page.getByText('Google JWT File', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('GCE Default Service Account')).toHaveCount(0);
 });
 
