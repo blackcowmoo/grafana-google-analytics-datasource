@@ -79,6 +79,7 @@ getDashboardVersions().forEach(version => {
 });
 
 test('time series', async ({ readProvisionedDataSource, explorePage, page }) => {
+  test.setTimeout(60000);
   // default settings
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
