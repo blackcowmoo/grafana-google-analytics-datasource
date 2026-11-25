@@ -39,6 +39,18 @@ const waitForPageSettle = async (page: import('@playwright/test').Page) => {
   await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 };
 
+const selectDatasourceAndWaitForAccounts = async (
+  page: import('@playwright/test').Page,
+  explorePage: { datasource: { set: (name: string) => Promise<void> } },
+  name: string
+) => {
+  const accountsResponse = page.waitForResponse(
+    (response) => response.url().includes('/resources/account-summaries') && response.ok()
+  );
+  await explorePage.datasource.set(name);
+  await accountsResponse;
+};
+
 // 대시보드 버전 목록 가져오기
 const getDashboardVersions = () => {
   const dashboardsDir = path.join(__dirname, '../../provisioning/dashboards');
@@ -71,7 +83,7 @@ test('time series', async ({ readProvisionedDataSource, explorePage, page }) => 
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
   await dismissWhatsNewModal(page);
-  await explorePage.datasource.set(ds.name);
+  await selectDatasourceAndWaitForAccounts(page, explorePage, ds.name);
   await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
 
@@ -109,7 +121,7 @@ test('table', async ({ readProvisionedDataSource, explorePage, page }) => {
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
   await dismissWhatsNewModal(page);
-  await explorePage.datasource.set(ds.name);
+  await selectDatasourceAndWaitForAccounts(page, explorePage, ds.name);
   await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
   await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Table');
@@ -145,7 +157,7 @@ test('realtime', async ({ readProvisionedDataSource, explorePage, page }) => {
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
 
   await dismissWhatsNewModal(page);
-  await explorePage.datasource.set(ds.name);
+  await selectDatasourceAndWaitForAccounts(page, explorePage, ds.name);
   await waitForPageSettle(page);
   await explorePage.timeRange.set({ from: 'now-7d', to: 'now' });
   await selectQueryMode(explorePage.getQueryEditorRow('A'), 'Realtime');
