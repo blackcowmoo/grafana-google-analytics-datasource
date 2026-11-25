@@ -11,11 +11,10 @@ import {
   RadioButtonGroup,
 } from '@grafana/ui';
 import { DataSource } from 'DataSource';
-import { GAFilterExpressionComponent } from 'Filter';
+import { GAFilterExpressionComponent, type LoadFieldsFn } from 'Filter';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { GADataSourceOptions, GAFilterExpression, GAQuery } from 'types';
-import type { LoadFieldsFn } from 'Filter';
 type Props = QueryEditorProps<DataSource, GAQuery, GADataSourceOptions>;
 
 const defaultCacheDuration = 300;
@@ -43,7 +42,8 @@ export const GAServiceLevel = {
 };
 
 export class QueryEditorGA4 extends PureComponent<Props> {
-  options: CascaderOption[] = [];
+  state: { accountOptions: CascaderOption[] } = { accountOptions: [] };
+
   constructor(props: Readonly<Props>) {
     super(props);
     const { query } = this.props;
@@ -53,7 +53,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
     }
     this.props.query.displayName = new Map<string, string>();
     this.props.datasource.getAccountSummaries().then((accountSummaries) => {
-      this.options = accountSummaries;
+      this.setState({ accountOptions: accountSummaries });
       this.props.onChange(this.props.query);
     });
     if (query.mode === undefined || query.mode === '') {
@@ -208,7 +208,7 @@ export class QueryEditorGA4 extends PureComponent<Props> {
         <div className="gf-form-group">
           <div className="gf-form">
             <HorizontalGroup spacing="sm" justify="flex-start">
-              <ButtonCascader options={this.options} onChange={this.onIdSelect}>
+              <ButtonCascader options={this.state.accountOptions} onChange={this.onIdSelect}>
                 Account Select
               </ButtonCascader>
               <InlineLabel aria-label='account-info'>{`Account: ${accountId || ''},Property: ${webPropertyId || ''}`}</InlineLabel>

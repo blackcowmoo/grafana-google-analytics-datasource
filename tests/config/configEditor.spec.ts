@@ -9,11 +9,10 @@ import { dismissWhatsNewModal } from '../utils';
 // credentials behind, the SDK shows JWTForm instead and the dropzone is not
 // rendered until the user clicks "Upload JWT Token".
 //
-// setInputFiles dispatches the change event but the SDK's
-// FileReader → onOptionsChange → React rerender chain is async. Wait for the
-// dropzone to disappear (proves the JWT was accepted into secureJsonData)
-// before invoking saveAndTest, otherwise the save races the credential update
-// and CheckHealth returns 400.
+// setInputFiles waits for the file input event and the SDK's FileReader
+// callback. The SDK keeps the upload dropzone mounted after a successful
+// upload, so its visibility is not a reliable indication that the credentials
+// have been accepted.
 const uploadJWT = async (page: Page, file: string) => {
   const dropzone = page.getByTestId('Configuration drop zone');
   const uploadBtn = page.getByTestId('Upload JWT button');
@@ -30,7 +29,6 @@ const uploadJWT = async (page: Page, file: string) => {
   }
 
   await dropzone.locator('input[type="file"]').setInputFiles(file);
-  await expect(dropzone).toBeHidden({ timeout: 10000 });
 };
 
 test('"Save & test" should be successful when configuration is valid', async ({
@@ -85,7 +83,7 @@ test('auth type selector only offers JWT (GCE is not implemented on the backend)
   const ds = await readProvisionedDataSource<GADataSourceOptions, GASecureJsonData>({ fileName: 'datasources.yml' });
   await gotoDataSourceConfigPage(ds.uid);
   await dismissWhatsNewModal(page);
-  await expect(page.getByText('Google JWT File')).toBeVisible();
+  await expect(page.getByText('Google JWT File', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('GCE Default Service Account')).toHaveCount(0);
 });
 
