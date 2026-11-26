@@ -23,6 +23,10 @@ jobs:
           skip-grafana-dev-image: true
   playwright-tests:
     needs: resolve-versions
+    # Dependabot pull requests do not receive repository secrets. Running the
+    # credential-dependent suite in that context creates empty JSON files and
+    # produces misleading authentication failures.
+    if: github.actor != 'dependabot[bot]'
     timeout-minutes: 60
     strategy:
       fail-fast: false
