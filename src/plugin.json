@@ -4,6 +4,7 @@
   "id": "blackcowmoo-googleanalytics-datasource",
   "metrics": true,
   "backend": true,
+  "alerting": true,
   "executable": "gpx_blackcowmoo-googleanalytics-datasource",
   "info": {
     "description": " GoogleAnalytics Visualize & datasource",
